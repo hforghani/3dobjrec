@@ -22,8 +22,7 @@ classdef Point
         function self = calc_descriptors(self, img_fold_name, model)
 %             desc_arr = [];
             for i = 1:self.measure_num
-                meas = self.measurements{i};
-                meas = meas.calc_descriptors(img_fold_name, model);
+                self.measurements{i} = self.measurements{i}.calc_descriptors(img_fold_name, model);
 %                 desc_arr = [desc_arr, meas.descriptors];
             end
 %             self.descriptor = desc_arr;
