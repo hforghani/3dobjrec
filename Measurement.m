@@ -7,8 +7,7 @@ classdef Measurement
         feature_index;
         pos;
         
-        frames;
-        descriptors;
+        multiscale_desc;
     end
     
     properties (SetAccess = private)
@@ -18,10 +17,12 @@ classdef Measurement
     end
     
     methods
-        function self = Measurement(image_index, feature_index, pos)
-            self.image_index = image_index;
-            self.feature_index = feature_index;
-            self.pos = pos;
+        function self = Measurement(varargin)
+            if nargin == 3
+                self.image_index = varargin{1};
+                self.feature_index = varargin{2};
+                self.pos = varargin{3};
+            end
         end
         
         function pos = get_pos_in_camera(self, calibration)
@@ -31,31 +32,40 @@ classdef Measurement
             pos = pos(1:2);
         end
         
+        function multiscale_desc = calc_desc_in_scales(self, image, im_pos)
+            % Calculate sift descriptors in a range of scales.
+            % image: gray-scale image
+            % im_pos: position of the point in the image
+            % fr_array: cell array of frames of size length(scale_range)
+            % fr_array: cell array of descriptors of size length(scale_range)
+            
+            scale_range = self.min_scale : self.scale_step : self.max_scale;
+            fr = [im_pos; 0; 0];
+            fr = repmat(fr, 1, length(scale_range));
+            fr(3,:) = scale_range;
+
+            [fr, de] = vl_sift(image, 'frames', fr, 'orientations');
+            
+            fr_array = cell(length(scale_range),1);
+            de_array = cell(length(scale_range),1);
+            for i = 1:length(scale_range)
+                indexes = abs(fr(3,:) - scale_range(i)) < 0.001;
+                fr_array{i} = fr(:, indexes);
+                de_array{i} = de(:, indexes);
+            end
+            multiscale_desc = MultiscaleDescriptor(fr_array, de_array);
+        end
+        
         function self = calc_descriptors(self, img_fold_name, model)
             % Calculate and save descriptors property.
-            % f : keypoint frames.
-            % d : keypoint descriptors.
+            % img_fold_name : folder if camera images in dataset.
+            % model: model class of dataset.
             file_name = model.cameras{self.image_index}.file_name;
             im = imread([img_fold_name, file_name]);
             im_gray = single(rgb2gray(im));
             
-            scale_range = self.min_scale : self.scale_step : self.max_scale;
             pos_in_camera = self.get_pos_in_camera(model.calibration);
-            fr = [pos_in_camera; 0; 0];
-            fr = repmat(fr, 1, length(scale_range));
-            fr(3,:) = scale_range;
-
-            [fr, de] = vl_sift(im_gray, 'frames', fr, 'orientations');
-%             self.frames = f;
-%             self.descriptors = d;
-            
-            self.descriptors = cell(length(scale_range),1);
-            self.frames = cell(length(scale_range),1);
-            for i = 1:length(scale_range)
-                indexes = abs(fr(3,:) - scale_range(i)) < 0.001;
-                self.frames{i} = fr(:, indexes);
-                self.descriptors{i} = de(:, indexes);
-            end
+            self.multiscale_desc = self.calc_desc_in_scales(im_gray, pos_in_camera);
         end
     end
     
