@@ -6,7 +6,9 @@ for i = 1:N
     tic;
     point = model.points{i}.calc_descriptors([model_path 'db_img\'], model);
     model.points{i} = point;
-    save model;
     fprintf('Point %d with %d measurements prepared.\n', i, model.points{i}.measure_num);
     toc;
+    if mod(i, 100) == 0
+        save model;
+    end
 end
