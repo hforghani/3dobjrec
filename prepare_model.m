@@ -1,14 +1,12 @@
-function model = prepare_model(model, model_path)
+% You may run just once.
+% run('VLFEATROOT/toolbox/vl_setup');
 
-N = size(model.points, 1);
+%% Read model
+model_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
+model_fname = [model_path 'model.nvm'];
+model = read_model(model_fname);
+save model;
 
-for i = 1:N
-    tic;
-    point = model.points{i}.calc_descriptors([model_path 'db_img\'], model);
-    model.points{i} = point;
-    fprintf('Point %d with %d measurements prepared.\n', i, model.points{i}.measure_num);
-    toc;
-    if mod(i, 100) == 0
-        save model;
-    end
-end
+%% Offline model preparation
+model = create_model_descriptors(model, model_path);
+save model;

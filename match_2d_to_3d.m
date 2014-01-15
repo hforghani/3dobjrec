@@ -18,33 +18,35 @@ set(h1,'color','k','linewidth',3);
 set(h2,'color','y','linewidth',2);
 
 points_num = length(model.points);
-max_error = 1;
+max_error = 7;
 
 % Iterate on query image key points.
 for feature_index = 1:size(sift_frames, 2)
     query_f = sift_frames(:,feature_index);
-    query_meas = Measurement();
+    query_d = sift_descriptors(:,feature_index);
+%     query_meas = Measurement();
     point_pos = query_f(1:2,1);
-    multiscale_des = query_meas.calc_desc_in_scales(query_im, point_pos);
+%     multiscale_des = query_meas.calc_desc_in_scales(query_im, point_pos);
     fprintf('%i : query point (%f, %f):\n', feature_index, point_pos(1), point_pos(2));
 
     % Iterate on points.
     for point_index = 1:points_num
         pt = model.points{point_index};
-        fprintf('%i : model point (%f, %f, %f) : ', point_index, pt.pos(1), pt.pos(2), pt.pos(3));
+%         fprintf('%i : model point (%f, %f, %f) : ', point_index, pt.pos(1), pt.pos(2), pt.pos(3));
 
         % Iterate on 3d point measurements.
         for measure_i = 1:pt.measure_num
             meas = pt.measurements{measure_i};
-            [f, d, dist] = meas.multiscale_desc.get_best_match(multiscale_des.multiscale_desc);
+%             [f, d, dist] = meas.multiscale_desc.get_best_match(multiscale_des);
+            [f, d, dist] = meas.get_best_match(query_f, query_d);
             
-            fprintf('%i:%f, ', meas.image_index, dist);
+%             fprintf('%i:%f, ', meas.image_index, dist);
             if dist < max_error
-                fprintf('\n====== Matched: (%d, %d) to (%d, %d, %d) ======\n', ...
-                    query_f(1), query_f(2), pt.pos(1), pt.pos(2), pt.pos(3));
+                fprintf('\n====== Matched: (%f, %f) to (%f, %f, %f) : %f ======\n', ...
+                    query_f(1), query_f(2), pt.pos(1), pt.pos(2), pt.pos(3), dist);
             end
         end
-        fprintf('\n');
+%         fprintf('\n');
     end
 end
 
