@@ -118,11 +118,18 @@ classdef Measurement
         
         function index = get_nearest_scale_index(self, scale)
             scales = self.min_scale : self.scale_step : self.max_scale;
-            index = length(scales);
+            index = -1;
             for i = 1:length(scales)
-                if scales(i) - scale <= self.scale_step / 2
+                if abs(scales(i) - scale) <= self.scale_step / 2
                     index = i;
                     break;
+                end
+            end
+            if index == -1
+                if scale > self.max_scale
+                    index = length(scales);
+                else
+                    index = 1;
                 end
             end
         end
