@@ -1,5 +1,6 @@
-function matches = match_2d_to_3d(I, model)
-% Match 2d features of I with 3d features of model.
+function [matches2d, matches3d] = match_2d_to_3d(I, model)
+% matches: [2dpoints, 3dpoints] where 2dpoints is 2*N and 3dpoints is a
+% cell array of Point instances of size N*1.
 
 %%Extract features.
 query_im = single(rgb2gray(I));
@@ -10,15 +11,18 @@ figure;
 imshow(I);
 hold on;
 
+% Show some of features.
 perm = randperm(size(sift_frames,2));
-sel = perm(1:500);
+sel = perm(1:1000);
 h1 = vl_plotframe(sift_frames(:,sel));
 h2 = vl_plotframe(sift_frames(:,sel));
 set(h1,'color','k','linewidth',3);
 set(h2,'color','y','linewidth',2);
 
 points_num = length(model.points);
-max_error = 7;
+matches2d = [];
+matches3d = {};
+max_error = 100;
 
 % Iterate on query image key points.
 for feature_index = 1:size(sift_frames, 2)
@@ -42,12 +46,13 @@ for feature_index = 1:size(sift_frames, 2)
             
 %             fprintf('%i:%f, ', meas.image_index, dist);
             if dist < max_error
+                matches2d = [matches2d, point_pos];
+                matches3d = {matches3d; pt};
                 fprintf('\n====== Matched: (%f, %f) to (%f, %f, %f) : %f ======\n', ...
                     query_f(1), query_f(2), pt.pos(1), pt.pos(2), pt.pos(3), dist);
+                break;
             end
         end
 %         fprintf('\n');
     end
 end
-
-matches = [];
