@@ -19,13 +19,16 @@ classdef Point
             self.measurements = measurements;
         end
         
-        function self = calc_descriptors(self, img_fold_name, model)
-%             desc_arr = [];
+        function self = calc_multiscale_descriptors(self, img_fold_name, model)
             for i = 1:self.measure_num
-                self.measurements{i} = self.measurements{i}.calc_descriptors(img_fold_name, model);
-%                 desc_arr = [desc_arr, meas.descriptors];
+                self.measurements{i} = self.measurements{i}.calc_multiscale_descriptors(img_fold_name, model);
             end
-%             self.descriptor = desc_arr;
+        end
+        
+        function self = calc_descriptor(self, img_fold_name, model)
+            for i = 1:self.measure_num
+                self.measurements{i} = self.measurements{i}.calc_descriptor(img_fold_name, model);
+            end            
         end
     end
     

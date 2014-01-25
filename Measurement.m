@@ -8,12 +8,15 @@ classdef Measurement
         pos;
         
         multiscale_desc;
+        singlescale_desc;
     end
     
     properties (SetAccess = private)
         min_scale = 1.5;
         max_scale = 5;
         scale_step = 0.1;
+        
+        single_scale = 8/3;
     end
     
     methods
@@ -56,7 +59,7 @@ classdef Measurement
             multiscale_desc = MultiscaleDescriptor(fr_array, de_array);
         end
         
-        function self = calc_descriptors(self, img_fold_name, model)
+        function self = calc_multiscale_descriptors(self, img_fold_name, model)
             % Calculate and save descriptors property.
             % img_fold_name : folder if camera images in dataset.
             % model: model class of dataset.
@@ -68,33 +71,38 @@ classdef Measurement
             self.multiscale_desc = self.calc_desc_in_scales(im_gray, pos_in_camera);
         end
         
-        function [f, d, min_dist] = get_best_multiscale_match(self, desc)
-            % Get best matching descriptor between all descriptor pairs of
-            % this multi-scale descriptor and the multi-scale descriptor given.
-            % desc : an instance of MultiscaleDescriptor.
-            % f : best matched frame.
-            % d : best matched descriptor.
-            % min_dist: minimum distance.
-            scales_size = size(self.frames_array, 1);
+        function self = calc_descriptor(self, img_fold_name, model)
+            file_name = model.cameras{self.image_index}.file_name;
+            im = imread([img_fold_name, file_name]);
+            im_gray = single(rgb2gray(im));
+            pos_in_camera = self.get_pos_in_camera(model.calibration);
+            
+            fr = [pos_in_camera; self.single_scale; 0];
+
+            [frames, desc] = vl_sift(im_gray, 'frames', fr, 'orientations');
+            self.singlescale_desc = desc;
+        end
+        
+        function [d, min_dist] = get_best_match_to_singlescale(self, desc)
+            % Get distance of the descriptor given to the single-scale
+            % descriptor of self.
+            % desc : descriptor
+            % dist: distance;
             min_dist = -1;
-            f = []; d = [];
-            for s = 1 : scales_size
-                self_desc = self.descriptors_array{s};
-                other_desc = desc.descriptors_array{s};
-                for self_i = 1 : size(self_desc, 2)
-                    for other_i = 1 : size(other_desc, 2)
-                        dist = norm(double(self_desc(:,self_i) - other_desc(:,other_i)));
-                        if min_dist == -1 || dist < min_dist
-                            min_dist = dist;
-                            d = self_desc(:,self_i);
-                            f = self.frames_array{s}(:,self_i);
-                        end
+            d = [];
+            self_desc = self.singlescale_desc;
+            for self_i = 1 : size(self_desc, 2)
+                for other_i = 1 : size(desc, 2)
+                    dist = norm(double(self_desc(:,self_i) - desc(:,other_i)));
+                    if min_dist == -1 || dist < min_dist
+                        min_dist = dist;
+                        d = self_desc(:,self_i);
                     end
                 end
             end
         end
         
-        function [f, d, min_dist] = get_best_match(self, frame, desc)
+        function [f, d, min_dist] = get_best_match_to_multiscale(self, frame, desc)
             % Get best matching descriptor between all descriptor pairs of
             % this multi-scale descriptor and the descriptor given.
             % frame: sift frame

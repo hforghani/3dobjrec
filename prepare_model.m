@@ -1,3 +1,4 @@
+clc; clearvars;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 
@@ -8,5 +9,6 @@ model = read_model(model_fname);
 save model;
 
 %% Offline model preparation
-model = create_model_descriptors(model, model_path);
+% model = model.calc_multiscale_descriptors(model_path);
+model = model.calc_descriptor(model_path);
 save model;
