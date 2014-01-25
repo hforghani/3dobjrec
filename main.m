@@ -2,17 +2,18 @@ clc; clearvars; close all;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 
-% load model;
-load model_multiscale;
+% model_f_name = 'data/model_anchiceratops_multi.mat';
+model_f_name = 'data/model_ankylosaurus_brown_multi.mat';
+matches_f_name = 'data/matches_ankylosaurus_brown.mat';
+% test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
+test_im_name = 'test.jpg';
 
-% model_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
-% colored = imread([model_path 'db_img\1090.jpg']);
-path = 'test.jpg';
-image = imread(path);
+load(model_f_name);
+image = imread(test_im_name);
 
 %% Match 2d-to-3d
 [matches2d, matches3d] = match_2d_to_3d(image, model);
-save('matches.mat', 'matches2d', 'matches3d');
+save(matches_f_name, 'matches2d', 'matches3d');
 
 figure;
 imshow(image);

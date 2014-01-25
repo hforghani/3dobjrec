@@ -5,12 +5,12 @@ function [matches2d, matches3d] = match_2d_to_3d(I, model)
 %% Extract features.
 query_im = single(rgb2gray(I));
 
-bin_size = 8;
-magnif = 3;
-[sift_frames, sift_descriptors] = vl_dsift(query_im, 'size', bin_size, 'step', 5);
-sift_frames(3,:) = bin_size / magnif ;
-sift_frames(4,:) = 0;
-% [sift_frames, sift_descriptors] = vl_sift(query_im);
+% bin_size = 8;
+% magnif = 3;
+% [sift_frames, sift_descriptors] = vl_dsift(query_im, 'size', bin_size, 'step', 5);
+% sift_frames(3,:) = bin_size / magnif ;
+% sift_frames(4,:) = 0;
+[sift_frames, sift_descriptors] = vl_sift(query_im);
 
 query_points_num = size(sift_frames, 2);
 fprintf('%d descriptors extracted.\n', query_points_num);
@@ -53,7 +53,7 @@ for feature_index = 1:query_points_num
             distances(measure_i) = dist;
             if dist < max_error
                 matches2d = [matches2d, point_pos];
-                matches3d = {matches3d; pt};
+                matches3d = [matches3d; {pt}];
                 fprintf('\n====== Matched: (%f, %f) to (%f, %f, %f) : %f ======\n', ...
                     query_f(1), query_f(2), pt.pos(1), pt.pos(2), pt.pos(3), dist);
                 break;
