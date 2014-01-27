@@ -1,8 +1,10 @@
-%close all;
+clearvars;
 
-model_path = 'E:\datasets\Microsoeft_research\0-24(1)\0-24\anchiceratops\';
-model_fname = [model_path 'model.nvm'];
-model = read_model(model_fname);
+model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
+model_data_f_name = 'data/model_ankylosaurus_brown_multi.mat';
+
+model_fname = [model_data_path 'model.nvm'];
+load(model_data_f_name);
 
 %% Show a camera and its points.
 point_index = 1001;
@@ -19,7 +21,7 @@ for measure_i = 1:6
     measurement = pt.measurements{measure_i};
     image_index = measurement.image_index;    
     file_name = model.cameras{image_index}.file_name;
-    I = imread([model_path 'db_img\' file_name]);
+    I = imread([model_data_path 'db_img\' file_name]);
     
     cal = model.calibration;
     Kc = [1 0 cal.cx; 0 cal.fy/cal.fx cal.cy; 0 0 1];
