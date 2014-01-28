@@ -1,4 +1,4 @@
-clearvars; close all;
+clearvars; close all; clc;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 

@@ -1,6 +1,7 @@
-function [matches2d, matches3d] = match_2d_to_3d(I, model)
-% matches: [2dpoints, 3dpoints] where 2dpoints is 2*N and 3dpoints is a
-% cell array of Point instances of size N*1.
+function [matches2d, matches3d, matches_dist] = match_2d_to_3d(I, model)
+% matches2d : 2*N ; matches of query image.
+% matches3d : cell array of Point instances of size N*1.
+% matches_dist : distances of query and model points for matches.
 addpath model;
 
 %% Extract features.
@@ -33,7 +34,7 @@ set(h2,'color','y','linewidth',2);
 points_num = length(model.points);
 matches2d = [];
 matches3d = [];
-distances = [];
+matches_dist = [];
 max_error = 100;
 
 % Iterate on query image key points.
@@ -43,26 +44,39 @@ for feature_index = 1:query_points_num
     query_d = sift_descriptors(:,feature_index);
     point_pos = query_f(1:2,1);
 
-    % Iterate on points.
+    % Iterate on 3d points.
+    good_point_indices = [];
+    good_point_dist = [];
+    all_point_dist = [];
     for point_index = 1:points_num
         pt = model.points{point_index};
-        point_dist = zeros(pt.measure_num, 1);
         % Iterate on 3d point measurements.
         for measure_i = 1:pt.measure_num
             meas = pt.measurements{measure_i};
             [f, d, dist] = meas.get_best_match_to_multiscale(query_f, query_d);
 %             [d, dist] = meas.get_best_match_to_singlescale(query_d);
-            point_dist(measure_i) = dist;
+            all_point_dist = [all_point_dist; dist];
             if dist < max_error
-                matches2d = [matches2d, point_pos];
-                matches3d = [matches3d, pt.pos];
-                fprintf('\n====== Matched: (%f, %f) to (%f, %f, %f) : %f ======\n', ...
-                    query_f(1), query_f(2), pt.pos(1), pt.pos(2), pt.pos(3), dist);
+                good_point_indices = [good_point_indices; point_index];
+                good_point_dist = [good_point_dist; dist];
                 break;
             end
         end
     end
-    min_dist = min(point_dist);
+    
+    % Add best match to the matches.
+    if ~isempty(good_point_indices)
+        [min_dist, i] = min(good_point_dist);
+        min_index = good_point_indices(i);
+        matches2d = [matches2d, point_pos];
+        pos = model.points{min_index}.pos;
+        matches3d = [matches3d, pos];
+        matches_dist = [matches_dist, min_dist];
+        fprintf('\n====== Matched: (%f, %f) to (%f, %f, %f) : %f ======\n', ...
+            query_f(1), query_f(2), pos(1), pos(2), pos(3), min_dist);
+    else
+        min_dist = min(all_point_dist);
+    end
     toc;
     fprintf('%i : query point (%f, %f) with min dist %f done.\n', ...
         feature_index, point_pos(1), point_pos(2), min_dist);
