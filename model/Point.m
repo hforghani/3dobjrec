@@ -25,11 +25,11 @@ classdef Point
             end
         end
         
-        function self = calc_descriptor(self, img_fold_name, model)
-            for i = 1:self.measure_num
-                self.measurements{i} = self.measurements{i}.calc_descriptor(img_fold_name, model);
-            end            
-        end
+%         function self = calc_descriptor(self, img_fold_name, model)
+%             for i = 1:self.measure_num
+%                 self.measurements{i} = self.measurements{i}.calc_descriptor(img_fold_name, model);
+%             end            
+%         end
         
         function show_measurements(self, model, model_data_path)
             % Show up to 6 measurements in their camera images.

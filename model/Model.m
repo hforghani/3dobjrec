@@ -29,19 +29,34 @@ classdef Model
             end
         end
 
-        function self = calc_descriptor(self, model_path)
-            N = size(self.points, 1);
-            for i = 1:N
-                tic;
-                point = self.points{i}.calc_descriptor([model_path 'db_img\'], self);
-                self.points{i} = point;
-                fprintf('Point %d with %d measurements prepared.\n', i, self.points{i}.measure_num);
-                toc;
-                if mod(i, 100) == 0
+%         function self = calc_descriptor(self, model_path)
+%             N = size(self.points, 1);
+%             for i = 1:N
+%                 tic;
+%                 point = self.points{i}.calc_descriptor([model_path 'db_img\'], self);
+%                 self.points{i} = point;
+%                 fprintf('Point %d with %d measurements prepared.\n', i, self.points{i}.measure_num);
+%                 toc;
+%                 if mod(i, 100) == 0
+%                     save model;
+%                 end
+%             end
+%         end
+        
+        function self = calc_single_desc(self, model_path)
+            for i = 1:length(self.cameras)
+%                 tic;
+                cam = self.cameras{i};
+                scale = 1.2;
+                % TODO: Save descriptors in points.
+                cam.calc_single_desc(scale, self, model_path);                
+%                 toc;
+                if mod(i, 10) == 0
                     save model;
                 end
             end
         end
+        
     end
     
 end

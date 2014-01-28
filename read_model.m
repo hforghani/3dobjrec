@@ -23,6 +23,7 @@ for i = 1:camera_num
     fgetl(fid);
 
     cameras{i} = Camera(file_name, focal_length, q_rotation, center, r_distortion);
+    cameras{i}.index = i;
 end
 
 %% Read points data.

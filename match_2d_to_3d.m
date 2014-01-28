@@ -68,8 +68,8 @@ for feature_index = 1:query_points_num
         % Iterate on 3d point measurements.
         for measure_i = 1:pt.measure_num
             meas = pt.measurements{measure_i};
-            [f, d, dist] = meas.get_best_match_to_multiscale(query_f, query_d);
-%             [d, dist] = meas.get_best_match_to_singlescale(query_d);
+%             [f, d, dist] = meas.get_best_match_to_multiscale(query_f, query_d);
+            [d, dist] = meas.get_best_match_to_singlescale(query_d);
             all_point_dist = [all_point_dist; dist];
             if dist < max_error
                 good_point_indices = [good_point_indices; point_index];
