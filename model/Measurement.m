@@ -16,7 +16,7 @@ classdef Measurement
         max_scale = 5;
         scale_step = 0.1;
         
-        single_scale = 8/3;
+        single_scale = 1.2;
     end
     
     methods
