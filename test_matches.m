@@ -1,4 +1,3 @@
-
 clearvars; close all;
 
 test_im_name = 'test.jpg';

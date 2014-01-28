@@ -1,10 +1,11 @@
-clc; clearvars; close all;
+clearvars; close all;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 
-% model_f_name = 'data/model_anchiceratops_multi.mat';
-model_f_name = 'data/model_ankylosaurus_brown_multi.mat';
-matches_f_name = 'data/matches_ankylosaurus_brown.mat';
+model_f_name = 'data/model_anchiceratops_multi.mat';
+% model_f_name = 'data/model_ankylosaurus_brown_multi.mat';
+matches_f_name = 'data/matches_anchiceratops.mat';
+% matches_f_name = 'data/matches_ankylosaurus_brown.mat';
 % test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
 test_im_name = 'test.jpg';
 

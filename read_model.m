@@ -1,6 +1,6 @@
 function model = read_model(model_fname)
 % Read data from model file and read the model.
-
+addpath model;
 fid = fopen(model_fname);
 
 %% Read cameras data.

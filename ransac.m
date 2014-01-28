@@ -2,7 +2,7 @@
 %
 % Usage:
 %
-% [M, inliers] = ransac(x, fittingfn, distfn, degenfn s, t, feedback, ...
+% [M, inliers] = ransac(x, fittingfn, distfn, degenfn ,s, t, feedback, ...
 %                       maxDataTrials, maxTrials)
 %
 % Arguments:

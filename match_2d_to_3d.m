@@ -1,6 +1,7 @@
 function [matches2d, matches3d] = match_2d_to_3d(I, model)
 % matches: [2dpoints, 3dpoints] where 2dpoints is 2*N and 3dpoints is a
 % cell array of Point instances of size N*1.
+addpath model;
 
 %% Extract features.
 query_im = single(rgb2gray(I));
@@ -31,7 +32,8 @@ set(h2,'color','y','linewidth',2);
 %% Register 2d to 3d.
 points_num = length(model.points);
 matches2d = [];
-matches3d = {};
+matches3d = [];
+distances = [];
 max_error = 100;
 
 % Iterate on query image key points.
@@ -44,23 +46,23 @@ for feature_index = 1:query_points_num
     % Iterate on points.
     for point_index = 1:points_num
         pt = model.points{point_index};
-        distances = zeros(pt.measure_num, 1);
+        point_dist = zeros(pt.measure_num, 1);
         % Iterate on 3d point measurements.
         for measure_i = 1:pt.measure_num
             meas = pt.measurements{measure_i};
             [f, d, dist] = meas.get_best_match_to_multiscale(query_f, query_d);
 %             [d, dist] = meas.get_best_match_to_singlescale(query_d);
-            distances(measure_i) = dist;
+            point_dist(measure_i) = dist;
             if dist < max_error
                 matches2d = [matches2d, point_pos];
-                matches3d = [matches3d; {pt}];
+                matches3d = [matches3d, pt.pos];
                 fprintf('\n====== Matched: (%f, %f) to (%f, %f, %f) : %f ======\n', ...
                     query_f(1), query_f(2), pt.pos(1), pt.pos(2), pt.pos(3), dist);
                 break;
             end
         end
     end
-    min_dist = min(distances);
+    min_dist = min(point_dist);
     toc;
     fprintf('%i : query point (%f, %f) with min dist %f done.\n', ...
         feature_index, point_pos(1), point_pos(2), min_dist);
