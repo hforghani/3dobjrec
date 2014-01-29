@@ -10,7 +10,8 @@ classdef Camera
         r_distortion;
         
         index;
-        singlescale_desc
+        singlescale_desc;
+        single_desc_point_indexes;
     end
     
     methods
@@ -26,14 +27,18 @@ classdef Camera
             measurements = self.get_measurements(model);
 
             frames = zeros(4,length(measurements));
+%             meas_indexes = [];
+            point_indexes = [];
             for j = 1:length(measurements)
                 frames(1:2,j) = measurements{j}.get_pos_in_camera(model.calibration);
+                point_indexes = [point_indexes measurements{j}.point_index];
             end
             frames(3,:) = scale;
 
             im_gray = single(rgb2gray(self.get_image(model_path)));
             [~, desc] = vl_sift(im_gray, 'frames', frames);
             self.singlescale_desc = desc;
+            self.single_desc_point_indexes = point_indexes;
             
             fprintf('Single descriptor of cemera %d with %d measurements calculated.\n', self.index, length(measurements));
         end

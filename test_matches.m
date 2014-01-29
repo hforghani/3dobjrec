@@ -1,13 +1,16 @@
 close all;
 
 test_im_name = 'test.jpg';
-% matches_f_name = 'data/matches_anchiceratops';
+matches_f_name = 'data/matches_anchiceratops';
 % matches_f_name = 'data/matches_anchiceratops_dense';
-matches_f_name = 'data/matches_ankylosaurus_brown_dense';
-% model_f_name = 'data/model_anchiceratops_multi';
-model_f_name = 'data/model_ankylosaurus_brown_multi';
-% model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
-model_data_path = [get_dataset_path() '0-24(1)\0-24\ankylosaurus_brown\'];
+% matches_f_name = 'data/matches_anchiceratops_dense';
+
+model_f_name = 'data/model_anchiceratops_multi';
+% model_f_name = 'data/model_anchiceratops_single';
+% model_f_name = 'data/model_ankylosaurus_brown_multi';
+
+model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
+% model_data_path = [get_dataset_path() '0-24(1)\0-24\ankylosaurus_brown\'];
 
 matches = load(matches_f_name);
 matches2d = matches.matches2d;

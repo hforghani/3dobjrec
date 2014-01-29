@@ -9,6 +9,7 @@ classdef Measurement
         
         multiscale_desc;
         singlescale_desc;
+        point_index;
     end
     
     properties (SetAccess = private)

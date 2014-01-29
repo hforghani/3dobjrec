@@ -2,8 +2,9 @@ clearvars; close all; clc;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 
-model_f_name = 'data/model_anchiceratops_multi.mat';
+% model_f_name = 'data/model_anchiceratops_multi.mat';
 % model_f_name = 'data/model_ankylosaurus_brown_multi.mat';
+model_f_name = 'data/model_anchiceratops_single.mat';
 
 % matches_f_name = 'data/matches_anchiceratops.mat';
 matches_f_name = 'data/matches_anchiceratops_dense.mat';
@@ -16,7 +17,10 @@ load(model_f_name);
 image = imread(test_im_name);
 
 %% Match 2d-to-3d
-[matches2d, matches3d, matches_dist] = match_2d_to_3d(image, model, matches_f_name);
+% [matches2d, matches3d, matches_dist] = match_2d_to_3d(image, model, matches_f_name);
+scale = 1.2;
+[matches2d, matches3d, matches_dist] = match_2d_to_3d_single(image, model, matches_f_name, scale);
+
 save(matches_f_name, 'matches2d', 'matches3d', 'matches_dist');
 
 figure;

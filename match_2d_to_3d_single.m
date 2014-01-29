@@ -1,4 +1,4 @@
-function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, matches_f_name)
+function [matches2d, matches3d, matches_dist] = match_2d_to_3d_single(color_im, model, matches_f_name, scale)
 % matches2d : 2*N; points of query image.
 % matches3d : points of 3d model.; 4*N, each column: [point_index; point_pos]
 % matches_dist : distances of query and model points for matches.
@@ -8,13 +8,16 @@ tic;
 
 %% Extract features.
 % parameters for dense matching.
-step = 2;
-bin_size = 3.6;
+step = 4;
+magnif = 3;
+bin_size = scale * magnif;
 
 query_im = single(rgb2gray(color_im));
 
-% regular matching
-[sift_frames, sift_descriptors] = vl_sift(query_im);
+% dense matching
+[sift_frames, sift_descriptors] = vl_dsift(query_im, 'size', bin_size, 'step', step);
+sift_frames(3,:) = scale;
+sift_frames(4,:) = 0;
 
 query_points_num = size(sift_frames, 2);
 fprintf('%d descriptors extracted.\n', query_points_num);
@@ -33,10 +36,10 @@ fprintf('%d descriptors extracted.\n', query_points_num);
 % set(h2,'color','y','linewidth',2);
 
 %% Register 2d to 3d.
-max_error = 100;
+max_error = 40;
 max_color_dist = 20;
 
-points_num = length(model.points);
+camera_count = length(model.cameras);
 matches2d = [];
 matches3d = [];
 matches_dist = [];
@@ -54,24 +57,32 @@ for feature_index = 1:query_points_num
     good_point_indices = [];
     good_point_dist = [];
     all_point_dist = [];
-    for point_index = 1:points_num
-        pt = model.points{point_index};
-        if norm(pt.color - query_color) > max_color_dist
-            continue;
-        end
-        % Iterate on 3d point measurements.
-        for measure_i = 1:pt.measure_num
-            meas = pt.measurements{measure_i};
-            
-            [f, d, dist] = meas.get_best_match_to_multiscale(query_f, query_d);
-            
-            all_point_dist = [all_point_dist; dist];
-            if dist < max_error
-                good_point_indices = [good_point_indices; point_index];
-                good_point_dist = [good_point_dist; dist];
-                break;
-            end
-        end
+    
+    % Iterate on cameras.
+    for camera_index = 1:camera_count
+        cam = model.cameras{camera_index};
+        desc_count = size(cam.singlescale_desc, 2);
+        dif = cam.singlescale_desc - repmat(query_d, 1, desc_count);
+        dif_norms = sum(dif .^ 2) .^ 0.5;
+        low_errors = dif_norms(dif_norms < max_error);
+        low_err_indexes = cam.single_desc_point_indexes(dif_norms < max_error);
+        good_point_dist = [good_point_dist low_errors];
+        good_point_indices = [good_point_indices low_err_indexes];
+%         if norm(cam.color - query_color) > max_color_dist
+%             continue;
+%         end
+%         % Iterate on 3d point measurements.
+%         for measure_i = 1:cam.measure_num
+%             meas = cam.measurements{measure_i};
+% %             [f, d, dist] = meas.get_best_match_to_multiscale(query_f, query_d);
+%             [d, dist] = meas.get_best_match_to_singlescale(query_d);
+%             all_point_dist = [all_point_dist; dist];
+%             if dist < max_error
+%                 good_point_indices = [good_point_indices; camera_index];
+%                 good_point_dist = [good_point_dist; dist];
+%                 break;
+%             end
+%         end
     end
     
     % Add best match to the matches.
@@ -93,7 +104,7 @@ for feature_index = 1:query_points_num
     if min_dist
         fprintf('Min dist = %f.\n', min_dist);
     else
-        fprintf('No color match.\n');
+        fprintf('No accepted match.\n');
     end
     
     % Save in determined intervals.

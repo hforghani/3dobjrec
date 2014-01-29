@@ -18,7 +18,8 @@ save (model_f_name, 'model');
 
 %% Offline model preparation
 % model = model.calc_multiscale_descriptors(model_data_path);
-model = model.calc_single_desc(model_data_path);
+scale = 1.2;
+model = model.calc_single_desc(scale, model_data_path);
 save (model_f_name, 'model');
 
 toc;

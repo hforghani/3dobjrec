@@ -23,8 +23,7 @@ for measure_i = 1:6
     file_name = model.cameras{image_index}.file_name;
     I = imread([model_data_path 'db_img\' file_name]);
     
-    cal = model.calibration;
-    Kc = [1 0 cal.cx; 0 cal.fy/cal.fx cal.cy; 0 0 1];
+    Kc = model.get_intrinsic_matrix();
     point = Kc * [measurement.pos; 1];
     
     imshow(I);
