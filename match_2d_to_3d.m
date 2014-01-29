@@ -1,4 +1,4 @@
-function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, matches_f_name)
+function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, matches_f_name, edge_thresh)
 % matches2d : 2*N; points of query image.
 % matches3d : points of 3d model.; 4*N, each column: [point_index; point_pos]
 % matches_dist : distances of query and model points for matches.
@@ -14,7 +14,7 @@ bin_size = 3.6;
 query_im = single(rgb2gray(color_im));
 
 % regular matching
-[sift_frames, sift_descriptors] = vl_sift(query_im);
+[sift_frames, sift_descriptors] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
 
 query_points_num = size(sift_frames, 2);
 fprintf('%d descriptors extracted.\n', query_points_num);

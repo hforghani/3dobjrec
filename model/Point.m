@@ -47,7 +47,7 @@ classdef Point
                 I = imread([model_data_path 'db_img\' file_name]);
 
                 cal = model.calibration;
-                Kc = model.get_intrinsic_matrix();
+                Kc = model.get_Kc();
                 point = Kc * [measurement.pos; 1];
 
                 imshow(I);
