@@ -11,7 +11,8 @@ model_f_name = 'data/model_anchiceratops_multi';
 result_f_name = 'data/result_anchiceratops';
 % result_f_name = 'data/result_anchiceratops_dense';
 
-test_im_name = 'test.jpg';
+test_im_name = 'test/test1.jpg';
+% test_im_name = 'test/test2.jpg';
 
 matches = load(matches_f_name);
 matches2d = matches.matches2d;
