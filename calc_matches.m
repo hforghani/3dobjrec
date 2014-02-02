@@ -2,17 +2,19 @@ clearvars; close all; clc;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 
-model_f_name = 'data/model_anchiceratops_multi.mat';
-% model_f_name = 'data/model_ankylosaurus_brown_multi.mat';
+% model_f_name = 'data/model_anchiceratops_multi.mat';
 % model_f_name = 'data/model_anchiceratops_single.mat';
+% model_f_name = 'data/model_ankylosaurus_brown_multi.mat';
+model_f_name = 'data/model_ankylosaurus_brown_single.mat';
 
-matches_f_name = 'data/matches_anchi_test2_thresh100.mat';
+% matches_f_name = 'data/matches_anchi_test1_thresh100.mat';
 % matches_f_name = 'data/matches_anchiceratops_dense.mat';
-% matches_f_name = 'data/matches_ankylosaurus_brown.mat';
+% matches_f_name = 'data/matches_anky_test1_t100.mat';
+matches_f_name = 'data/matches_anky_test1_single.mat';
 
 % test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
-% test_im_name = 'test/test1.jpg';
-test_im_name = 'test/test2.jpg';
+test_im_name = 'test/test1.jpg';
+% test_im_name = 'test/test2.jpg';
 
 load(model_f_name);
 image = imread(test_im_name);

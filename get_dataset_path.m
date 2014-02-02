@@ -1,6 +1,6 @@
 function path = get_dataset_path()
 
-path = 'D:\datasets\Microsoeft_research\';
+path = 'D:\Hossein\Microsoeft_research\';
 
 end
 

@@ -27,25 +27,11 @@ classdef Model
             K = [cal.fx 0 cal.cx; 0 cal.fy cal.cy; 0 0 1];
         end
         
-        function self = calc_multiscale_descriptors(self, model_path)
-            N = size(self.points, 1);
-            for i = 1:N
-                tic;
-                point = self.points{i}.calc_multiscale_descriptors([model_path 'db_img\'], self);
-                self.points{i} = point;
-                fprintf('Point %d with %d measurements prepared.\n', i, self.points{i}.measure_num);
-                toc;
-                if mod(i, 100) == 0
-                    save model;
-                end
-            end
-        end
-
-%         function self = calc_descriptor(self, model_path)
+%         function self = calc_multiscale_descriptors(self, model_path)
 %             N = size(self.points, 1);
 %             for i = 1:N
 %                 tic;
-%                 point = self.points{i}.calc_descriptor([model_path 'db_img\'], self);
+%                 point = self.points{i}.calc_multiscale_descriptors([model_path 'db_img\'], self);
 %                 self.points{i} = point;
 %                 fprintf('Point %d with %d measurements prepared.\n', i, self.points{i}.measure_num);
 %                 toc;
@@ -54,17 +40,27 @@ classdef Model
 %                 end
 %             end
 %         end
-        
+
+        function self = calc_multi_desc(self, model_path)
+            fprintf('Calculating descriptors in %d cameras began.\n', length(self.cameras));
+            for i = 1:length(self.cameras)
+%                 tic;
+                cam = self.cameras{i};
+                cam = cam.calc_multi_desc(self, model_path);
+                self.cameras{i} = cam;
+%                 toc;
+            end
+        end
+
+    
         function self = calc_single_desc(self, scale, model_path)
+            fprintf('Calculating descriptors in %d cameras began.\n', length(self.cameras));
             for i = 1:length(self.cameras)
 %                 tic;
                 cam = self.cameras{i};
                 cam = cam.calc_single_desc(scale, self, model_path);
                 self.cameras{i} = cam;
 %                 toc;
-                if mod(i, 10) == 0
-                    save model;
-                end
             end
         end
 

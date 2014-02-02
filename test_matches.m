@@ -1,12 +1,14 @@
 close all;
 
-test_im_name = 'test.jpg';
-matches_f_name = 'data/matches_anchiceratops';
-% matches_f_name = 'data/matches_anchiceratops_dense';
-% matches_f_name = 'data/matches_anchiceratops_dense';
+test_im_name = 'test/test1.jpg';
 
-model_f_name = 'data/model_anchiceratops_multi';
-% model_f_name = 'data/model_anchiceratops_single';
+% matches_f_name = 'data/matches_anchiceratops';
+% matches_f_name = 'data/matches_anchi_test1_thresh100';
+matches_f_name = 'data/matches_anchiceratops_dense';
+% matches_f_name = 'data/matches_anchiceratops_morethresh';
+
+% model_f_name = 'data/model_anchiceratops_multi';
+model_f_name = 'data/model_anchiceratops_single';
 % model_f_name = 'data/model_ankylosaurus_brown_multi';
 
 model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
@@ -26,9 +28,9 @@ imshow(image);
 figure(1);
 hold on;
 scatter(matches2d(1,:), matches2d(2,:), 'r', 'filled');
-for i = 1:match_count
-    text(matches2d(1,i), matches2d(2,i), num2str(i), 'Color', 'y');
-end
+% for i = 1:match_count
+%     text(matches2d(1,i), matches2d(2,i), num2str(i), 'Color', 'y');
+% end
 
 disp('Select a key point on the image.');
 while 1

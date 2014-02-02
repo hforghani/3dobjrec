@@ -48,18 +48,6 @@ classdef Measurement
             self.multiscale_desc = self.calc_desc_in_scales(im_gray, pos_in_camera);
         end
         
-%         function self = calc_descriptor(self, img_fold_name, model)
-%             file_name = model.cameras{self.image_index}.file_name;
-%             im = imread([img_fold_name, file_name]);
-%             im_gray = single(rgb2gray(im));
-%             pos_in_camera = self.get_pos_in_camera(model.calibration);
-%             
-%             fr = [pos_in_camera; self.single_scale; 0];
-% 
-%             [frames, desc] = vl_sift(im_gray, 'frames', fr);
-%             self.singlescale_desc = desc;
-%         end
-        
         function multiscale_desc = calc_desc_in_scales(self, image, im_pos)
             % Calculate sift descriptors in a range of scales.
             % image: gray-scale image

@@ -2,14 +2,16 @@ clearvars; close all;
 addpath EPnP;
 
 %% Load data.
-matches_f_name = 'data/matches_anchiceratops';
-% matches_f_name = 'data/matches_anchiceratops_dense';
+% matches_f_name = 'data/matches_anchiceratops';
+% matches_f_name = 'data/matches_anchiceratops_dense1';
+matches_f_name = 'data/matches_anchiceratops_morethresh';
 
 model_f_name = 'data/model_anchiceratops_multi';
 % model_f_name = 'data/model_anchiceratops_single';
 
-result_f_name = 'data/result_anchiceratops';
+% result_f_name = 'data/result_anchiceratops';
 % result_f_name = 'data/result_anchiceratops_dense';
+result_f_name = 'data/result_anchi_test1_morethresh';
 
 test_im_name = 'test/test1.jpg';
 % test_im_name = 'test/test2.jpg';

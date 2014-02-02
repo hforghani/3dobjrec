@@ -36,7 +36,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d_single(color_im, 
     % set(h2,'color','y','linewidth',2);
 
     %% Register 2d to 3d.
-    max_error = 40;
+    max_error = 30;
     max_color_dist = 20;
 
     camera_count = length(model.cameras);
@@ -53,7 +53,6 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d_single(color_im, 
         query_color = color_im(round(query_pos(2)), round(query_pos(1)), :);
         query_color = double(reshape(query_color, 3,1));
 
-        % Iterate on 3d points.
         good_point_indices = [];
         good_point_dist = [];
         all_point_dist = [];
@@ -62,9 +61,11 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d_single(color_im, 
         for camera_index = 1:camera_count
             cam = model.cameras{camera_index};
             % Match by color.
-            is_matched = match_by_color(cam.single_desc_point_indexes, query_color, max_color_dist, model);
-            singlescale_desc = cam.singlescale_desc(:,is_matched);
-            single_desc_point_indexes = cam.single_desc_point_indexes(:,is_matched);
+%             is_matched = match_by_color(cam.single_desc_point_indexes, query_color, max_color_dist, model);
+%             singlescale_desc = cam.singlescale_desc(:,is_matched);
+%             single_desc_point_indexes = cam.single_desc_point_indexes(:,is_matched);
+            singlescale_desc = cam.singlescale_desc;
+            single_desc_point_indexes = cam.single_desc_point_indexes;
             % Match by descriptor.
             desc_count = size(singlescale_desc, 2);
             dif = singlescale_desc - repmat(query_d, 1, desc_count);
@@ -83,8 +84,8 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d_single(color_im, 
             pt = model.points{min_index};
             matches3d = [matches3d, [min_index; pt.pos]];
             matches_dist = [matches_dist, min_dist];
-            fprintf('\n====== Matched: (%f, %f) to (%f, %f, %f) : %f ======\n\n', ...
-                query_f(1), query_f(2), pt.pos(1), pt.pos(2), pt.pos(3), min_dist);
+            fprintf('\n====== Matched: (%f, %f) to point %d : %f ======\n\n', ...
+                query_f(1), query_f(2), min_index, min_dist);
         else
             min_dist = min(all_point_dist);
         end
@@ -113,7 +114,7 @@ function is_filtered = match_by_color(point_indexes, color, threshold, model)
 % is_filtered: binary result of filter
     pt_count = length(point_indexes);
     colors = zeros(3, pt_count);
-    for i = pt_count
+    for i = 1:pt_count
         colors(:,i) = model.points{point_indexes(i)}.color;
     end
     dif = colors - repmat(color, 1, pt_count);

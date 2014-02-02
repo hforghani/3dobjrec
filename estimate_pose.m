@@ -4,16 +4,17 @@ clearvars; close all;
 addpath EPnP;
 
 %% Load data.
-matches_f_name = 'data/matches_anchiceratops';
-% matches_f_name = 'data/matches_anchiceratops_dense';
+% matches_f_name = 'data/matches_anchiceratops';
+matches_f_name = 'data/matches_anchiceratops_dense';
+% matches_f_name = 'data/matches_anchiceratops_morethresh';
 
-model_f_name = 'data/model_anchiceratops_multi';
-% model_f_name = 'data/model_anchiceratops_single';
+% model_f_name = 'data/model_anchiceratops_multi';
+model_f_name = 'data/model_anchiceratops_single';
 
-result_f_name = 'data/result_anchiceratops';
-% result_f_name = 'data/result_anchiceratops_dense';
+% result_f_name = 'data/result_anchiceratops';
+result_f_name = 'data/result_anchiceratops_dense';
     
-test_im_name = 'test.jpg';
+test_im_name = 'test/test1.jpg';
 
 matches = load(matches_f_name);
 matches2d = matches.matches2d;
@@ -29,8 +30,8 @@ K = model.get_calib_matrix(); % calibration matrix
 %% Run P3P with RANSAC.
 corr_data = [matches2d; matches3d(2:4,:)];
 
-t = 50;
-s = 5;
+t = 100;
+s = 3;
 [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , s, t);
 rotation_mat = M(:,1:3);
 translation_mat = M(:,4);
@@ -38,18 +39,22 @@ save(result_f_name, 'rotation_mat', 'translation_mat', 'inliers');
 
 %% Draw inliers.
 image = imread(test_im_name);
-imshow(image);
 figure(1);
+imshow(image);
 hold on;
 scatter(matches2d(1,:), matches2d(2,:), 'r', 'filled');
 scatter(matches2d(1,inliers), matches2d(2,inliers), 'y', 'filled');
 
 %% Map points with the found transformation.
 points2d = model.project_points(rotation_mat, translation_mat);
+figure(2);
+imshow(image);
+hold on;
+scatter(matches2d(1,:), matches2d(2,:), 'r', 'filled');
 scatter(points2d(1,:), points2d(2,:), 10, 'g', 'filled');
 
-figure(2);
-scatter(points2d(1,:), points2d(2,:), 10, 'g', 'filled');
+% figure(3);
+% scatter(points2d(1,:), points2d(2,:), 10, 'g', 'filled');
 
 
 function M = epnp_fittingfn(data)
