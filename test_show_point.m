@@ -1,13 +1,14 @@
 clearvars;
 
 model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
-model_data_f_name = 'data/model_ankylosaurus_brown_multi.mat';
 
-model_fname = [model_data_path 'model.nvm'];
+model_data_f_name = 'data/model_anchiceratops_multi';
+% model_data_f_name = 'data/model_ankylosaurus_brown_multi';
+
 load(model_data_f_name);
 
 %% Show a camera and its points.
-point_index = 1001;
+point_index = 871;
 pt = model.points{point_index};
 
 figure(1);
@@ -28,6 +29,6 @@ for measure_i = 1:6
     
     imshow(I);
     hold on;
-    scatter(cal.cx, cal.cy, 100 , 'r+');
+    scatter(model.calibration.cx, model.calibration.cy, 100 , 'r+');
     scatter(point(1), point(2), 100 , 'y');
 end

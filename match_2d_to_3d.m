@@ -29,17 +29,13 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
     % set(h2,'color','y','linewidth',2);
 
     %% Register 2d to 3d.
-    max_error = 40;
+    max_error = 110;
     max_color_dist = 20;
 
     matches2d = [];
     matches3d = [];
     matches_dist = [];
 
-    good_point_indices = [];
-    good_point_dist = [];
-    all_point_dist = [];
-    
     % Iterate on query image key points.
     camera_count = length(model.cameras);
     for feature_index = 1:query_points_num
@@ -50,6 +46,9 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
         query_color = color_im(round(query_pos(2)), round(query_pos(1)), :);
         query_color = double(reshape(query_color, 3,1));
 
+        good_point_indices = [];
+        good_point_dist = [];
+    
         % Iterate on cameras.
         for camera_index = 1:camera_count
             cam = model.cameras{camera_index};
@@ -61,7 +60,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
             multi_desc_point_indexes = cam.multi_desc_point_indexes;
             % Match by descriptor.
             desc_count = size(multiscale_desc, 2);
-            dif = multiscale_desc - repmat(query_d, 1, desc_count);
+            dif = double(multiscale_desc) - double(repmat(query_d, 1, desc_count));
             dif_norms = sqrt(sum(dif .^ 2));
             low_errors = dif_norms(dif_norms < max_error);
             low_err_indexes = multi_desc_point_indexes(dif_norms < max_error);
@@ -79,8 +78,6 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
             matches_dist = [matches_dist, min_dist];
             fprintf('\n====== Matched: (%f, %f) to point %d : %f ======\n\n', ...
                 query_f(1), query_f(2), min_index, min_dist);
-        else
-            min_dist = min(all_point_dist);
         end
     %     toc;
         fprintf('%i : Query point (%f, %f) done. ', ...

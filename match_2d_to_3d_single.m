@@ -68,7 +68,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d_single(color_im, 
             single_desc_point_indexes = cam.single_desc_point_indexes;
             % Match by descriptor.
             desc_count = size(singlescale_desc, 2);
-            dif = singlescale_desc - repmat(query_d, 1, desc_count);
+            dif = double(singlescale_desc) - repmat(double(query_d), 1, desc_count);
             dif_norms = sum(dif .^ 2) .^ 0.5;
             low_errors = dif_norms(dif_norms < max_error);
             low_err_indexes = single_desc_point_indexes(dif_norms < max_error);

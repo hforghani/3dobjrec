@@ -3,12 +3,12 @@ close all;
 test_im_name = 'test/test1.jpg';
 
 % matches_f_name = 'data/matches_anchiceratops';
-% matches_f_name = 'data/matches_anchi_test1_thresh100';
-matches_f_name = 'data/matches_anchiceratops_dense';
+matches_f_name = 'data/matches_anchi_test1_thresh100';
+% matches_f_name = 'data/matches_anchiceratops_dense';
 % matches_f_name = 'data/matches_anchiceratops_morethresh';
 
-% model_f_name = 'data/model_anchiceratops_multi';
-model_f_name = 'data/model_anchiceratops_single';
+model_f_name = 'data/model_anchiceratops_multi';
+% model_f_name = 'data/model_anchiceratops_single';
 % model_f_name = 'data/model_ankylosaurus_brown_multi';
 
 model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
@@ -55,9 +55,6 @@ while 1
     point.show_measurements(model, model_data_path);
     fprintf('distance between 2d and 3d = %f\n', matches_dist(sel_index));
     reply = input('Do you want more? Y/N [Y]: ', 's');
-    if isempty(reply)
-        reply = 'Y';
-    end
     if reply == 'N'
         break;
     end
