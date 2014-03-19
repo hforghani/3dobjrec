@@ -17,7 +17,7 @@ test_im_name = 'test/test1.jpg';
 % test_im_name = 'test/test2.jpg';
 
 model_file = load(model_f_name);
-model = model.model;
+model = model_file.model;
 image = imread(test_im_name);
 
 %% Match 2d-to-3d

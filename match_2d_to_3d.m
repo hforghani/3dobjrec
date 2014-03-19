@@ -68,6 +68,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
             good_point_indices = [good_point_indices low_err_indexes];
         end
 
+        min_dist = [];
         % Add best match to the matches.
         if ~isempty(good_point_indices)
             [min_dist, i] = min(good_point_dist);
