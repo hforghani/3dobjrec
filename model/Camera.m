@@ -14,6 +14,7 @@ classdef Camera
         single_desc_point_indexes;
         multiscale_desc;
         multi_desc_point_indexes;
+        desc_kdtree;
     end
     
     properties (SetAccess = private)
@@ -81,6 +82,8 @@ classdef Camera
 
             self.multiscale_desc = desc;
             self.multi_desc_point_indexes = new_p_indexes;
+            
+            self.desc_kdtree = vl_kdtreebuild(double(self.multiscale_desc)) ;
             
             fprintf('Multi-scale descriptor of cemera %d with %d measurements calculated.\n', self.index, length(measurements));
         end

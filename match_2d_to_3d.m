@@ -11,6 +11,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 
     % regular matching
     [sift_frames, sift_descriptors] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
+    sift_descriptors = double(sift_descriptors);
 
     query_points_num = size(sift_frames, 2);
     fprintf('%d descriptors extracted.\n', query_points_num);
@@ -39,7 +40,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
     % Iterate on query image key points.
     camera_count = length(model.cameras);
     for feature_index = 1:query_points_num
-    %     tic;
+%         tic;
         query_f = sift_frames(:,feature_index);
         query_d = sift_descriptors(:,feature_index);
         query_pos = query_f(1:2,1);
@@ -56,16 +57,23 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 %             is_matched = match_by_color(cam.multi_desc_point_indexes, query_color, max_color_dist, model);
 %             multiscale_desc = cam.multiscale_desc(:,is_matched);
 %             multi_desc_point_indexes = cam.multi_desc_point_indexes(:,is_matched);
-            multiscale_desc = cam.multiscale_desc;
+            multiscale_desc = double(cam.multiscale_desc);
             multi_desc_point_indexes = cam.multi_desc_point_indexes;
             % Match by descriptor.
-            desc_count = size(multiscale_desc, 2);
-            dif = double(multiscale_desc) - double(repmat(query_d, 1, desc_count));
-            dif_norms = sqrt(sum(dif .^ 2));
-            low_errors = dif_norms(dif_norms < max_error);
-            low_err_indexes = multi_desc_point_indexes(dif_norms < max_error);
-            good_point_dist = [good_point_dist low_errors];
-            good_point_indices = [good_point_indices low_err_indexes];
+            % exhust search
+%             desc_count = size(multiscale_desc, 2);
+%             dif = multiscale_desc - double(repmat(query_d, 1, desc_count));
+%             dif_norms = sqrt(sum(dif .^ 2));
+%             low_errors = dif_norms(dif_norms < max_error);
+%             low_err_indexes = multi_desc_point_indexes(dif_norms < max_error);
+%             good_point_dist = [good_point_dist low_errors];
+%             good_point_indices = [good_point_indices low_err_indexes];
+            % using kd-tree
+            [index, distance] = vl_kdtreequery(cam.desc_kdtree, multiscale_desc, query_d);
+            if distance < max_error
+                good_point_dist = [good_point_dist, distance];
+                good_point_indices = [good_point_indices, multi_desc_point_indexes(index)];
+            end
         end
 
         min_dist = [];
@@ -80,7 +88,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
             fprintf('\n====== Matched: (%f, %f) to point %d : %f ======\n\n', ...
                 query_f(1), query_f(2), min_index, min_dist);
         end
-    %     toc;
+%         toc;
         fprintf('%i : Query point (%f, %f) done. ', ...
                     feature_index, query_pos(1), query_pos(2));
         if min_dist

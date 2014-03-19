@@ -27,20 +27,6 @@ classdef Model
             K = [cal.fx 0 cal.cx; 0 cal.fy cal.cy; 0 0 1];
         end
         
-%         function self = calc_multiscale_descriptors(self, model_path)
-%             N = size(self.points, 1);
-%             for i = 1:N
-%                 tic;
-%                 point = self.points{i}.calc_multiscale_descriptors([model_path 'db_img\'], self);
-%                 self.points{i} = point;
-%                 fprintf('Point %d with %d measurements prepared.\n', i, self.points{i}.measure_num);
-%                 toc;
-%                 if mod(i, 100) == 0
-%                     save model;
-%                 end
-%             end
-%         end
-
         function self = calc_multi_desc(self, model_path)
             fprintf('Calculating descriptors in %d cameras began.\n', length(self.cameras));
             for i = 1:length(self.cameras)
@@ -51,7 +37,6 @@ classdef Model
 %                 toc;
             end
         end
-
     
         function self = calc_single_desc(self, scale, model_path)
             fprintf('Calculating descriptors in %d cameras began.\n', length(self.cameras));
