@@ -70,6 +70,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 %             good_point_indices = [good_point_indices low_err_indexes];
             % using kd-tree
             [index, distance] = vl_kdtreequery(cam.desc_kdtree, multiscale_desc, query_d);
+            distance = sqrt(distance);
             if distance < max_error
                 good_point_dist = [good_point_dist, distance];
                 good_point_indices = [good_point_indices, multi_desc_point_indexes(index)];
