@@ -41,6 +41,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
     camera_count = length(model.cameras);
     for feature_index = 1:query_points_num
 %         tic;
+        
         query_f = sift_frames(:,feature_index);
         query_d = sift_descriptors(:,feature_index);
         query_pos = query_f(1:2,1);
@@ -89,7 +90,9 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
             fprintf('\n====== Matched: (%f, %f) to point %d : %f ======\n\n', ...
                 query_f(1), query_f(2), min_index, min_dist);
         end
+        
 %         toc;
+        
         fprintf('%i : Query point (%f, %f) done. ', ...
                     feature_index, query_pos(1), query_pos(2));
         if min_dist
