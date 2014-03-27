@@ -23,6 +23,7 @@ for i = 1:camera_num
     fgetl(fid);
 
     cameras{i} = Camera(file_name, focal_length, q_rotation, center, r_distortion);
+    cameras{i}.index = i;
 end
 
 %% Read points data.
@@ -38,6 +39,7 @@ for i = 1:points_num
         feature_index = fscanf(fid, '%d', 1);
         pos_in_image = fscanf(fid, '%f', 2);
         measurements{j} = Measurement(image_index, feature_index, pos_in_image);
+        measurements{j}.point_index = i;
     end
     points{i} = Point(pos, color, measure_num, measurements);
 end

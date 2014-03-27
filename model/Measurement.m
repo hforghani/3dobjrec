@@ -9,6 +9,7 @@ classdef Measurement
         
         multiscale_desc;
         singlescale_desc;
+        point_index;
     end
     
     properties (SetAccess = private)
@@ -16,7 +17,7 @@ classdef Measurement
         max_scale = 5;
         scale_step = 0.1;
         
-        single_scale = 8/3;
+        single_scale = 1.2;
     end
     
     methods
@@ -33,6 +34,18 @@ classdef Measurement
             Kc = [1 0 calibration.cx; 0 calibration.fy/calibration.fx calibration.cy; 0 0 1];
             pos = Kc * [self.pos; 1];
             pos = pos(1:2);
+        end
+        
+        function self = calc_multiscale_descriptors(self, img_fold_name, model)
+            % Calculate and save descriptors property.
+            % img_fold_name : folder if camera images in dataset.
+            % model: model class of dataset.
+            file_name = model.cameras{self.image_index}.file_name;
+            im = imread([img_fold_name, file_name]);
+            im_gray = single(rgb2gray(im));
+            
+            pos_in_camera = self.get_pos_in_camera(model.calibration);
+            self.multiscale_desc = self.calc_desc_in_scales(im_gray, pos_in_camera);
         end
         
         function multiscale_desc = calc_desc_in_scales(self, image, im_pos)
@@ -57,30 +70,6 @@ classdef Measurement
                 de_array{i} = de(:, indexes);
             end
             multiscale_desc = MultiscaleDescriptor(fr_array, de_array);
-        end
-        
-        function self = calc_multiscale_descriptors(self, img_fold_name, model)
-            % Calculate and save descriptors property.
-            % img_fold_name : folder if camera images in dataset.
-            % model: model class of dataset.
-            file_name = model.cameras{self.image_index}.file_name;
-            im = imread([img_fold_name, file_name]);
-            im_gray = single(rgb2gray(im));
-            
-            pos_in_camera = self.get_pos_in_camera(model.calibration);
-            self.multiscale_desc = self.calc_desc_in_scales(im_gray, pos_in_camera);
-        end
-        
-        function self = calc_descriptor(self, img_fold_name, model)
-            file_name = model.cameras{self.image_index}.file_name;
-            im = imread([img_fold_name, file_name]);
-            im_gray = single(rgb2gray(im));
-            pos_in_camera = self.get_pos_in_camera(model.calibration);
-            
-            fr = [pos_in_camera; self.single_scale; 0];
-
-            [frames, desc] = vl_sift(im_gray, 'frames', fr, 'orientations');
-            self.singlescale_desc = desc;
         end
         
         function [d, min_dist] = get_best_match_to_singlescale(self, desc)
