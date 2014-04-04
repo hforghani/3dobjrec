@@ -8,6 +8,15 @@ model_f_name = 'data/model_anchi_multi_kd';
 % model_f_name = 'data/model_ankylosaurus_brown_multi';
 % model_f_name = 'data/model_ankylosaurus_brown_single';
 
+matches_f_name = 'data/matches_anchi_test1_t100_kd';
+% matches_f_name = 'data/matches_anchi_test1_thresh100';
+% matches_f_name = 'data/matches_anchiceratops_dense';
+% matches_f_name = 'data/matches_anky_test1_t100';
+% matches_f_name = 'data/matches_anky_test1_single';
+
+test_im_name = 'test/test1.jpg';
+% test_im_name = 'test/test2.jpg';
+
 matches_f_name = 'data/matches_anchi_test0_t100_kd';
 % matches_f_name = 'data/matches_anchi_test1_thresh100';
 % matches_f_name = 'data/matches_anchiceratops_dense';
