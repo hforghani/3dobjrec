@@ -4,17 +4,20 @@ clearvars; close all;
 addpath EPnP;
 
 %% Load data.
+matches_f_name = 'data/matches_anchi_test0_t100_kd';
+% matches_f_name = 'data/matches_anchiceratops_morethresh';
 % matches_f_name = 'data/matches_anchiceratops';
 % matches_f_name = 'data/matches_anchiceratops_dense';
-matches_f_name = 'data/matches_anchiceratops_morethresh';
 
-model_f_name = 'data/model_anchiceratops_multi';
+model_f_name = 'data/model_anchi_multi_kd';
+% model_f_name = 'data/model_anchiceratops_multi';
 % model_f_name = 'data/model_anchiceratops_single';
 
-result_f_name = 'data/result_anchiceratops';
+result_f_name = 'data/result_anchi_kd';
 % result_f_name = 'data/result_anchiceratops_dense';
 
-test_im_name = 'test/test1.jpg';
+test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
+% test_im_name = 'test/test1.jpg';
 
 matches = load(matches_f_name);
 matches2d = matches.matches2d;
@@ -24,7 +27,6 @@ match_count = size(matches2d,2);
 
 model = load(model_f_name);
 model = model.model;
-cal = model.calibration;
 K = model.get_calib_matrix(); % calibration matrix
 
 %% Run P3P with RANSAC.

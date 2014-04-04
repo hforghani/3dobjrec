@@ -4,15 +4,24 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 % matches_dist : distances of query and model points for matches.
     addpath model;
 
-    tic;
+%     tic;
 
     %% Extract features.
     query_im = single(rgb2gray(color_im));
 
     % regular matching
     [sift_frames, sift_descriptors] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
-    sift_descriptors = double(sift_descriptors);
 
+%     % dense matching
+%     step = 2;
+%     magnif = 3;
+%     scale = 2;
+%     bin_size = scale * magnif;
+%     [sift_frames, sift_descriptors] = vl_dsift(query_im, 'size', bin_size, 'step', step);
+%     sift_frames(3,:) = scale;
+%     sift_frames(4,:) = 0;
+
+    sift_descriptors = double(sift_descriptors);
     query_points_num = size(sift_frames, 2);
     fprintf('%d descriptors extracted.\n', query_points_num);
 
@@ -40,7 +49,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
     % Iterate on query image key points.
     camera_count = length(model.cameras);
     for feature_index = 1:query_points_num
-%         tic;
+        tic;
         
         query_f = sift_frames(:,feature_index);
         query_d = sift_descriptors(:,feature_index);
@@ -91,7 +100,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
                 query_f(1), query_f(2), min_index, min_dist);
         end
         
-%         toc;
+        toc;
         
         fprintf('%i : Query point (%f, %f) done. ', ...
                     feature_index, query_pos(1), query_pos(2));
@@ -108,7 +117,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 
     end
 
-    toc;
+%     toc;
 end
 
 
