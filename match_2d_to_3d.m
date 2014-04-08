@@ -9,17 +9,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
     %% Extract features.
     query_im = single(rgb2gray(color_im));
 
-    % regular matching
     [sift_frames, sift_descriptors] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
-
-%     % dense matching
-%     step = 2;
-%     magnif = 3;
-%     scale = 2;
-%     bin_size = scale * magnif;
-%     [sift_frames, sift_descriptors] = vl_dsift(query_im, 'size', bin_size, 'step', step);
-%     sift_frames(3,:) = scale;
-%     sift_frames(4,:) = 0;
 
     sift_descriptors = double(sift_descriptors);
     query_points_num = size(sift_frames, 2);
@@ -70,15 +60,6 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
             multiscale_desc = double(cam.multiscale_desc);
             multi_desc_point_indexes = cam.multi_desc_point_indexes;
             % Match by descriptor.
-            % exhust search
-%             desc_count = size(multiscale_desc, 2);
-%             dif = multiscale_desc - double(repmat(query_d, 1, desc_count));
-%             dif_norms = sqrt(sum(dif .^ 2));
-%             low_errors = dif_norms(dif_norms < max_error);
-%             low_err_indexes = multi_desc_point_indexes(dif_norms < max_error);
-%             good_point_dist = [good_point_dist low_errors];
-%             good_point_indices = [good_point_indices low_err_indexes];
-            % using kd-tree
             [index, distance] = vl_kdtreequery(cam.desc_kdtree, multiscale_desc, query_d);
             distance = sqrt(distance);
             if distance < max_error
@@ -121,22 +102,22 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 end
 
 
-function is_filtered = match_by_color(point_indexes, color, threshold, model)
-% point_indexes: indexes of some points.
-% color: match color.
-% threshold: threshold of color difference.
-% is_filtered: binary result of filter
-    uniq_indexes = unique(point_indexes);
-    pt_count = length(point_indexes);
-    colors = zeros(3, pt_count);
-    for i = 1:length(uniq_indexes)
-        index = uniq_indexes(i);
-        col = model.points{index}.color;
-        colors(1, point_indexes == index) = col(1);
-        colors(2, point_indexes == index) = col(2);
-        colors(3, point_indexes == index) = col(3);
-    end
-    dif = colors - repmat(color, 1, pt_count);
-    dif_norms = sum(dif .^ 2) .^ 0.5;
-    is_filtered = dif_norms < threshold;
-end
+% function is_filtered = match_by_color(point_indexes, color, threshold, model)
+% % point_indexes: indexes of some points.
+% % color: match color.
+% % threshold: threshold of color difference.
+% % is_filtered: binary result of filter
+%     uniq_indexes = unique(point_indexes);
+%     pt_count = length(point_indexes);
+%     colors = zeros(3, pt_count);
+%     for i = 1:length(uniq_indexes)
+%         index = uniq_indexes(i);
+%         col = model.points{index}.color;
+%         colors(1, point_indexes == index) = col(1);
+%         colors(2, point_indexes == index) = col(2);
+%         colors(3, point_indexes == index) = col(3);
+%     end
+%     dif = colors - repmat(color, 1, pt_count);
+%     dif_norms = sum(dif .^ 2) .^ 0.5;
+%     is_filtered = dif_norms < threshold;
+% end
