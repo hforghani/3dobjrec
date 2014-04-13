@@ -1,29 +1,11 @@
-function estimate_pose()
+function estimate_pose(matches_f_name, model_f_name, test_im_name, result_f_name)
 
-clearvars; close all;
 addpath EPnP;
 
 %% Load data.
-matches_f_name = 'data/matches_anchi_test0_daisy_kd';
-% matches_f_name = 'data/matches_anchiceratops_morethresh';
-% matches_f_name = 'data/matches_anchiceratops';
-% matches_f_name = 'data/matches_anchiceratops_dense';
-
-model_f_name = 'data/model_anchi_daisy_kd';
-% model_f_name = 'data/model_anchiceratops_multi';
-% model_f_name = 'data/model_anchiceratops_single';
-
-result_f_name = 'data/result_anchi_daisy_kd';
-% result_f_name = 'data/result_anchiceratops_dense';
-
-test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
-% test_im_name = 'test/test1.jpg';
-
 matches = load(matches_f_name);
 matches2d = matches.matches2d;
 matches3d = matches.matches3d;
-matches_dist = matches.matches_dist;
-match_count = size(matches2d,2);
 
 model = load(model_f_name);
 model = model.model;
