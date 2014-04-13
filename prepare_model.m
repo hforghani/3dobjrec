@@ -3,6 +3,7 @@ tic;
 
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
+addpath daisy;
 
 model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
 % model_data_path = [get_dataset_path() '0-24(1)\0-24\ankylosaurus_brown\'];

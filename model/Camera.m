@@ -63,14 +63,20 @@ classdef Camera
 %             self.multiscale_desc = desc;
 %             self.multi_desc_point_indexes = new_p_indexes;
             
-            dzy = compute_daisy(im_gray);
             
-            self.multiscale_desc = zeros(400, length(measurements));
+            self.multiscale_desc = zeros(200, length(measurements));
             self.multi_desc_point_indexes = zeros(1, length(measurements));
             for i = 1:length(measurements)
                 meas_pos = measurements{i}.get_pos_in_camera(model.calibration);
-                desc = display_descriptor(dzy, meas_pos(2), meas_pos(1));
-                self.multiscale_desc(:,i) = reshape(desc, 400, 1);
+                x = meas_pos(1);
+                y = meas_pos(2);
+                x1 = max(1, x-50);
+                x2 = min(size(im_gray,2), x+50);
+                y1 = max(1, y-50);
+                y2 = min(size(im_gray,1), y+50);
+                dzy = compute_daisy(im_gray(y1 : y2, x1 : x2));
+                desc = display_descriptor(dzy, x - x1, y - y1);
+                self.multiscale_desc(:,i) = reshape(desc, 200, 1);
                 self.multi_desc_point_indexes(i) = measurements{i}.point_index;
             end
             
