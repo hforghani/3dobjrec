@@ -19,7 +19,7 @@ model = read_model(model_fname);
 save (prepared_model_fname, 'model');
 
 %% Offline model preparation
-fprintf('Calculating descriptors in %d cameras ...\n', length(model.cameras));
+fprintf('calculating descriptors in %d cameras ...\n', length(model.cameras));
 for i = 1:length(model.cameras)
     tic;
     cam = model.cameras{i};
