@@ -1,15 +1,15 @@
 close all;
 
-test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
-% test_im_name = 'test/test1.jpg';
+% test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
+test_im_name = 'test/test1.jpg';
 
-matches_f_name = 'data/matches_anchi_test0_t100_kd';
+matches_f_name = 'data/matches_anchi_test1_daisy_kd';
 % matches_f_name = 'data/matches_anchi_test1_thresh100';
 % matches_f_name = 'data/matches_anchiceratops';
 % matches_f_name = 'data/matches_anchiceratops_dense';
 % matches_f_name = 'data/matches_anchiceratops_morethresh';
 
-model_f_name = 'data/model_anchi_multi_kd';
+model_f_name = 'data/model_anchi_daisy_kd';
 % model_f_name = 'data/model_anchiceratops_multi';
 % model_f_name = 'data/model_anchiceratops_single';
 % model_f_name = 'data/model_ankylosaurus_brown_multi';

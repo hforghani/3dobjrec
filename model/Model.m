@@ -28,27 +28,16 @@ classdef Model
         end
         
         function self = calc_multi_desc(self, model_path)
-            fprintf('Calculating descriptors in %d cameras began.\n', length(self.cameras));
+            fprintf('Calculating descriptors in %d cameras ...\n', length(self.cameras));
             for i = 1:length(self.cameras)
 %                 tic;
                 cam = self.cameras{i};
-                cam = cam.calc_multi_desc(self, model_path);
+                cam = cam.calc_multi_desc(self.points, model_path);
                 self.cameras{i} = cam;
 %                 toc;
             end
         end
     
-%         function self = calc_single_desc(self, scale, model_path)
-%             fprintf('Calculating descriptors in %d cameras began.\n', length(self.cameras));
-%             for i = 1:length(self.cameras)
-% %                 tic;
-%                 cam = self.cameras{i};
-%                 cam = cam.calc_single_desc(scale, self, model_path);
-%                 self.cameras{i} = cam;
-% %                 toc;
-%             end
-%         end
-
         function trans_points3d = transform_points(self, R, T)
             points_count = length(self.points);
             trans_points3d = zeros(3, points_count);

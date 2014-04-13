@@ -48,8 +48,8 @@ elseif nargin == 1
 end
 
 %% init grid points and sigma's to use for cubes
-fprintf(1,'-------------------------------------------------------\n');
-fprintf(1,'0. init grid+sigmas;\n');
+% fprintf(1,'-------------------------------------------------------\n');
+% fprintf(1,'0. init grid+sigmas;\n');
 grid = compute_grid(R,RQ,TQ);
 ogrid = compute_oriented_grid(grid,360);
 
@@ -67,7 +67,7 @@ im = im/255.0;
 % im = load_binary('input.bin');
 
 %%% layers
-fprintf(1,'1. compute layers ');
+% fprintf(1,'1. compute layers ');
 tic;
 L = layered_gradient(im,HQ);
 
@@ -75,14 +75,14 @@ L = layered_gradient(im,HQ);
 sig_inc=sqrt(1.6^2-0.5^2);
 L = smooth_layers(L,sig_inc);
 time_cl=toc;
-fprintf(1,'is done in %f sec\n',time_cl);
+% fprintf(1,'is done in %f sec\n',time_cl);
 
 %% compute cubes
 tic;
-fprintf(1,'2. compute cubes: ');
+% fprintf(1,'2. compute cubes: ');
 
 for r=1:cn
-    fprintf(1,strcat(num2str(r),'..'));
+%     fprintf(1,strcat(num2str(r),'..'));
     % we do incremental smoothing...
     if r==1
         sigma=csigma(r);
@@ -93,7 +93,7 @@ for r=1:cn
     end
 end
 time_cc = toc;
-fprintf(1,' is done in %f secs\n',time_cc);
+% fprintf(1,' is done in %f secs\n',time_cc);
 
 %% compute histograms
 h = size(im,1);
@@ -119,12 +119,12 @@ dzy.ogrid   = ogrid;
 dzy.cind    = cind;
 dzy.csigma  = csigma;
 dzy.ostable = compute_orientation_shift(HQ,1);
-fprintf(1,'-------------------------------------------------------\n');
+% fprintf(1,'-------------------------------------------------------\n');
 dzy.SI = SI;
 dzy.LI = LI;
 dzy.NT = NT;
 dzy.params = single([dzy.DS dzy.HN dzy.h dzy.w R RQ TQ HQ SI LI NT length(dzy.ostable)]);
-fprintf(1,'precomputation total time: %f sec\n',time_cl+time_cc);
+% fprintf(1,'precomputation total time: %f sec\n',time_cl+time_cc);
 
 %% Auxilary Functions
 

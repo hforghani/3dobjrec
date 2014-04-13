@@ -51,9 +51,9 @@ end
 
 o = 0; % which orientation to compute the descriptors
 
-fprintf(1,'computing descriptors ');
+% fprintf(1,'computing descriptors ');
 tic;
 dzy.descs = mex_compute_all_descriptors(dzy.H, dzy.params, dzy.ogrid(:,:,o+1), dzy.ostable, single(o) )';
 time_dc=toc;
-fprintf(1,'is done in %f sec\n',time_dc);
+% fprintf(1,'is done in %f sec\n',time_dc);
 

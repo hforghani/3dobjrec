@@ -4,16 +4,16 @@ clearvars; close all;
 addpath EPnP;
 
 %% Load data.
-matches_f_name = 'data/matches_anchi_test0_t100_kd';
+matches_f_name = 'data/matches_anchi_test0_daisy_kd';
 % matches_f_name = 'data/matches_anchiceratops_morethresh';
 % matches_f_name = 'data/matches_anchiceratops';
 % matches_f_name = 'data/matches_anchiceratops_dense';
 
-model_f_name = 'data/model_anchi_multi_kd';
+model_f_name = 'data/model_anchi_daisy_kd';
 % model_f_name = 'data/model_anchiceratops_multi';
 % model_f_name = 'data/model_anchiceratops_single';
 
-result_f_name = 'data/result_anchi_kd';
+result_f_name = 'data/result_anchi_daisy_kd';
 % result_f_name = 'data/result_anchiceratops_dense';
 
 test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
@@ -32,12 +32,14 @@ K = model.get_calib_matrix(); % calibration matrix
 %% Run P3P with RANSAC.
 corr_data = [matches2d; matches3d(2:4,:)];
 
-t = 100;
-s = 3;
+t = 10;
+s = 4;
 [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , s, t);
 rotation_mat = M(:,1:3);
 translation_mat = M(:,4);
 save(result_f_name, 'rotation_mat', 'translation_mat', 'inliers');
+final_err = reprojection_error_usingRT(matches3d(2:4,inliers)', matches2d(:,inliers)', rotation_mat, translation_mat, K);
+fprintf('Final error = %f\n', final_err);
 
 %% Draw inliers.
 image = imread(test_im_name);

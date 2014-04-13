@@ -19,7 +19,22 @@ model = read_model(model_fname);
 save (prepared_model_fname, 'model');
 
 %% Offline model preparation
-model = model.calc_multi_desc(model_data_path);
-save (prepared_model_fname, 'model');
+fprintf('Calculating descriptors in %d cameras ...\n', length(model.cameras));
+for i = 1:length(model.cameras)
+    tic;
+    cam = model.cameras{i};
+    points = model.points;
+    cal = model.calibration;
+    clear model;
+    cam = cam.calc_multi_desc(points, cal, model_data_path);
+    model_file = load(prepared_model_fname);
+    model = model_file.model;
+    model.cameras{i} = cam;
+    save (prepared_model_fname, 'model');
+    toc;
+end
+
+% model = model.calc_multi_desc(model_data_path);
+% save (prepared_model_fname, 'model');
 
 toc;

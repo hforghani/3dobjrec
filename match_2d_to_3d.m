@@ -7,12 +7,32 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 %     tic;
 
     %% Extract features.
+    fprintf('extracting feature from query image ... ');
     query_im = single(rgb2gray(color_im));
+    [h, w] = size(query_im);
+	step = 3;
+	w_count = ceil(w/step) - 1;
+	h_count = ceil(h/step) - 1;
+	points = zeros(2, w_count * h_count);
+	x = 0;
+	for i = 1 : w_count
+		x = x + step;
+        y = 0;
+		for j = 1 : h_count
+			y = y + step;
+			points(:, (i-1)*h_count + j) = [x; y];
+		end
+    end
+    
+    [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
+    points = sift_frames(1:2, :);
+    descriptors = devide_and_compute_daisy(query_im, points);
+    fprintf('done\n');
+	
+	
 
-    [sift_frames, sift_descriptors] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
-
-    sift_descriptors = double(sift_descriptors);
-    query_points_num = size(sift_frames, 2);
+    % sift_descriptors = double(sift_descriptors);
+    query_points_num = size(descriptors, 2);
     fprintf('%d descriptors extracted.\n', query_points_num);
 
     %% Display features.
@@ -29,8 +49,8 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
     % set(h2,'color','y','linewidth',2);
 
     %% Register 2d to 3d.
-    max_error = 110;
-    max_color_dist = 20;
+    max_error = 0.5;
+%     max_color_dist = 20;
 
     matches2d = [];
     matches3d = [];
@@ -39,13 +59,14 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
     % Iterate on query image key points.
     camera_count = length(model.cameras);
     for feature_index = 1:query_points_num
-        tic;
+%         tic;
         
-        query_f = sift_frames(:,feature_index);
-        query_d = sift_descriptors(:,feature_index);
-        query_pos = query_f(1:2,1);
-        query_color = color_im(round(query_pos(2)), round(query_pos(1)), :);
-        query_color = double(reshape(query_color, 3,1));
+        % query_f = sift_frames(:,feature_index);
+        query_d = descriptors(:,feature_index);
+        query_pos = points(:,feature_index);
+%         query_pos = query_f(1:2,1);
+%         query_color = color_im(round(query_pos(2)), round(query_pos(1)), :);
+%         query_color = double(reshape(query_color, 3,1));
 
         good_point_indices = [];
         good_point_dist = [];
@@ -57,14 +78,12 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 %             is_matched = match_by_color(cam.multi_desc_point_indexes, query_color, max_color_dist, model);
 %             multiscale_desc = cam.multiscale_desc(:,is_matched);
 %             multi_desc_point_indexes = cam.multi_desc_point_indexes(:,is_matched);
-            multiscale_desc = double(cam.multiscale_desc);
-            multi_desc_point_indexes = cam.multi_desc_point_indexes;
             % Match by descriptor.
-            [index, distance] = vl_kdtreequery(cam.desc_kdtree, multiscale_desc, query_d);
-            distance = sqrt(distance);
+            [index, distance] = vl_kdtreequery(cam.desc_kdtree, double(cam.multiscale_desc), query_d);
+%             distance = sqrt(distance);
             if distance < max_error
                 good_point_dist = [good_point_dist, distance];
-                good_point_indices = [good_point_indices, multi_desc_point_indexes(index)];
+                good_point_indices = [good_point_indices, cam.multi_desc_point_indexes(index)];
             end
         end
 
@@ -78,10 +97,10 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
             matches3d = [matches3d, [min_index; pt.pos]];
             matches_dist = [matches_dist, min_dist];
             fprintf('\n====== Matched: (%f, %f) to point %d : %f ======\n\n', ...
-                query_f(1), query_f(2), min_index, min_dist);
+                query_pos(1), query_pos(2), min_index, min_dist);
         end
         
-        toc;
+%         toc;
         
         fprintf('%i : Query point (%f, %f) done. ', ...
                     feature_index, query_pos(1), query_pos(2));

@@ -10,8 +10,6 @@ classdef Camera
         r_distortion;
         
         index;
-        singlescale_desc;
-        single_desc_point_indexes;
         multiscale_desc;
         multi_desc_point_indexes;
         desc_kdtree;
@@ -32,63 +30,25 @@ classdef Camera
             obj.r_distortion = r_distortion;
         end
         
-        function self = calc_multi_desc(self, model, model_path)
-            measurements = self.get_measurements(model);
-
-%             % Create frames matrix.
-%             scale_range = self.min_scale : self.scale_step : self.max_scale;
-%             scale_count = length(scale_range);
-%             frames = zeros(4,length(measurements) * scale_count);
-%             point_indexes = zeros(1, size(frames,2));
-%             for i = 1:length(measurements)
-%                 begin = (i-1) * scale_count + 1;
-%                 ending = i * scale_count;
-%                 meas_pos = measurements{i}.get_pos_in_camera(model.calibration);
-%                 frames(1:2, begin:ending) = repmat(meas_pos, 1, length(scale_range));
-%                 frames(3, begin:ending) = scale_range;
-%                 point_indexes(begin:ending) = measurements{i}.point_index;
-%             end
-% 
+        function self = calc_multi_desc(self, points, calibration, model_path)
             im_gray = single(rgb2gray(self.get_image(model_path)));
-%             [res_frames, desc] = vl_sift(im_gray, 'frames', frames, 'orientations');
-%             
-%             % Update point indexes because of new columns for orientations.
-%             new_p_indexes = zeros(1, size(res_frames,2));
-%             for i = 1 : scale_count : size(frames,2)
-%                 have_equal_pos = abs(res_frames(1,:) - frames(1,i)) < 0.0001 ...
-%                     & abs(res_frames(2,:) - frames(2,i)) < 0.0001;
-%                 new_p_indexes(have_equal_pos) = point_indexes(i);
-%             end
-% 
-%             self.multiscale_desc = desc;
-%             self.multi_desc_point_indexes = new_p_indexes;
-            
-            
-            self.multiscale_desc = zeros(200, length(measurements));
+            measurements = self.get_measurements(points);
+            meas_poses = zeros(2, length(measurements));
             self.multi_desc_point_indexes = zeros(1, length(measurements));
             for i = 1:length(measurements)
-                meas_pos = measurements{i}.get_pos_in_camera(model.calibration);
-                x = meas_pos(1);
-                y = meas_pos(2);
-                x1 = max(1, x-50);
-                x2 = min(size(im_gray,2), x+50);
-                y1 = max(1, y-50);
-                y2 = min(size(im_gray,1), y+50);
-                dzy = compute_daisy(im_gray(y1 : y2, x1 : x2));
-                desc = display_descriptor(dzy, x - x1, y - y1);
-                self.multiscale_desc(:,i) = reshape(desc, 200, 1);
+                meas_poses(:,i) = measurements{i}.get_pos_in_camera(calibration);
                 self.multi_desc_point_indexes(i) = measurements{i}.point_index;
             end
+            self.multiscale_desc = devide_and_compute_daisy(im_gray, meas_poses);
+            self.desc_kdtree = vl_kdtreebuild(double(self.multiscale_desc));
             
-            self.desc_kdtree = vl_kdtreebuild(double(self.multiscale_desc)) ;
-            
-            fprintf('Multi-scale descriptor of cemera %d with %d measurements calculated.\n', self.index, length(measurements));
+            fprintf('Descriptors of cemera %d with %d measurements calculated.\n', self.index, length(measurements));
         end
         
-        function measurements = get_measurements(self, model)
+        function measurements = get_measurements(self, points)
             measurements = {};
-            for i = 1:length(model.points)
-                pt = model.points{i};
+            for i = 1:length(points)
+                pt = points{i};
                 for j = 1:length(pt.measurements)
                     meas = pt.measurements{j};
                     if meas.image_index == self.index
