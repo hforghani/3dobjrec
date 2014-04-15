@@ -9,6 +9,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
     %% Extract features.
     fprintf('extracting feature from query image ... ');
     query_im = single(rgb2gray(color_im));
+    % dense sampling: %
 %     [h, w] = size(query_im);
 % 	step = 3;
 % 	w_count = ceil(w/step) - 1;
@@ -23,7 +24,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 % 			points(:, (i-1)*h_count + j) = [x; y];
 % 		end
 %     end
-    
+    % Use SIFT key-points:
     [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
     points = sift_frames(1:2, :);
     descriptors = devide_and_compute_daisy(query_im, points);
