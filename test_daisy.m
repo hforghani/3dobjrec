@@ -22,4 +22,4 @@ for i = 1 : pt.measure_num
     meas_desc = cam.multiscale_desc(:, cam.multi_desc_point_indexes == point_index);
     descriptors(:,i) = meas_desc;
 end
-fprintf('Covariance = %d', cov(descriptors'));
+cov = cov(descriptors')
