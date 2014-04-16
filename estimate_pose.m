@@ -1,4 +1,4 @@
-function estimate_pose(matches_f_name, model_f_name, test_im_name, result_f_name)
+function [rotation_mat, translation_mat] = estimate_pose(matches_f_name, model_f_name, test_im_name)
 
 addpath EPnP;
 
@@ -19,7 +19,6 @@ s = 4;
 [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , s, t);
 rotation_mat = M(:,1:3);
 translation_mat = M(:,4);
-save(result_f_name, 'rotation_mat', 'translation_mat', 'inliers');
 final_err = reprojection_error_usingRT(matches3d(2:4,inliers)', matches2d(:,inliers)', rotation_mat, translation_mat, K);
 fprintf('Final error = %f\n', final_err);
 

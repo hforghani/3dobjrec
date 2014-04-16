@@ -1,5 +1,5 @@
 clc; clearvars;
-
+tic;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 addpath daisy;
@@ -22,22 +22,18 @@ fprintf('calculating descriptors in %d cameras ...\n', length(model.cameras));
 descriptors = [];
 desc_point_indexes = [];
 for i = 1:length(model.cameras)
-    tic;
     cam = model.cameras{i};
     points = model.points;
     cal = model.calibration;
-    clear model;
-    cam = cam.calc_multi_desc(points, cal, model_data_path);
-    descriptors = [descriptors, cam.multiscale_desc];
-    desc_point_indexes = [desc_point_indexes, cam.multi_desc_point_indexes];
-    model_file = load(prepared_model_fname);
-    model = model_file.model;
-    model.cameras{i} = cam;
-    save (prepared_model_fname, 'model');
-    toc;
+    [cam_desc, cam_desc_point_indexes] = cam.calc_multi_desc(points, cal, model_data_path);
+    descriptors = [descriptors, cam_desc];
+    desc_point_indexes = [desc_point_indexes, cam_desc_point_indexes];
 end
+kdtree = vl_kdtreebuild(double(descriptors));
 
-desc_kdtree = vl_kdtreebuild(double(descriptors));
-save ('data/descriptors', 'descriptors');
-save ('data/desc_point_indexes', 'desc_point_indexes');
-save ('data/kdtree', 'desc_kdtree');
+model.descriptors = descriptors;
+model.desc_point_indexes = desc_point_indexes;
+model.kdtree = kdtree;
+save (prepared_model_fname, 'model');
+
+toc;

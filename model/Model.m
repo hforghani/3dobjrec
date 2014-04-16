@@ -6,6 +6,10 @@ classdef Model
         calibration;
         cameras;
         points;
+
+        descriptors;
+        desc_point_indexes;
+        kdtree;
     end
     
     methods

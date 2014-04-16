@@ -10,15 +10,6 @@ classdef Camera
         r_distortion;
         
         index;
-        multiscale_desc;
-        multi_desc_point_indexes;
-        desc_kdtree;
-    end
-    
-    properties (SetAccess = private)
-        min_scale = 1.5;
-        max_scale = 5;
-        scale_step = 0.1;
     end
     
     methods
@@ -30,18 +21,16 @@ classdef Camera
             obj.r_distortion = r_distortion;
         end
         
-        function self = calc_multi_desc(self, points, calibration, model_path)
+        function [descriptors, desc_point_indexes] = calc_multi_desc(self, points, calibration, model_path)
             im_gray = single(rgb2gray(self.get_image(model_path)));
             measurements = self.get_measurements(points);
             meas_poses = zeros(2, length(measurements));
-            self.multi_desc_point_indexes = zeros(1, length(measurements));
+            desc_point_indexes = zeros(1, length(measurements));
             for i = 1:length(measurements)
                 meas_poses(:,i) = measurements{i}.get_pos_in_camera(calibration);
-                self.multi_desc_point_indexes(i) = measurements{i}.point_index;
+                desc_point_indexes(i) = measurements{i}.point_index;
             end
-            self.multiscale_desc = devide_and_compute_daisy(im_gray, meas_poses);
-            self.desc_kdtree = vl_kdtreebuild(double(self.multiscale_desc));
-            
+            descriptors = devide_and_compute_daisy(im_gray, meas_poses);
             fprintf('Descriptors of cemera %d with %d measurements calculated.\n', self.index, length(measurements));
         end
         
