@@ -1,5 +1,4 @@
 clc; clearvars;
-tic;
 
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
@@ -20,6 +19,8 @@ save (prepared_model_fname, 'model');
 
 %% Offline model preparation
 fprintf('calculating descriptors in %d cameras ...\n', length(model.cameras));
+descriptors = [];
+desc_point_indexes = [];
 for i = 1:length(model.cameras)
     tic;
     cam = model.cameras{i};
@@ -27,6 +28,8 @@ for i = 1:length(model.cameras)
     cal = model.calibration;
     clear model;
     cam = cam.calc_multi_desc(points, cal, model_data_path);
+    descriptors = [descriptors, cam.multiscale_desc];
+    desc_point_indexes = [desc_point_indexes, cam.multi_desc_point_indexes];
     model_file = load(prepared_model_fname);
     model = model_file.model;
     model.cameras{i} = cam;
@@ -34,7 +37,6 @@ for i = 1:length(model.cameras)
     toc;
 end
 
-% model = model.calc_multi_desc(model_data_path);
-% save (prepared_model_fname, 'model');
-
-toc;
+desc_kdtree = vl_kdtreebuild(double(descriptors));
+save (descriptors, 'data/descriptors');
+save (desc_kdtree, 'data/kdtree');
