@@ -3,8 +3,12 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 % matches3d : points of 3d model.; 4*N, each column: [point_index; point_pos]
 % matches_dist : distances of query and model points for matches.
     addpath model;
+    
+    load data/descriptors;
+    load data/desc_point_indexes;
+    load data/kdtree;
 
-%     tic;
+    tic;
 
     %% Extract features.
     fprintf('extracting feature from query image ... ');
@@ -26,12 +30,12 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 %     end
     % Use SIFT key-points:
     [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
-    points = sift_frames(1:2, :);
-    descriptors = devide_and_compute_daisy(query_im, points);
+    query_points = sift_frames(1:2, :);
+    query_descriptors = devide_and_compute_daisy(query_im, query_points);
     fprintf('done\n');
 
     % sift_descriptors = double(sift_descriptors);
-    query_points_num = size(descriptors, 2);
+    query_points_num = size(query_descriptors, 2);
     fprintf('%d descriptors extracted.\n', query_points_num);
 
     %% Display features.
@@ -60,48 +64,52 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
     for feature_index = 1:query_points_num
 %         tic;
         
-        query_d = descriptors(:,feature_index);
-        query_pos = points(:,feature_index);
+        query_d = query_descriptors(:,feature_index);
+        query_pos = query_points(:,feature_index);
 
-        good_point_indices = [];
-        good_point_dist = [];
+%         good_point_indices = [];
+%         good_point_dist = [];
     
         % Iterate on cameras.
-        for camera_index = 1:camera_count
-            cam = model.cameras{camera_index};
+%         for camera_index = 1:camera_count
+%             cam = model.cameras{camera_index};
             % Match by color.
 %             is_matched = match_by_color(cam.multi_desc_point_indexes, query_color, max_color_dist, model);
 %             multiscale_desc = cam.multiscale_desc(:,is_matched);
 %             multi_desc_point_indexes = cam.multi_desc_point_indexes(:,is_matched);
             % Match by descriptor.
-            [index, distance] = vl_kdtreequery(cam.desc_kdtree, double(cam.multiscale_desc), query_d);
-            if distance < max_error
-                good_point_dist = [good_point_dist, distance];
-                good_point_indices = [good_point_indices, cam.multi_desc_point_indexes(index)];
-            end
-        end
-
-        min_dist = [];
-        % Add best match to the matches.
-        if ~isempty(good_point_indices)
-            [min_dist, i] = min(good_point_dist);
-            min_index = good_point_indices(i);
+        [index, distance] = vl_kdtreequery(desc_kdtree, double(descriptors), query_d);
+        if distance < max_error
+%             good_point_dist = [good_point_dist, distance];
+%             good_point_indices = [good_point_indices, cam.multi_desc_point_indexes(index)];
+            point_index = desc_point_indexes(index);
             matches2d = [matches2d, query_pos];
-            pt = model.points{min_index};
-            matches3d = [matches3d, [min_index; pt.pos]];
-            matches_dist = [matches_dist, min_dist];
-            fprintf('\n====== Matched: (%f, %f) to point %d : %f ======\n\n', ...
-                query_pos(1), query_pos(2), min_index, min_dist);
+            pt = model.points{point_index};
+            matches3d = [matches3d, [point_index; pt.pos]];
+            matches_dist = [matches_dist, distance];
+            fprintf('%i :  ====== Matched: (%f, %f) to point %d with distance %f ======\n\n', ...
+                query_pos(1), query_pos(2), point_index, distance);
         end
+%         end
+
+%         min_dist = [];
+%         % Add best match to the matches.
+%         if ~isempty(good_point_indices)
+%             [min_dist, i] = min(good_point_dist);
+%             min_index = good_point_indices(i);
+%             matches2d = [matches2d, query_pos];
+%             pt = model.points{min_index};
+%             matches3d = [matches3d, [min_index; pt.pos]];
+%             matches_dist = [matches_dist, min_dist];
+%             fprintf('\n====== Matched: (%f, %f) to point %d : %f ======\n\n', ...
+%                 query_pos(1), query_pos(2), min_index, min_dist);
+%         end
         
 %         toc;
         
-        fprintf('%i : Query point (%f, %f) done. ', ...
-                    feature_index, query_pos(1), query_pos(2));
-        if min_dist
-            fprintf('Min dist = %f.\n', min_dist);
-        else
-            fprintf('No accepted match.\n');
+        if distance >= max_error
+            fprintf('%i : Query point (%f, %f) done. No match.\n', ...
+                        feature_index, query_pos(1), query_pos(2));
         end
 
         % Save in determined intervals.
@@ -111,7 +119,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 
     end
 
-%     toc;
+    toc;
 end
 
 

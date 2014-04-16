@@ -38,5 +38,6 @@ for i = 1:length(model.cameras)
 end
 
 desc_kdtree = vl_kdtreebuild(double(descriptors));
-save (descriptors, 'data/descriptors');
-save (desc_kdtree, 'data/kdtree');
+save ('data/descriptors', 'descriptors');
+save ('data/desc_point_indexes', 'desc_point_indexes');
+save ('data/kdtree', 'desc_kdtree');
