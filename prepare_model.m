@@ -4,13 +4,12 @@ tic;
 % run('VLFEATROOT/toolbox/vl_setup');
 addpath daisy;
 
-model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
+% model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
 % model_data_path = [get_dataset_path() '0-24(1)\0-24\ankylosaurus_brown\'];
+model_data_path = [get_dataset_path() '0-24(1)\0-24\bengal_tiger\'];
 
-prepared_model_fname = 'data/model_anchi_daisy_kd';
-% prepared_model_fname = 'data/model_anchi_multi_kd';
-% prepared_model_fname = 'data/model_anchiceratops_multi';
-% prepared_model_fname = 'data/model_ankylosaurus_brown_multi';
+% prepared_model_fname = 'data/model_anchi_daisy_kd';
+prepared_model_fname = 'data/model_tiger';
 
 %% Read model
 model_fname = [model_data_path 'model.nvm'];
