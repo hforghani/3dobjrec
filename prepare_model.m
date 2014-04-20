@@ -6,10 +6,12 @@ addpath daisy;
 
 % model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
 % model_data_path = [get_dataset_path() '0-24(1)\0-24\ankylosaurus_brown\'];
-model_data_path = [get_dataset_path() '0-24(1)\0-24\bengal_tiger\'];
+model_data_path = [get_dataset_path() '0-24(1)\0-24\axe_knight\'];
 
 % prepared_model_fname = 'data/model_anchi_daisy_kd';
-prepared_model_fname = 'data/model_tiger';
+prepared_model_fname = 'data/model_axe_knight';
+
+desc_model_fname = 'data/model_desc_axe_knight';
 
 %% Read model
 model_fname = [model_data_path 'model.nvm'];
@@ -30,9 +32,6 @@ for i = 1:length(model.cameras)
 end
 kdtree = vl_kdtreebuild(double(descriptors));
 
-model.descriptors = descriptors;
-model.desc_point_indexes = desc_point_indexes;
-model.kdtree = kdtree;
-save (prepared_model_fname, 'model');
+save (desc_model_fname, 'descriptors', 'desc_point_indexes', 'kdtree');
 
 toc;
