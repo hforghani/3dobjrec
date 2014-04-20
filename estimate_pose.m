@@ -14,8 +14,8 @@ K = model.get_calib_matrix(); % calibration matrix
 %% Run P3P with RANSAC.
 corr_data = [matches2d; matches3d(2:4,:)];
 
-t = 10;
-s = 5;
+t = 50;
+s = 10;
 [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , s, t);
 rotation_mat = M(:,1:3);
 translation_mat = M(:,4);
