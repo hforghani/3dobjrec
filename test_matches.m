@@ -1,21 +1,20 @@
 close all;
 
 % test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
-test_im_name = 'test/test1.jpg';
+test_im_name = [get_dataset_path() '0-24(1)/0-24/axe_knight/db_img/1090.jpg'];
+% test_im_name = 'test/test3.jpg';
 
-matches_f_name = 'data/matches_anchi_test1_daisy_kd';
-% matches_f_name = 'data/matches_anchi_test1_thresh100';
-% matches_f_name = 'data/matches_anchiceratops';
-% matches_f_name = 'data/matches_anchiceratops_dense';
-% matches_f_name = 'data/matches_anchiceratops_morethresh';
+% obj_name = 'anchiceratops';
+obj_name = 'axe_knight';
 
-model_f_name = 'data/model_anchi_daisy_kd';
-% model_f_name = 'data/model_anchiceratops_multi';
-% model_f_name = 'data/model_anchiceratops_single';
-% model_f_name = 'data/model_ankylosaurus_brown_multi';
+parts = textscan(test_im_name, '%s', 'delimiter', '/');
+parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
+exact_name = parts{1}{1};
+matches_f_name = ['data/matches_' obj_name '_' exact_name];
 
-model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
-% model_data_path = [get_dataset_path() '0-24(1)\0-24\ankylosaurus_brown\'];
+model_f_name = ['data/model_' obj_name];
+
+model_data_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
 
 matches = load(matches_f_name);
 matches2d = matches.matches2d;

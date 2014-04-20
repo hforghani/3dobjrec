@@ -15,8 +15,8 @@ function descriptors = devide_and_compute_daisy(im, points)
             j2 = min(j1 + patch_size, h);
             display_j2 = min(j2 + offset, h);
             patch = im(display_j1:display_j2, display_i1:display_i2);
-            is_in_patch = points(1,:) >= i1 & points(1,:) <= i2 ...
-                        & points(2,:) >= j1 & points(2,:) <= j2;
+            is_in_patch = points(1,:) > i1 & points(1,:) < i2-1 ...
+                        & points(2,:) > j1 & points(2,:) < j2-1;
             points_in_patch = points(:, is_in_patch);
             if isempty(points_in_patch)
                 continue;
@@ -27,13 +27,18 @@ function descriptors = devide_and_compute_daisy(im, points)
 %                 scatter(points_in_patch(1,k), points_in_patch(2,k), 'y');
                 x_in_patch = round(points_in_patch(1,k) - display_i1 + 1);
                 y_in_patch = round(points_in_patch(2,k) - display_j1 + 1);
-                desc = display_descriptor(dzy, y_in_patch, x_in_patch);
+                try
+                    desc = display_descriptor(dzy, y_in_patch, x_in_patch);
+                catch e
+                    disp(e);
+                end
                 desc_in_patch(:, k) = reshape(desc, 200, 1);
 %                 scatter(points_in_patch(1,k), points_in_patch(2,k), 'g');
             end
             descriptors(:, is_in_patch) = desc_in_patch;
         end
     end
+    
 end
 
 function show_points(im, points, patch_size)

@@ -4,14 +4,14 @@ tic;
 % run('VLFEATROOT/toolbox/vl_setup');
 addpath daisy;
 
-% model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
-% model_data_path = [get_dataset_path() '0-24(1)\0-24\ankylosaurus_brown\'];
-model_data_path = [get_dataset_path() '0-24(1)\0-24\axe_knight\'];
+% obj_name = 'anchiceratops';
+obj_name = 'axe_knight';
 
-% prepared_model_fname = 'data/model_anchi_daisy_kd';
-prepared_model_fname = 'data/model_axe_knight';
+model_data_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
 
-desc_model_fname = 'data/model_desc_axe_knight';
+prepared_model_fname = ['data/model_' obj_name];
+desc_model_fname = ['data/model_desc_' obj_name];
+
 
 %% Read model
 model_fname = [model_data_path 'model.nvm'];
@@ -24,9 +24,7 @@ descriptors = [];
 desc_point_indexes = [];
 for i = 1:length(model.cameras)
     cam = model.cameras{i};
-    points = model.points;
-    cal = model.calibration;
-    [cam_desc, cam_desc_point_indexes] = cam.calc_multi_desc(points, cal, model_data_path);
+    [cam_desc, cam_desc_point_indexes] = cam.calc_multi_desc(model.points, model.calibration, model_data_path);
     descriptors = [descriptors, cam_desc];
     desc_point_indexes = [desc_point_indexes, cam_desc_point_indexes];
 end

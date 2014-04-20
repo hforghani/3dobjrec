@@ -25,10 +25,13 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, desc_mo
 % 		end
 %     end
     % Use SIFT key-points:
-    edge_thresh = 100;
+    edge_thresh = 20;
     [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
     query_points = sift_frames(1:2, :);
     query_descriptors = devide_and_compute_daisy(query_im, query_points);
+    zero_indexes = find(~any(query_descriptors));
+    query_descriptors(:, zero_indexes) = [];
+    query_points(:, zero_indexes) = [];
     fprintf('done\n');
 
     % sift_descriptors = double(sift_descriptors);
@@ -36,7 +39,7 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, desc_mo
     fprintf('%d descriptors extracted.\n', query_points_num);
 
     %% Register 2d to 3d.
-    max_error = 0.5;
+    max_error = 1;
 %     max_color_dist = 20;
 
     matches2d = [];
@@ -62,12 +65,12 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, desc_mo
             pt = points{point_index};
             matches3d = [matches3d, [point_index; pt.pos]];
             matches_dist = [matches_dist, distance];
-            fprintf('%i :  ====== Matched: (%f, %f) to point %d with distance %f ======\n\n', ...
-                query_pos(1), query_pos(2), point_index, distance);
+            fprintf('%i :  ====== Matched: (%f, %f) to point %d , dist = %f ======\n\n', ...
+                feature_index, query_pos(1), query_pos(2), point_index, distance);
         end
         if distance >= max_error
-            fprintf('%i : Query point (%f, %f) done. No match.\n', ...
-                        feature_index, query_pos(1), query_pos(2));
+            fprintf('%i : (%f, %f) , dist = %f. No match.\n', ...
+                        feature_index, query_pos(1), query_pos(2), distance);
         end
         % Save in determined intervals.
         if mod(feature_index, 100) == 0
