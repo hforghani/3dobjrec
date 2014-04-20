@@ -1,4 +1,4 @@
-function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, matches_f_name)
+function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, desc_model, points, matches_f_name)
 % matches2d : 2*N; points of query image.
 % matches3d : points of 3d model.; 4*N, each column: [point_index; point_pos]
 % matches_dist : distances of query and model points for matches.
@@ -53,13 +53,13 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, model, 
 %             multiscale_desc = cam.multiscale_desc(:,is_matched);
 %             multi_desc_point_indexes = cam.multi_desc_point_indexes(:,is_matched);
         % Match by descriptor.
-        [index, distance] = vl_kdtreequery(model.kdtree, double(model.descriptors), query_d);
+        [index, distance] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_d);
         if distance < max_error
 %             good_point_dist = [good_point_dist, distance];
 %             good_point_indices = [good_point_indices, cam.multi_desc_point_indexes(index)];
-            point_index = model.desc_point_indexes(index);
+            point_index = desc_model.desc_point_indexes(index);
             matches2d = [matches2d, query_pos];
-            pt = model.points{point_index};
+            pt = points{point_index};
             matches3d = [matches3d, [point_index; pt.pos]];
             matches_dist = [matches_dist, distance];
             fprintf('%i :  ====== Matched: (%f, %f) to point %d with distance %f ======\n\n', ...
