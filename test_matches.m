@@ -30,9 +30,11 @@ imshow(image);
 figure(1);
 hold on;
 scatter(matches2d(1,:), matches2d(2,:), 'r', 'filled');
-% for i = 1:match_count
+for i = 1:match_count
 %     text(matches2d(1,i), matches2d(2,i), num2str(i), 'Color', 'y');
-% end
+    addpath utils;
+    circle(matches2d(1,i), matches2d(2,i), 30);
+end
 
 disp('Select a key point on the image.');
 while 1

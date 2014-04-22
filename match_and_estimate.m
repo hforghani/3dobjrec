@@ -1,4 +1,6 @@
 clearvars; close all; clc;
+addpath model;
+addpath daisy;
 
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
@@ -35,4 +37,5 @@ matches3d = matches3d(:, indexes);
 matches_dist = matches_dist(:, indexes);
 
 %% Estimate pose.
-[rotation_mat, translation_mat] = estimate_pose(matches_f_name, model_f_name, query_im_name);
+load(model_f_name);
+[rotation_mat, translation_mat] = estimate_pose(matches2d, matches3d, model, query_im_name);

@@ -1,17 +1,10 @@
-function [rotation_mat, translation_mat] = estimate_pose(matches_f_name, model_f_name, test_im_name)
-
-addpath EPnP;
-
-%% Load data.
-matches = load(matches_f_name);
-matches2d = matches.matches2d;
-matches3d = matches.matches3d;
-
-model = load(model_f_name);
-model = model.model;
-K = model.get_calib_matrix(); % calibration matrix
+function [rotation_mat, translation_mat] = estimate_pose(matches2d, matches3d, model, test_im_name)
 
 %% Run P3P with RANSAC.
+addpath EPnP;
+
+K = model.get_calib_matrix(); % calibration matrix
+
 corr_data = [matches2d; matches3d(2:4,:)];
 
 t = 50;
