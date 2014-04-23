@@ -33,7 +33,7 @@ classdef Point
         
         function show_measurements(self, model, model_data_path)
             % Show up to 6 measurements in their camera images.
-            figure(10);
+            figure(2);
             % Iterate on measurements.
             for measure_i = 1:6
                 subplot(2,3,measure_i);
@@ -54,6 +54,8 @@ classdef Point
                 hold on;
                 scatter(cal.cx, cal.cy, 100 , 'r+');
                 scatter(point(1), point(2), 100 , 'y');
+%                 zoom reset;
+%                 zoom(2);
             end
         end
     end

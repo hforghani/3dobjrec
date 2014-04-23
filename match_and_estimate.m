@@ -37,5 +37,18 @@ matches3d = matches3d(:, indexes);
 matches_dist = matches_dist(:, indexes);
 
 %% Estimate pose.
+fprintf('estimating pose ...\n');
 load(model_f_name);
-[rotation_mat, translation_mat] = estimate_pose(matches2d, matches3d, model, query_im_name);
+s = 5;
+t = 50;
+exp_thrown = 1;
+while exp_thrown && s < 15
+    try
+        [rotation_mat, translation_mat] = estimate_pose(matches2d, matches3d, model, query_im_name, s, t);
+        exp_thrown = 0;
+        fprintf('sample count = %d\n', s);
+    catch e
+        s = s + 1;
+    end
+end
+fprintf('done\n');

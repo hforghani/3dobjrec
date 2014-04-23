@@ -1,11 +1,13 @@
 close all;
+addpath model;
+addpath utils;
 
-% test_im_name = [get_dataset_path() '0-24(1)\0-24\anchiceratops\db_img\1090.jpg'];
-test_im_name = [get_dataset_path() '0-24(1)/0-24/axe_knight/db_img/1090.jpg'];
+test_im_name = [get_dataset_path() '0-24(1)/0-24/anchiceratops/db_img/1090.jpg'];
+% test_im_name = [get_dataset_path() '0-24(1)/0-24/axe_knight/db_img/1090.jpg'];
 % test_im_name = 'test/test3.jpg';
 
-% obj_name = 'anchiceratops';
-obj_name = 'axe_knight';
+obj_name = 'anchiceratops';
+% obj_name = 'axe_knight';
 
 parts = textscan(test_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
@@ -29,12 +31,11 @@ image = imread(test_im_name);
 imshow(image);
 figure(1);
 hold on;
-scatter(matches2d(1,:), matches2d(2,:), 'r', 'filled');
-for i = 1:match_count
+scatter(matches2d(1,:), matches2d(2,:), 5, 'r', 'filled');
+% for i = 1:match_count
 %     text(matches2d(1,i), matches2d(2,i), num2str(i), 'Color', 'y');
-    addpath utils;
-    circle(matches2d(1,i), matches2d(2,i), 30);
-end
+%     circle(matches2d(1,i), matches2d(2,i), 30);
+% end
 
 disp('Select a key point on the image.');
 while 1
@@ -57,9 +58,9 @@ while 1
     sel_point_index = matches3d(1,sel_index);
     point = model.points{sel_point_index};
     point.show_measurements(model, model_data_path);
-    fprintf('distance between 2d and 3d = %f\n', matches_dist(sel_index));
-    reply = input('Do you want more? Y/N [Y]: ', 's');
-    if reply == 'N'
-        break;
-    end
+%     fprintf('distance between 2d and 3d = %f\n', matches_dist(sel_index));
+%     reply = input('Do you want more? Y/N [Y]: ', 's');
+%     if reply == 'N'
+%         break;
+%     end
 end

@@ -1,6 +1,6 @@
 function circle(ox, oy, r)
 
-numPoints = 100 * r; %Number of points making up the circle
+numPoints = ceil(0.5 * r); %Number of points making up the circle
 
 %Define circle in polar coordinates (angle and radius)
 theta = linspace(0, 2*pi, numPoints); %100 evenly spaced points between 0 and 2pi
