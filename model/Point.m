@@ -25,12 +25,6 @@ classdef Point
             end
         end
         
-%         function self = calc_descriptor(self, img_fold_name, model)
-%             for i = 1:self.measure_num
-%                 self.measurements{i} = self.measurements{i}.calc_descriptor(img_fold_name, model);
-%             end            
-%         end
-        
         function show_measurements(self, model, model_data_path)
             % Show up to 6 measurements in their camera images.
             figure(2);
@@ -54,7 +48,6 @@ classdef Point
                 hold on;
                 scatter(cal.cx, cal.cy, 100 , 'r+');
                 scatter(point(1), point(2), 100 , 'y');
-%                 zoom reset;
 %                 zoom(2);
             end
         end

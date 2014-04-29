@@ -1,37 +1,17 @@
-function [rotation_mat, translation_mat] = estimate_pose(matches2d, matches3d, model, test_im_name, sample_count, threshold)
+function [rotation_mat, translation_mat, inliers] = estimate_pose(matches2d, matches3d, model, sample_count, threshold)
 
 %% Run P3P with RANSAC.
 addpath EPnP;
 
 K = model.get_calib_matrix(); % calibration matrix
 
-corr_data = [matches2d; matches3d(2:4,:)];
+corr_data = [matches2d; matches3d];
 
 [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold);
 rotation_mat = M(:,1:3);
 translation_mat = M(:,4);
-final_err = reprojection_error_usingRT(matches3d(2:4,inliers)', matches2d(:,inliers)', rotation_mat, translation_mat, K);
+final_err = reprojection_error_usingRT(matches3d(:,inliers)', matches2d(:,inliers)', rotation_mat, translation_mat, K);
 fprintf('Final error = %f\n', final_err);
-
-%% Draw inliers.
-image = imread(test_im_name);
-figure(1);
-imshow(image);
-hold on;
-scatter(matches2d(1,:), matches2d(2,:), 'r', 'filled');
-scatter(matches2d(1,inliers), matches2d(2,inliers), 'y', 'filled');
-
-%% Map points with the found transformation.
-points2d = model.project_points(rotation_mat, translation_mat);
-figure(2);
-imshow(image);
-hold on;
-scatter(matches2d(1,:), matches2d(2,:), 'r', 'filled');
-scatter(points2d(1,:), points2d(2,:), 10, 'g', 'filled');
-
-% figure(3);
-% scatter(points2d(1,:), points2d(2,:), 10, 'g', 'filled');
-
 
 function M = epnp_fittingfn(data)
 %% Estimate camera position by EPnP.

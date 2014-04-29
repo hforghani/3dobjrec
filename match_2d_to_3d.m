@@ -1,4 +1,5 @@
-function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, desc_model, points, matches_f_name)
+function [matches2d, matches3d, match_model_indexes, match_point_indexes, matches_dist] = ...
+    match_2d_to_3d(color_im, desc_model, model_points)
 % matches2d : 2*N; points of query image.
 % matches3d : points of 3d model.; 4*N, each column: [point_index; point_pos]
 % matches_dist : distances of query and model points for matches.
@@ -28,7 +29,6 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, desc_mo
     query_points(:, zero_indexes) = [];
     fprintf('done\n');
 
-    % sift_descriptors = double(sift_descriptors);
     query_points_num = size(query_descriptors, 2);
     fprintf('%d descriptors extracted.\n', query_points_num);
 
@@ -40,12 +40,14 @@ function [matches2d, matches3d, matches_dist] = match_2d_to_3d(color_im, desc_mo
     [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors);
     match_indexes = distances < max_error;
     matches2d = query_points(:, match_indexes);
+    match_model_indexes = desc_model.desc_model_indexes(indexes(match_indexes));
     match_point_indexes = desc_model.desc_point_indexes(indexes(match_indexes));
-    point_poses = zeros(3, length(match_point_indexes));
+    matches3d = zeros(3, length(match_point_indexes));
     for i = 1:length(match_point_indexes)
-        point_poses(:, i) = points{match_point_indexes(i)}.pos;
+        model_index = match_model_indexes(i);
+        points = model_points{model_index};
+        matches3d(:, i) = points{match_point_indexes(i)}.pos;
     end
-    matches3d = [match_point_indexes; point_poses];
     matches_dist = distances(match_indexes);
 
     fprintf('done\n');

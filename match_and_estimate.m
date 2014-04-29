@@ -6,9 +6,10 @@ addpath daisy;
 % run('VLFEATROOT/toolbox/vl_setup');
 
 % obj_name = 'anchiceratops';
-obj_name = 'axe_knight';
+obj_name = 'all';
+obj_names = {'anchiceratops', 'axe_knight'};
 
-model_f_name = ['data/model_' obj_name];
+% model_f_name = ['data/model_' obj_name];
 desc_model_f_name = ['data/model_desc_' obj_name];
 
 % query_im_name = [get_dataset_path() '0-24(1)/0-24/anchiceratops/db_img/1090.jpg'];
@@ -21,34 +22,28 @@ exact_name = parts{1}{1};
 matches_f_name = ['data/matches_' obj_name '_' exact_name];
 
 %% Match 2d to 3d
-load(model_f_name);
-points = model.points;
-clear model;
+obj_count = length(obj_names);
+points_array = cell(obj_count, 1);
+for i = 1:obj_count
+    model_f_name = ['data/model_' obj_names{i}];
+    load(model_f_name);
+    points_array{i} = model.points;
+    clear model;
+end
 desc_model = load(desc_model_f_name);
 
 image = imread(query_im_name);
-[matches2d, matches3d, matches_dist] = match_2d_to_3d(image, desc_model, points, matches_f_name);
-save(matches_f_name, 'matches2d', 'matches3d', 'matches_dist');
+[matches2d, matches3d, match_model_indexes, match_point_indexes, matches_dist] = match_2d_to_3d(image, desc_model, points_array);
+save(matches_f_name, 'matches2d', 'matches3d', 'match_model_indexes', 'match_point_indexes', 'matches_dist');
 
 %% Filter correspondences.
-indexes = filter_corr(matches2d, matches3d);
+indexes = filter_corr(matches2d, matches3d, match_model_indexes, match_point_indexes);
 matches2d = matches2d(:, indexes);
 matches3d = matches3d(:, indexes);
+match_model_indexes = match_model_indexes(:, indexes);
+match_point_indexes = match_point_indexes(:, indexes);
 matches_dist = matches_dist(:, indexes);
 
 %% Estimate pose.
-fprintf('estimating pose ...\n');
-load(model_f_name);
-s = 5;
-t = 50;
-exp_thrown = 1;
-while exp_thrown && s < 15
-    try
-        [rotation_mat, translation_mat] = estimate_pose(matches2d, matches3d, model, query_im_name, s, t);
-        exp_thrown = 0;
-        fprintf('sample count = %d\n', s);
-    catch e
-        s = s + 1;
-    end
-end
-fprintf('done\n');
+transforms = estimate_multi_pose(matches2d, matches3d, match_model_indexes, obj_names, query_im_name);
+
