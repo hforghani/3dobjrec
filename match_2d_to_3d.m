@@ -5,8 +5,6 @@ function [matches2d, matches3d, match_model_indexes, match_point_indexes, matche
 % matches_dist : distances of query and model points for matches.
     addpath model;
 
-    tic;
-
     %% Extract features.
     fprintf('extracting feature from query image ... ');
     query_im = single(rgb2gray(color_im));
@@ -14,15 +12,14 @@ function [matches2d, matches3d, match_model_indexes, match_point_indexes, matche
     % dense sampling:
 %     [h, w] = size(query_im);
 % 	step = 3;
-% 	w_count = ceil(w/step) - 1;
-% 	h_count = ceil(h/step) - 1;
-%     [x, y] = meshgrid(step:step:w_count, step:step:h_count);
-% 	points = [reshape(x, 1, w_count * h_count); reshape(y, 1, w_count * h_count)];
+%     [x, y] = meshgrid(step : step : w - step, step : step : h - step);
+% 	query_points = [x(:), y(:)]';
     
     % Use SIFT key-points:
-    edge_thresh = 50;
+    edge_thresh = 100;
     [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
     query_points = sift_frames(1:2, :);
+
     query_descriptors = devide_and_compute_daisy(query_im, query_points);
     zero_indexes = find(~any(query_descriptors));
     query_descriptors(:, zero_indexes) = [];
@@ -51,7 +48,6 @@ function [matches2d, matches3d, match_model_indexes, match_point_indexes, matche
     matches_dist = distances(match_indexes);
 
     fprintf('done\n');
-    toc;
 end
 
 

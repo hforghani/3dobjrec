@@ -1,4 +1,4 @@
-function [rotation_mat, translation_mat, inliers] = estimate_pose(matches2d, matches3d, model, sample_count, threshold)
+function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, model, sample_count, threshold)
 
 %% Run P3P with RANSAC.
 addpath EPnP;
@@ -11,7 +11,6 @@ corr_data = [matches2d; matches3d];
 rotation_mat = M(:,1:3);
 translation_mat = M(:,4);
 final_err = reprojection_error_usingRT(matches3d(:,inliers)', matches2d(:,inliers)', rotation_mat, translation_mat, K);
-fprintf('Final error = %f\n', final_err);
 
 function M = epnp_fittingfn(data)
 %% Estimate camera position by EPnP.

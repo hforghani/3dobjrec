@@ -25,6 +25,25 @@ classdef Point
             end
         end
         
+        function res = is_covisible_with(self, points)
+            % Return a matrix which each cell of it indicates whether the 
+            % point is co-visible with this point in any camera. points is
+            % an array of Point.
+            self_cam_indexes = zeros(self.measure_num, 1);
+            for i = 1:self.measure_num
+                self_cam_indexes(i) = self.measurements{i}.image_index;
+            end
+            res = zeros(length(points), 1);
+            for i = 1:length(points)
+                pnt = points{i};
+                point_cam_indexes = zeros(pnt.measure_num, 1);
+                for j = 1:pnt.measure_num
+                    point_cam_indexes(j) = pnt.measurements{j}.image_index;
+                end
+                res(i) = ~isempty(intersect(self_cam_indexes, point_cam_indexes));
+            end
+        end
+        
         function show_measurements(self, model, model_data_path)
             % Show up to 6 measurements in their camera images.
             figure(2);

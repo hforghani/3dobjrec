@@ -35,6 +35,8 @@ classdef Camera
         end
         
         function measurements = get_measurements(self, points)
+            % Get measurements visible in the camera.
+            % points is the array of all points.
             measurements = {};
             for i = 1:length(points)
                 pt = points{i};

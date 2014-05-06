@@ -5,7 +5,8 @@ tic;
 addpath daisy;
 
 % obj_name = 'anchiceratops';
-obj_name = 'axe_knight';
+% obj_name = 'axe_knight';
+obj_name = 'airborne_soldier';
 
 model_data_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
 
@@ -30,6 +31,10 @@ for i = 1:length(model.cameras)
 end
 kdtree = vl_kdtreebuild(double(descriptors));
 
-save (desc_model_fname, 'descriptors', 'desc_point_indexes', 'kdtree');
+% Model index of all descriptors is 1 as there is just one model.
+desc_model_indexes = ones(size(desc_point_indexes));
+obj_names = {obj_name};
+
+save (desc_model_fname, 'descriptors', 'desc_point_indexes', 'desc_model_indexes', 'kdtree', 'obj_names');
 
 toc;

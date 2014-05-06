@@ -1,5 +1,8 @@
 function transforms = estimate_multi_pose(matches2d, matches3d, match_model_indexes, obj_names, query_im_name)
 
+start_sample_count = 5;
+error_threshold = 30;
+
 image = imread(query_im_name);
 figure(1);
 imshow(image);
@@ -26,8 +29,7 @@ for i = 1 : model_count
     model_f_name = ['data/model_' obj_names{i}];
     load(model_f_name);
 
-    s = 5;
-    t = 50;
+    s = start_sample_count;
     exp_thrown = 1;
     while exp_thrown && s < 15
         if size(hyp_matches2d, 2) < s
@@ -35,11 +37,12 @@ for i = 1 : model_count
             break;
         end
         try
-            [rotation_mat, translation_mat, inliers] = estimate_pose(hyp_matches2d, hyp_matches3d, model, s, t);
+            [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(hyp_matches2d, hyp_matches3d, model, s, error_threshold);
             show_results(hyp_matches2d, rotation_mat, translation_mat, inliers, model, model_index)
             transforms{i} = [rotation_mat, translation_mat];
             exp_thrown = 0;
             fprintf('s=%d : successfuly done\n', s);
+            fprintf('Final error = %f\n\n', final_err);
             break;
         catch e
             fprintf('s=%d : %s\n', s, e.message);
@@ -48,7 +51,7 @@ for i = 1 : model_count
     end
     clear model;
     if exp_thrown
-        fprintf('no estimation\n');
+        fprintf('object not found\n\n');
     end
 end
 
