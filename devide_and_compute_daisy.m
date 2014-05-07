@@ -1,6 +1,6 @@
 function descriptors = devide_and_compute_daisy(im, points)
     [h, w] = size(im);
-    patch_size = 300;
+    patch_size = 1300;
     offset = 10;
     
 %     show_points(im, points, patch_size)

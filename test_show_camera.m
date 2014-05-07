@@ -1,6 +1,6 @@
 close all;
 
-model_path = 'E:\datasets\Microsoeft_research\0-24(1)\0-24\anchiceratops\';
+model_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
 model_fname = [model_path 'model.nvm'];
 model = read_model(model_fname);
 points_num = length(model.points);

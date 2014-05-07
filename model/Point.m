@@ -42,6 +42,7 @@ classdef Point
                 end
                 res(i) = ~isempty(intersect(self_cam_indexes, point_cam_indexes));
             end
+            res = logical(res);
         end
         
         function show_measurements(self, model, model_data_path)

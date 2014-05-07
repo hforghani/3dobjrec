@@ -1,4 +1,4 @@
-obj_names = {'anchiceratops', 'axe_knight', 'airborne_soldier'};
+obj_names = {'airborne_soldier', 'alex_row', 'axe_knight', 'anchiceratops'};
 result_name = 'all';
 
 descriptors = [];
@@ -8,7 +8,7 @@ desc_model_indexes = [];
 for i = 1:length(obj_names)
     fprintf('adding object %d ... ', i);
     obj_name = obj_names{i};
-    desc_model_fname = ['data/model_desc_' obj_name];
+    desc_model_fname = ['data/model_desc/' obj_name];
     model_desc = load(desc_model_fname);
     descriptors = [descriptors, model_desc.descriptors];
     desc_point_indexes = [desc_point_indexes, model_desc.desc_point_indexes];
@@ -24,6 +24,6 @@ kdtree = vl_kdtreebuild(double(descriptors));
 fprintf('done\n');
 
 fprintf('saving ... ');
-save(['data/model_desc_' result_name], ...
+save(['data/model_desc/' result_name], ...
     'descriptors', 'desc_point_indexes', 'desc_model_indexes', 'kdtree', 'obj_names');
 fprintf('done\n');

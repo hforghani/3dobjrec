@@ -2,8 +2,7 @@ clearvars;
 
 model_data_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
 
-model_data_f_name = 'data/model_anchiceratops_multi';
-% model_data_f_name = 'data/model_ankylosaurus_brown_multi';
+model_data_f_name = 'data/model/anchiceratops';
 
 load(model_data_f_name);
 

@@ -10,15 +10,16 @@ function [matches2d, matches3d, match_model_indexes, match_point_indexes, matche
     query_im = single(rgb2gray(color_im));
     
     % dense sampling:
-%     [h, w] = size(query_im);
-% 	step = 3;
-%     [x, y] = meshgrid(step : step : w - step, step : step : h - step);
-% 	query_points = [x(:), y(:)]';
+    [h, w] = size(query_im);
+	step = 3;
+    [x, y] = meshgrid(step : step : w - step, step : step : h - step);
+	query_points = [x(:), y(:)]';
     
     % Use SIFT key-points:
-    edge_thresh = 100;
-    [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
-    query_points = sift_frames(1:2, :);
+%     edge_thresh = 60;
+%     [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
+%     query_points = sift_frames(1:2, :);
+%     query_points = unique(query_points', 'rows')'; % Remove repeated points.
 
     query_descriptors = devide_and_compute_daisy(query_im, query_points);
     zero_indexes = find(~any(query_descriptors));

@@ -6,12 +6,13 @@ addpath daisy;
 
 % obj_name = 'anchiceratops';
 % obj_name = 'axe_knight';
-obj_name = 'airborne_soldier';
+% obj_name = 'airborne_soldier';
+obj_name = 'alphonse_elric';
 
 model_data_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
 
-prepared_model_fname = ['data/model_' obj_name];
-desc_model_fname = ['data/model_desc_' obj_name];
+prepared_model_fname = ['data/model/' obj_name];
+desc_model_fname = ['data/model_desc/' obj_name];
 
 
 %% Read model
