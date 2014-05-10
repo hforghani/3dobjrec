@@ -1,13 +1,10 @@
-clc; clearvars;
+function prepare_model(obj_name)
+
+clc;
 tic;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 addpath daisy;
-
-% obj_name = 'anchiceratops';
-% obj_name = 'axe_knight';
-% obj_name = 'airborne_soldier';
-obj_name = 'alphonse_elric';
 
 model_data_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
 
@@ -39,3 +36,5 @@ obj_names = {obj_name};
 save (desc_model_fname, 'descriptors', 'desc_point_indexes', 'desc_model_indexes', 'kdtree', 'obj_names');
 
 toc;
+
+end
