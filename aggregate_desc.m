@@ -1,5 +1,10 @@
-obj_names = {'airborne_soldier', 'alex_row', 'axe_knight', 'anchiceratops'};
-result_name = 'all';
+clearvars;
+
+obj_names = {'airborne_soldier', 'alex_row', 'alphonse_elric', 'anakin_skywalker', ...
+    'anchiceratops', 'ankylosaurus_brown', 'ankylosaurus_green', 'ankylosaurus_olive', ...
+    'anteater', 'antelope', 'appaloosa_horse', 'armor_hunter', 'axe_knight', ...
+    'bactrian_camel', 'baryonyx'};
+result_name = 'all15';
 
 descriptors = [];
 desc_point_indexes = [];

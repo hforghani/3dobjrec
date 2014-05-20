@@ -1,8 +1,7 @@
-function [matches2d, matches3d, match_model_indexes, match_point_indexes, matches_dist] = ...
-    match_2d_to_3d(color_im, desc_model, model_points)
-% matches2d : 2*N; points of query image.
-% matches3d : points of 3d model.; 4*N, each column: [point_index; point_pos]
-% matches_dist : distances of query and model points for matches.
+function [query_poses, correspondences, points] = match_2d_to_3d(color_im, desc_model)
+% query_poses : 2*N; points of query image.
+% correspondences : 2*M matrix; each column is an array of [query_pos_index; point_index_in_points_array]
+% points: 2*P; points of 3d model; each column is in the format [model_index, point_index]
     addpath model;
 
     %% Extract features.
@@ -10,21 +9,21 @@ function [matches2d, matches3d, match_model_indexes, match_point_indexes, matche
     query_im = single(rgb2gray(color_im));
     
     % dense sampling:
-    [h, w] = size(query_im);
-	step = 3;
-    [x, y] = meshgrid(step : step : w - step, step : step : h - step);
-	query_points = [x(:), y(:)]';
+%     [h, w] = size(query_im);
+% 	step = 3;
+%     [x, y] = meshgrid(step : step : w - step, step : step : h - step);
+% 	query_points = [x(:), y(:)]';
     
     % Use SIFT key-points:
-%     edge_thresh = 60;
-%     [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
-%     query_points = sift_frames(1:2, :);
-%     query_points = unique(query_points', 'rows')'; % Remove repeated points.
+    edge_thresh = 100;
+    [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
+    query_poses = sift_frames(1:2, :);
+    query_poses = unique(query_poses', 'rows')'; % Remove repeated points.
 
-    query_descriptors = devide_and_compute_daisy(query_im, query_points);
+    query_descriptors = devide_and_compute_daisy(query_im, query_poses);
     zero_indexes = find(~any(query_descriptors));
     query_descriptors(:, zero_indexes) = [];
-    query_points(:, zero_indexes) = [];
+    query_poses(:, zero_indexes) = [];
     fprintf('done\n');
 
     query_points_num = size(query_descriptors, 2);
@@ -33,41 +32,38 @@ function [matches2d, matches3d, match_model_indexes, match_point_indexes, matche
     %% Register 2d to 3d.
     fprintf('registering 2d to 3d ... ');
     max_error = 0.7;
-%     max_color_dist = 20;
 
-    [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors);
-    match_indexes = distances < max_error;
-    matches2d = query_points(:, match_indexes);
-    match_model_indexes = desc_model.desc_model_indexes(indexes(match_indexes));
-    match_point_indexes = desc_model.desc_point_indexes(indexes(match_indexes));
-    matches3d = zeros(3, length(match_point_indexes));
-    for i = 1:length(match_point_indexes)
-        model_index = match_model_indexes(i);
-        points = model_points{model_index};
-        matches3d(:, i) = points{match_point_indexes(i)}.pos;
+    % Match 2d to 3d; some nearest neighbors for each query pose.
+    [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors, 'NUMNEIGHBORS', 2);
+    
+    % Filter high errors and determine points.
+    is_less_than_error = distances < max_error;
+    point_general_indexes = unique(indexes(is_less_than_error));
+    points_count = length(point_general_indexes);
+    points = zeros(2, points_count);
+    for i = 1:points_count
+        points(1, i) = desc_model.desc_model_indexes(point_general_indexes(i));
+        points(2, i) = desc_model.desc_point_indexes(point_general_indexes(i));
     end
-    matches_dist = distances(match_indexes);
+    
+    % Construct correspondences.
+    correspondences = zeros(2, sum(sum(is_less_than_error)));
+    corr_i = 1;
+    for i = 1:size(is_less_than_error,2)
+        indexes_i = indexes(:,i);
+        match_count = sum(is_less_than_error(:,i) == 1);
+        correspondences(1, corr_i : corr_i+match_count-1) = i;
+        correspondences(2, corr_i : corr_i+match_count-1) = indexes_i(1 : match_count);
+        corr_i = corr_i + match_count;
+    end
+    
+    % Set second row of correspondences to the index of point column in 'points' array.
+    new_point_indexes = zeros(1, length(point_general_indexes));
+    for i = 1:length(point_general_indexes)
+        new_point_indexes(correspondences(2,:) == point_general_indexes(i)) = i;
+    end
+    correspondences(2,:) = new_point_indexes;
 
     fprintf('done\n');
 end
 
-
-% function is_filtered = match_by_color(point_indexes, color, threshold, model)
-% % point_indexes: indexes of some points.
-% % color: match color.
-% % threshold: threshold of color difference.
-% % is_filtered: binary result of filter
-%     uniq_indexes = unique(point_indexes);
-%     pt_count = length(point_indexes);
-%     colors = zeros(3, pt_count);
-%     for i = 1:length(uniq_indexes)
-%         index = uniq_indexes(i);
-%         col = model.points{index}.color;
-%         colors(1, point_indexes == index) = col(1);
-%         colors(2, point_indexes == index) = col(2);
-%         colors(3, point_indexes == index) = col(3);
-%     end
-%     dif = colors - repmat(color, 1, pt_count);
-%     dif_norms = sum(dif .^ 2) .^ 0.5;
-%     is_filtered = dif_norms < threshold;
-% end

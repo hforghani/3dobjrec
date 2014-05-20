@@ -5,14 +5,14 @@ addpath daisy;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 
-case_name = 'all';
+case_name = 'all15';
 
 desc_model_f_name = ['data/model_desc/' case_name];
 
 % query_im_name = [get_dataset_path() '0-24(1)/0-24/anchiceratops/db_img/1093.jpg'];
 % query_im_name = [get_dataset_path() '0-24(1)/0-24/axe_knight/db_img/1090.jpg'];
 % query_im_name = [get_dataset_path() '0-24(1)/0-24/airborne_soldier/db_img/1114.jpg'];
-query_im_name = 'test/test4.jpg';
+query_im_name = 'test/test5.jpg';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
@@ -34,23 +34,17 @@ for i = 1:obj_count
 end
 
 image = imread(query_im_name);
-[matches2d, matches3d, match_model_indexes, match_point_indexes, matches_dist] = ...
-    match_2d_to_3d(image, desc_model, points_array);
-save(matches_f_name, ...
-    'matches2d', 'matches3d', 'match_model_indexes', 'match_point_indexes', 'matches_dist');
+[query_poses, correspondences, points] = match_2d_to_3d(image, desc_model);
+save(matches_f_name, 'query_poses', 'points', 'correspondences');
 
 %% Filter correspondences.
 fprintf('filtering correspondences ...\n');
-indexes = filter_corr(matches2d, matches3d, match_model_indexes, match_point_indexes, points_array, query_im_name);
-matches2d = matches2d(:, indexes);
-matches3d = matches3d(:, indexes);
-match_model_indexes = match_model_indexes(:, indexes);
-match_point_indexes = match_point_indexes(:, indexes);
-matches_dist = matches_dist(:, indexes);
+[query_poses, points, correspondences] = ...
+    filter_corr(query_poses, points, correspondences, desc_model, points_array, query_im_name);
 fprintf('done\n');
 
 %% Estimate pose.
-transforms = estimate_multi_pose(matches2d, matches3d, match_model_indexes, ...
+transforms = estimate_multi_pose(query_poses, points, match_model_indexes, ...
     desc_model.obj_names, query_im_name);
 
 toc;

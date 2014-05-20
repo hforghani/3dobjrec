@@ -25,7 +25,7 @@ function transforms = estimate_multi_pose(matches2d, matches3d, match_model_inde
 
         figure(2);
         hold on;
-        scatter(hyp_matches2d(1,:), hyp_matches2d(2,:), 'MarkerEdgeColor', colors{mod(i,length(colors))});
+        scatter(hyp_matches2d(1,:), hyp_matches2d(2,:), 'MarkerEdgeColor', colors{mod(i,length(colors))+1});
 
         model_f_name = ['data/model/' obj_names{i}];
         model = load(model_f_name);
