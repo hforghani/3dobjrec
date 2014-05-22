@@ -30,21 +30,23 @@ for i = 1:obj_count
     model_f_name = ['data/model/' desc_model.obj_names{i}];
     load(model_f_name);
     points_array{i} = model.points;
-    clear model;
 end
 
 image = imread(query_im_name);
 [query_poses, correspondences, points] = match_2d_to_3d(image, desc_model);
 save(matches_f_name, 'query_poses', 'points', 'correspondences');
+toc;
 
 %% Filter correspondences.
 fprintf('filtering correspondences ...\n');
-[query_poses, points, correspondences] = ...
+tic;
+correspondences = ...
     filter_corr(query_poses, points, correspondences, desc_model, points_array, query_im_name);
+toc;
 fprintf('done\n');
 
 %% Estimate pose.
+toc;
 transforms = estimate_multi_pose(query_poses, points, match_model_indexes, ...
     desc_model.obj_names, query_im_name);
-
 toc;

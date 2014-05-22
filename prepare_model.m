@@ -1,6 +1,5 @@
 function prepare_model(obj_name)
 
-clc;
 tic;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
