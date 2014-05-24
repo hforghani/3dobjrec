@@ -58,33 +58,27 @@ function [query_poses, correspondences, points] = match_2d_to_3d(color_im, desc_
     end
     
     % Set second row of correspondences to the index of point column in 'points' array.
-    correspondences(2,:) = re_index_arr(point_general_indexes, correspondences(2,:));
+    correspondences(2,:) = reindex_arr(point_general_indexes, correspondences(2,:));
     
     %% Delete repeated points.
     % Correct references in correspondences which will be removed.
-    for i = 1:size(points,2)
+    corrected = false(1, points_count);
+    for i = 1:points_count
         repeated_indexes = find(points(1,:) == points(1,i) & points(2,:) == points(2,i));
-        is_related_corr = ismember(correspondences(2,:), repeated_indexes);
-        correspondences(2, is_related_corr) = i;
+        if length(repeated_indexes) > 1 && ~corrected(i)
+            is_related_corr = ismember(correspondences(2,:), repeated_indexes);
+            correspondences(2, is_related_corr) = i;
+            corrected(repeated_indexes) = true;
+        end
     end
-    % Remove repeated ponints.
+    % Remove repeated points.
     points_ids = 1:size(points,2);
     [new_points, i_p, ~] = unique(points', 'rows');
     points_ids = points_ids(i_p);
     points = new_points';
     % Change references as they refer to the related column of points.
-    correspondences(2,:) = re_index_arr(points_ids, correspondences(2,:));
+    addpath utils;
+    correspondences(2,:) = reindex_arr(points_ids, correspondences(2,:));
 
     fprintf('done\n');
-end
-
-function new_pointer_array = re_index_arr(ref_array, pointer_array)
-% Some components of pointer_array are equal to the value of one component 
-% of ref_array. Suppose the values of ref_array has been changed to 1, 2, ..., n. 
-% Change the values of pointer_array in such a way that will be equal to
-% the same component of new ref_array.
-    new_pointer_array = zeros(size(pointer_array));
-    for i = 1:length(ref_array)
-        new_pointer_array(pointer_array == ref_array(i)) = i;
-    end
 end

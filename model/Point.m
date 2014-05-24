@@ -33,7 +33,7 @@ classdef Point
             for i = 1:self.measure_num
                 self_cam_indexes(i) = self.measurements{i}.image_index;
             end
-            res = zeros(length(points), 1);
+            res = false(length(points), 1);
             for i = 1:length(points)
                 pnt = points{i};
                 point_cam_indexes = zeros(pnt.measure_num, 1);
@@ -42,7 +42,6 @@ classdef Point
                 end
                 res(i) = ~isempty(intersect(self_cam_indexes, point_cam_indexes));
             end
-            res = logical(res);
         end
         
         function show_measurements(self, model, model_data_path)

@@ -12,6 +12,7 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
     model_count = length(models_i);
     result_corr_indexes = [];
 
+
     for i = 1 : model_count
         fprintf('validating hyp "%s" ... ', desc_model.obj_names{i});
         
@@ -22,6 +23,8 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
         model_points = points(:, is_of_model);
         model_corr_indexes = find(ismember(correspondences(2,:), model_indexes));
         model_corr = correspondences(:, model_corr_indexes);
+        addpath utils;
+        model_corr(2,:) = reindex_arr(model_indexes, model_corr(2,:));
         
 %         adj_mat = hyp_cons_graph(correspondences, model_query_poses, model_points, model_point_indexes, points_array{model_i});
         % 3d local consistency
@@ -40,7 +43,7 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
         
         % Filter hypotheses with low confidence, then filter
         % correspondences not present in 3-complete subgraphs.
-        conf_thr = length(unique(model_corr(1,:))) / 3;
+        conf_thr = size(model_points,2) ^ 2 / 20;
         if confidence > conf_thr
             adj_path_3 = adj_mat ^ 3;
             is_in_3complete = diag(adj_path_3) > 1;
@@ -51,6 +54,7 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
         else
             fprintf('rejected\n');
         end
+        fprintf('conf_thr = %f\n', conf_thr);
     end
 
     new_corr = correspondences(:, result_corr_indexes);
@@ -60,8 +64,9 @@ end
 function adj_mat = get_2d_cons_matrix(correspondences, query_poses)
     % Find 2d local consistent poses for each query pos.
     nei_thr_2d = 100 ^ 2;
-    nei_num = 20;
     q_pos_count = size(query_poses, 2);
+    nei_num = max(q_pos_count / 2 , 2);
+    
     kdtree = vl_kdtreebuild(double(query_poses));
     [nei_indexes, distances] = vl_kdtreequery(kdtree, query_poses, query_poses, 'NUMNEIGHBORS', nei_num);
     nei_indexes(distances > nei_thr_2d) = 0;
@@ -88,10 +93,10 @@ function adj_mat = get_3d_cons_matrix(correspondences, points, model_points)
 % points: 2*P matrix of points of an abject; each column contains model
 % index and point index
 % model_points: cell array of object points of type Point
-    nei_thr_3d = 2 ^ 2;
-    nei_num = 20;
+    nei_thr_3d = 0.5 ^ 2;
     points_count = size(points,2);
-    
+    nei_num = max(points_count / 2 , 2);
+
     % Put 3d point poses in a 3*P matrix.
     point_poses = zeros(3, points_count);
     point_instances = cell(1, points_count);
