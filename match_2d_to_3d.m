@@ -34,7 +34,9 @@ function [query_poses, correspondences, points] = match_2d_to_3d(color_im, desc_
     max_error = 0.7;
 
     % Match 2d to 3d; some nearest neighbors for each query pose.
-    [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors, 'NUMNEIGHBORS', 2);
+    models_count = len(unique(desc_model.desc_model_indexes));
+    nei_num = ceil(models_count/10);
+    [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors, 'NUMNEIGHBORS', nei_num);
     
     % Filter high errors and determine points.
     is_less_than_error = distances < max_error;
@@ -58,6 +60,7 @@ function [query_poses, correspondences, points] = match_2d_to_3d(color_im, desc_
     end
     
     % Set second row of correspondences to the index of point column in 'points' array.
+    addpath utils;
     correspondences(2,:) = reindex_arr(point_general_indexes, correspondences(2,:));
     
     %% Delete repeated points.
@@ -77,7 +80,6 @@ function [query_poses, correspondences, points] = match_2d_to_3d(color_im, desc_
     points_ids = points_ids(i_p);
     points = new_points';
     % Change references as they refer to the related column of points.
-    addpath utils;
     correspondences(2,:) = reindex_arr(points_ids, correspondences(2,:));
 
     fprintf('done\n');

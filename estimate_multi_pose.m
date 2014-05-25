@@ -1,7 +1,7 @@
 function transforms = estimate_multi_pose(query_poses, points, correspondences, points_array, obj_names, query_im_name)
 
-    start_sample_count = 5;
-    error_threshold = 20;
+    sample_count = 5;
+    error_threshold = 5;
 
     image = imread(query_im_name);
     figure(2);
@@ -29,8 +29,6 @@ function transforms = estimate_multi_pose(query_poses, points, correspondences, 
     transforms = cell(model_count, 1);
 
     for i = 1 : model_count
-        fprintf('estimating pose of hyp %s ...\n', obj_names{i});
-
         % Separate points and correspondences related to this model.
         model_i = models_i(i);
         model_indexes = find(points_model_indexes == model_i);
@@ -39,6 +37,7 @@ function transforms = estimate_multi_pose(query_poses, points, correspondences, 
             continue;
         end
         
+        fprintf('estimating pose of hyp %s ... ', obj_names{i});
         hyp_poses2d = poses2d(:, is_of_model);
         hyp_poses3d = poses3d(:, is_of_model);
 
@@ -50,30 +49,23 @@ function transforms = estimate_multi_pose(query_poses, points, correspondences, 
         model = load(model_f_name);
         model = model.model;
 
-        s = start_sample_count;
-        exp_thrown = 1;
-        while exp_thrown && s < 15
-            if size(hyp_poses2d, 2) < s
-                fprintf('s=%d : not enough points\n', s);
-                break;
-            end
-            try
-                [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(hyp_poses2d, hyp_poses3d, model, s, error_threshold);
-                show_results(hyp_poses2d, rotation_mat, translation_mat, inliers, model, model_i)
-                transforms{i} = [rotation_mat, translation_mat];
-                exp_thrown = 0;
-                fprintf('s=%d : successfuly done\n', s);
-                fprintf('Final error = %f\n\n', final_err);
-                break;
-            catch e
-                fprintf('s=%d : %s\n', s, e.message);
-                s = s + 1;
+        if size(hyp_poses2d, 2) < sample_count
+            fprintf('not enough points\n');
+            continue;
+        end
+        try
+            [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(hyp_poses2d, hyp_poses3d, model, sample_count, error_threshold);
+            show_results(hyp_poses2d, rotation_mat, translation_mat, inliers, model, model_i)
+            transforms{i} = [rotation_mat, translation_mat];
+            fprintf('successfuly done. Final error = %f\n', final_err);
+        catch e
+            if strcmp(e.message, 'ransac was unable to find a useful solution')
+                fprintf('object not found\n');
+            else
+                fprintf('%s\n', e.message);
             end
         end
         clear model;
-        if exp_thrown
-            fprintf('object not found\n\n');
-        end
     end
 
 

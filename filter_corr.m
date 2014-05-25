@@ -10,8 +10,8 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
     points_model_indexes = points(1,:);
     models_i = unique(points_model_indexes);
     model_count = length(models_i);
-    result_corr_indexes = [];
-
+    confidences = zeros(max(models_i), 1);
+    adj_matrices = cell(max(models_i), 1);
 
     for i = 1 : model_count
         fprintf('validating hyp "%s" ... ', desc_model.obj_names{i});
@@ -33,31 +33,21 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
         % Calculate adjacency matrix of consistency graph then compute
         % confidence of each model hypothesis.
         adj_mat = adj_mat_2d(model_corr_indexes, model_corr_indexes) & adj_mat_3d;
+        adj_matrices{model_i} = adj_mat;
         confidence = sum(sum(adj_mat));
+        confidences(model_i) = confidence;
         
         % Plot consistency graph of query poses
         figure(1); hold on;
         model_query_poses = query_poses(:, model_corr(1,:)); % May have repeated poses.
-        gplot(adj_mat, model_query_poses', ['-o' colors{mod(i,length(colors))+1}]);
-        fprintf('done, confidence = %d, ', confidence);
-        
-        % Filter hypotheses with low confidence, then filter
-        % correspondences not present in 3-complete subgraphs.
-        conf_thr = size(model_points,2) ^ 2 / 20;
-        if confidence > conf_thr
-            adj_path_3 = adj_mat ^ 3;
-            is_in_3complete = diag(adj_path_3) > 1;
-            result_corr_indexes = [result_corr_indexes, model_corr_indexes(is_in_3complete)];
-            scatter(model_query_poses(1, is_in_3complete), model_query_poses(2, is_in_3complete), 'filled', 'MarkerFaceColor', colors{mod(i,length(colors))+1});
-            
-            fprintf('accepted\n');
-        else
-            fprintf('rejected\n');
-        end
-        fprintf('conf_thr = %f\n', conf_thr);
+        gplot(adj_mat, model_query_poses', ['-o' colors{mod(model_i,length(colors))+1}]);
+        fprintf('done, confidence = %d\n', confidence);
     end
-
-    new_corr = correspondences(:, result_corr_indexes);
+    
+    % Choose N top hypotheses, then filter correspondences not present in 
+    % 3-complete subgraphs.
+    N = 5;
+    new_corr = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, desc_model.obj_names);
 end
 
 
@@ -133,4 +123,28 @@ function adj_mat = get_3d_cons_matrix(correspondences, points, model_points)
     
     adj_mat = adj_mat | adj_mat';
     adj_mat = adj_mat - eye(corr_count) .* adj_mat; % Zero diagonal elemets.
+end
+
+function new_corr = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, obj_names)
+    [~, sort_indexes] = sort(confidences, 'descend');
+    result_corr_indexes = [];
+    colors = {'r','g','b','c','m','y','k','w'};
+    
+    for i = 1:N
+        model_i = sort_indexes(i);
+        adj_mat = adj_matrices{model_i};
+        adj_path_3 = adj_mat ^ 3;
+        is_in_3complete = diag(adj_path_3) > 1;
+        
+        points_model_indexes = points(1,:);
+        model_indexes = find(points_model_indexes == model_i);
+        model_corr_indexes = find(ismember(correspondences(2,:), model_indexes));
+        result_corr_indexes = [result_corr_indexes, model_corr_indexes(is_in_3complete)];
+        model_corr = correspondences(:, model_corr_indexes);
+        model_query_poses = query_poses(:, model_corr(1,:));
+        scatter(model_query_poses(1, is_in_3complete), model_query_poses(2, is_in_3complete), 'filled', 'MarkerFaceColor', colors{mod(model_i,length(colors))+1});
+        
+        fprintf('hyp ''%s'' choosed\n', obj_names{model_i});
+    end
+    new_corr = correspondences(:, result_corr_indexes);
 end

@@ -12,16 +12,14 @@ desc_model_f_name = ['data/model_desc/' case_name];
 % query_im_name = [get_dataset_path() '0-24(1)/0-24/anchiceratops/db_img/1093.jpg'];
 % query_im_name = [get_dataset_path() '0-24(1)/0-24/axe_knight/db_img/1090.jpg'];
 % query_im_name = [get_dataset_path() '0-24(1)/0-24/airborne_soldier/db_img/1114.jpg'];
-query_im_name = 'test/test0.jpg';
+query_im_name = 'test/test4.jpg';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
 exact_name = parts{1}{1};
 matches_f_name = ['data/matches/' case_name '_' exact_name];
 
-%% Match 2d to 3d
-tic;
-
+fprintf('loading model ... ');
 desc_model = load(desc_model_f_name);
 
 obj_count = length(desc_model.obj_names);
@@ -31,7 +29,10 @@ for i = 1:obj_count
     load(model_f_name);
     points_array{i} = model.points;
 end
+fprintf('done\n');
 
+%% Match 2d to 3d
+tic;
 image = imread(query_im_name);
 [query_poses, correspondences, points] = match_2d_to_3d(image, desc_model);
 save(matches_f_name, 'query_poses', 'points', 'correspondences');
