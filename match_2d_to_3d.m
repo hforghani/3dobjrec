@@ -34,7 +34,7 @@ function [query_poses, correspondences, points] = match_2d_to_3d(color_im, desc_
     max_error = 0.7;
 
     % Match 2d to 3d; some nearest neighbors for each query pose.
-    models_count = len(unique(desc_model.desc_model_indexes));
+    models_count = length(unique(desc_model.desc_model_indexes));
     nei_num = ceil(models_count/10);
     [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors, 'NUMNEIGHBORS', nei_num);
     
