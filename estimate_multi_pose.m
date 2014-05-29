@@ -1,7 +1,7 @@
 function transforms = estimate_multi_pose(query_poses, points, correspondences, points_array, obj_names, query_im_name)
 
     sample_count = 5;
-    error_threshold = 5;
+    error_threshold = 10;
 
     image = imread(query_im_name);
     figure(2);
