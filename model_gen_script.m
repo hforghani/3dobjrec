@@ -1,10 +1,13 @@
-clearvars;
-obj_names = {'airborne_soldier', 'alex_row', 'alphonse_elric', 'anakin_skywalker', ...
-    'anchiceratops', 'ankylosaurus_brown', 'ankylosaurus_green', 'ankylosaurus_olive', ...
-    'anteater', 'antelope', 'appaloosa_horse', 'armor_hunter', 'axe_knight', ...
-    'bactrian_camel', 'baryonyx'};
+clearvars; clc;
 
-for i = 1:length(obj_names)
-    fprintf('preparing model "%s"\n', obj_names{i});
-    prepare_model(obj_names{i});
+base_path = [get_dataset_path() '0-24(1)\0-24\'];
+folders = dir(base_path);
+folders = folders(3:end);
+
+start_i = 1;
+end_i = length(folders);
+for i = start_i:end_i
+    obj_name = folders(i).name;
+    fprintf('preparing model "%s"\n', obj_name);
+    prepare_model(obj_name);    
 end
