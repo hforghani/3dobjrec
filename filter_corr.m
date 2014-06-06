@@ -1,5 +1,7 @@
 function new_corr = filter_corr(query_poses, points, correspondences, desc_model, points_array, query_im_name)
 
+    addpath utils;
+    
     image = imread(query_im_name);
     figure(1); imshow(image);
     colors = {'r','g','b','c','m','y','k','w'};
@@ -24,7 +26,6 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
         model_points = points(:, is_of_model);
         model_corr_indexes = find(ismember(correspondences(2,:), model_indexes));
         model_corr = correspondences(:, model_corr_indexes);
-        addpath utils;
         model_corr(2,:) = reindex_arr(model_indexes, model_corr(2,:));
         
 %         adj_mat = hyp_cons_graph(correspondences, model_query_poses, model_points, model_point_indexes, points_array{model_i});
@@ -38,15 +39,16 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
         conf_adj_mat = adj_mat_2d(model_corr_indexes, model_corr_indexes) & adj_mat_3d;
         confidence = sum(sum(conf_adj_mat));
         confidences(model_i) = confidence;
+        adj_matrices{model_i} = conf_adj_mat;
 
         % Calculate final compatibility adjucency matrix.
-        adj_mat = corr_comp_matrix(correspondences, conf_adj_mat, adj_3d_covis);
-        adj_matrices{model_i} = adj_mat;
+%         adj_mat = corr_comp_matrix(correspondences, conf_adj_mat, adj_3d_covis);
+%         adj_matrices{model_i} = adj_mat;
         
         % Plot consistency graph of query poses
         figure(1); hold on;
         model_query_poses = query_poses(:, model_corr(1,:)); % May have repeated poses.
-        gplot(adj_mat, model_query_poses', ['-o' colors{mod(model_i,length(colors))+1}]);
+        gplot(conf_adj_mat, model_query_poses', ['-o' colors{mod(model_i,length(colors))+1}]);
         fprintf('done, confidence = %d\n', confidence);
     end
     
