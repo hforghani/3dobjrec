@@ -12,14 +12,6 @@ classdef Measurement
         point_index;
     end
     
-    properties (SetAccess = private)
-        min_scale = 1.5;
-        max_scale = 5;
-        scale_step = 0.1;
-        
-        single_scale = 1.2;
-    end
-    
     methods
         function self = Measurement(varargin)
             if nargin == 3
@@ -55,7 +47,10 @@ classdef Measurement
             % fr_array: cell array of frames of size length(scale_range)
             % fr_array: cell array of descriptors of size length(scale_range)
             
-            scale_range = self.min_scale : self.scale_step : self.max_scale;
+            min_scale = 1.5;
+            max_scale = 5;
+            scale_step = 0.1;
+            scale_range = min_scale : scale_step : max_scale;
             fr = [im_pos; 0; 0];
             fr = repmat(fr, 1, length(scale_range));
             fr(3,:) = scale_range;
@@ -70,65 +65,6 @@ classdef Measurement
                 de_array{i} = de(:, indexes);
             end
             multiscale_desc = MultiscaleDescriptor(fr_array, de_array);
-        end
-        
-        function [d, min_dist] = get_best_match_to_singlescale(self, desc)
-            % Get distance of the descriptor given to the single-scale
-            % descriptor of self.
-            % desc : descriptor
-            % dist: distance;
-            min_dist = -1;
-            d = [];
-            self_desc = self.singlescale_desc;
-            for self_i = 1 : size(self_desc, 2)
-                for other_i = 1 : size(desc, 2)
-                    dist = norm(double(self_desc(:,self_i) - desc(:,other_i)));
-                    if min_dist == -1 || dist < min_dist
-                        min_dist = dist;
-                        d = self_desc(:,self_i);
-                    end
-                end
-            end
-        end
-        
-        function [f, d, min_dist] = get_best_match_to_multiscale(self, frame, desc)
-            % Get best matching descriptor between all descriptor pairs of
-            % this multi-scale descriptor and the descriptor given.
-            % frame: sift frame
-            % desc: sift descriptor
-            given_scale = frame(3);
-            min_dist = -1;
-            f = []; d = [];
-            s_index = self.get_nearest_scale_index(given_scale);
-            self_desc = self.multiscale_desc.descriptors_array{s_index};
-            for self_i = 1 : size(self_desc, 2)
-                for other_i = 1 : size(desc, 2)
-                    dist = norm(double(self_desc(:,self_i) - desc(:,other_i)));
-                    if min_dist == -1 || dist < min_dist
-                        min_dist = dist;
-                        d = self_desc(:,self_i);
-                        f = self.multiscale_desc.frames_array{s_index}(:,self_i);
-                    end
-                end
-            end
-        end
-        
-        function index = get_nearest_scale_index(self, scale)
-            scales = self.min_scale : self.scale_step : self.max_scale;
-            index = -1;
-            for i = 1:length(scales)
-                if abs(scales(i) - scale) <= self.scale_step / 2
-                    index = i;
-                    break;
-                end
-            end
-            if index == -1
-                if scale > self.max_scale
-                    index = length(scales);
-                else
-                    index = 1;
-                end
-            end
         end
     end
     
