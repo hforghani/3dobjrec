@@ -7,8 +7,6 @@ classdef Measurement
         feature_index;
         pos;
         
-        multiscale_desc;
-        singlescale_desc;
         point_index;
     end
     
