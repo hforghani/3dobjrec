@@ -63,8 +63,6 @@ function test_cameras_OpeningFcn(hObject, eventdata, handles, varargin)
     addpath model;
     global cam_index model_path model;
     cam_index = 1;
-    set(handles.index_edit, 'String', num2str(cam_index));
-    set(handles.total_count_text, 'String', ['/ ' num2str(length(model.cameras))]);
 
     model_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
     model_fname = 'data\model\anchiceratops';
@@ -72,6 +70,8 @@ function test_cameras_OpeningFcn(hObject, eventdata, handles, varargin)
     model = container.model;
 
     show_camera(cam_index, handles.axes1);
+    set(handles.index_edit, 'String', num2str(cam_index));
+    set(handles.total_count_text, 'String', ['/ ' num2str(length(model.cameras))]);
 
 
 % --- Outputs from this function are returned to the command line.
