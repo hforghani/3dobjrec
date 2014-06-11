@@ -5,14 +5,10 @@ addpath daisy;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 
-case_name = 'all15';
-
-desc_model_f_name = ['data/model_desc/' case_name];
-
-% query_im_name = [get_dataset_path() '0-24(1)/0-24/anchiceratops/db_img/1093.jpg'];
-% query_im_name = [get_dataset_path() '0-24(1)/0-24/axe_knight/db_img/1090.jpg'];
-% query_im_name = [get_dataset_path() '0-24(1)/0-24/airborne_soldier/db_img/1114.jpg'];
-query_im_name = 'test/test3.jpg';
+% Set these parameters:
+case_name = 'all25';
+query_im_name = 'test_img/test8.jpg';
+ply_fname = 'result/test8.ply';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
@@ -20,8 +16,8 @@ exact_name = parts{1}{1};
 matches_f_name = ['data/matches/' case_name '_' exact_name];
 
 fprintf('loading model ... ');
+desc_model_f_name = ['data/model_desc/' case_name];
 desc_model = load(desc_model_f_name);
-
 obj_count = length(desc_model.obj_names);
 points_array = cell(obj_count, 1);
 for i = 1:obj_count
@@ -48,5 +44,8 @@ fprintf('done\n');
 
 %% Estimate pose.
 tic;
-transforms = estimate_multi_pose(query_poses, points, correspondences, points_array, desc_model.obj_names, query_im_name);
+[transforms, rec_indexes] = estimate_multi_pose(query_poses, points, correspondences, points_array, desc_model.obj_names, query_im_name);
 toc;
+
+%% Create ply output.
+create_ply(transforms, rec_indexes, desc_model.obj_names, ply_fname);

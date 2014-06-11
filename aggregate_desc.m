@@ -1,10 +1,18 @@
 clearvars;
 
-obj_names = {'airborne_soldier', 'alex_row', 'alphonse_elric', 'anakin_skywalker', ...
-    'anchiceratops', 'ankylosaurus_brown', 'ankylosaurus_green', 'ankylosaurus_olive', ...
-    'anteater', 'antelope', 'appaloosa_horse', 'armor_hunter', 'axe_knight', ...
-    'bactrian_camel', 'baryonyx'};
-result_name = 'all15';
+base_path = [get_dataset_path() '0-24(1)\0-24\'];
+folders = dir(base_path);
+folders = folders(3:end);
+
+result_name = 'all25';
+start_i = 1;
+end_i = length(folders);
+
+obj_names = cell(end_i - start_i + 1, 1);
+for i = start_i:end_i
+    obj_name = folders(i).name;
+    obj_names{i} = obj_name;
+end
 
 descriptors = [];
 desc_point_indexes = [];

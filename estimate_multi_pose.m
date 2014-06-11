@@ -1,4 +1,4 @@
-function transforms = estimate_multi_pose(query_poses, points, correspondences, points_array, obj_names, query_im_name)
+function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, correspondences, points_array, obj_names, query_im_name)
 
     sample_count = 5;
     error_threshold = 10;
@@ -26,7 +26,8 @@ function transforms = estimate_multi_pose(query_poses, points, correspondences, 
     points_model_indexes = points(1,:);
     models_i = unique(points_model_indexes);
     model_count = length(models_i);
-    transforms = cell(model_count, 1);
+    transforms = {};
+    rec_indexes = [];
 
     for i = 1 : model_count
         % Separate points and correspondences related to this model.
@@ -56,7 +57,8 @@ function transforms = estimate_multi_pose(query_poses, points, correspondences, 
         try
             [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(hyp_poses2d, hyp_poses3d, model, sample_count, error_threshold);
             show_results(hyp_poses2d, rotation_mat, translation_mat, inliers, model, model_i)
-            transforms{i} = [rotation_mat, translation_mat];
+            transforms = [transforms; [rotation_mat, translation_mat]];
+            rec_indexes = [rec_indexes; i];
             fprintf('successfuly done. Final error = %f\n', final_err);
         catch e
             if strcmp(e.message, 'ransac was unable to find a useful solution')
@@ -81,11 +83,6 @@ function transforms = estimate_multi_pose(query_poses, points, correspondences, 
         figure(3);
         hold on;
         scatter(points2d(1,:), points2d(2,:), 10, 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))});
-
-        points3d = model.transform_points(rotation_mat, translation_mat);
-        figure(4);
-        hold on;
-        scatter3(points3d(1,:), points3d(2,:), points3d(3,:), 5, 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))});
     end
 
 end
