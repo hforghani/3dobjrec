@@ -1,6 +1,7 @@
 function create_ply(transforms, rec_indexes, obj_names, fname)
 
     poses = [];
+    colors = [];
     for i = 1:length(rec_indexes)
         model_f_name = ['data/model/' obj_names{rec_indexes(i)}];
         model = load(model_f_name);
@@ -12,6 +13,7 @@ function create_ply(transforms, rec_indexes, obj_names, fname)
 
         points3d = model.transform_points(rotation_mat, translation_mat);
         poses = [poses, points3d];
+        colors = [colors, model.get_colors()];
         
         clear model;
     end
@@ -25,10 +27,14 @@ function create_ply(transforms, rec_indexes, obj_names, fname)
     fprintf(fid, 'property float x\n');
     fprintf(fid, 'property float y\n');
     fprintf(fid, 'property float z\n');
+    fprintf(fid, 'property uchar red\n');
+    fprintf(fid, 'property uchar green\n');
+    fprintf(fid, 'property uchar blue\n');
     fprintf(fid, 'end_header\n');
     for i = 1:poses_num
         p = poses(:, i);
-        fprintf(fid, '%f %f %f\n', p(1), p(2), p(3));
+        c = colors(:, i);
+        fprintf(fid, '%f %f %f %d %d %d\n', p(1), p(2), p(3), c(1), c(2), c(3));
     end
     fclose(fid);
     

@@ -68,6 +68,14 @@ classdef Model
                 points2d(:,i) = pos2d(1:2) / pos2d(3);
             end
         end
+        
+        function colors = get_colors(self)
+            points_count = length(self.points);
+            colors = zeros(3, points_count);
+            for i = 1:points_count
+                colors(:, i) = self.points{i}.color;
+            end
+        end
     end
     
 end

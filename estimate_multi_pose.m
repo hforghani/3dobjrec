@@ -82,7 +82,7 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, co
         points2d = model.project_points(rotation_mat, translation_mat);
         figure(3);
         hold on;
-        scatter(points2d(1,:), points2d(2,:), 10, 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))});
+        scatter(points2d(1,:), points2d(2,:), 5, 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))});
     end
 
 end
