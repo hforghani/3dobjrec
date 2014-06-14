@@ -21,7 +21,7 @@ classdef Camera
             obj.r_distortion = r_distortion;
         end
         
-        function [descriptors, desc_point_indexes] = calc_multi_desc(self, points, calibration, model_path)
+        function [descriptors, desc_point_indexes] = calc_desc(self, points, calibration, model_path)
             im_gray = single(rgb2gray(self.get_image(model_path)));
             measurements = self.get_measurements(points);
             meas_poses = zeros(2, length(measurements));

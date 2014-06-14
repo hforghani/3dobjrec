@@ -28,7 +28,6 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
         model_corr = correspondences(:, model_corr_indexes);
         model_corr(2,:) = reindex_arr(model_indexes, model_corr(2,:));
         
-%         adj_mat = hyp_cons_graph(correspondences, model_query_poses, model_points, model_point_indexes, points_array{model_i});
         % 3d local consistency
         adj_3d_close = corr_close_matrix(model_corr, model_points, points_array{model_i});
         adj_3d_covis = corr_covis_matrix(model_corr, model_points, points_array{model_i});
@@ -185,7 +184,7 @@ function new_corr = choose_top_hyp(confidences, adj_matrices, N, points, query_p
         model_i = sort_indexes(i);
         adj_mat = adj_matrices{model_i};
         adj_path_3 = adj_mat ^ 3;
-        is_in_3complete = diag(adj_path_3) > 1;
+        is_in_3complete = diag(adj_path_3) >= 2;
         
         points_model_indexes = points(1,:);
         model_indexes = find(points_model_indexes == model_i);

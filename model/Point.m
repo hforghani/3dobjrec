@@ -7,8 +7,6 @@ classdef Point
         color;
         measure_num;
         measurements;
-        
-        descriptor;
     end
     
     methods
@@ -17,12 +15,6 @@ classdef Point
             self.color = color;
             self.measure_num = measure_num;
             self.measurements = measurements;
-        end
-        
-        function self = calc_multiscale_descriptors(self, img_fold_name, model)
-            for i = 1:self.measure_num
-                self.measurements{i} = self.measurements{i}.calc_multiscale_descriptors(img_fold_name, model);
-            end
         end
         
         function res = is_covisible_with(self, points)
@@ -60,14 +52,12 @@ classdef Point
                 I = imread([model_data_path 'db_img\' file_name]);
 
                 cal = model.calibration;
-                Kc = model.get_Kc();
-                point = Kc * [measurement.pos; 1];
+                point = cal.get_Kc() * [measurement.pos; 1];
 
                 imshow(I);
                 hold on;
                 scatter(cal.cx, cal.cy, 100 , 'r+');
                 scatter(point(1), point(2), 100 , 'y');
-%                 zoom(2);
             end
         end
     end

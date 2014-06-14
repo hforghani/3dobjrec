@@ -19,24 +19,12 @@ classdef Model
             obj.points = points;
         end
         
-        function Kc = get_Kc(self)
-            % Multiply to convert 2d image pose to 2d pixel position.
-            cal = self.calibration;
-            Kc = [1 0 cal.cx; 0 cal.fy/cal.fx cal.cy; 0 0 1];
-        end
-        
-        function K = get_calib_matrix(self)
-            % Multiply to convert 3d pose to 2d pose.
-            cal = self.calibration;
-            K = [cal.fx 0 cal.cx; 0 cal.fy cal.cy; 0 0 1];
-        end
-        
         function self = calc_multi_desc(self, model_path)
             fprintf('Calculating descriptors in %d cameras ...\n', length(self.cameras));
             for i = 1:length(self.cameras)
 %                 tic;
                 cam = self.cameras{i};
-                cam = cam.calc_multi_desc(self.points, model_path);
+                cam = cam.calc_desc(self.points, model_path);
                 self.cameras{i} = cam;
 %                 toc;
             end
@@ -63,7 +51,7 @@ classdef Model
                 proj_points3d(:,i) = transformed;
                 points3d(:,i) = pos3d;
                 
-                K = self.get_calib_matrix();
+                K = self.calibration.get_calib_matrix();
                 pos2d = K * transformed;
                 points2d(:,i) = pos2d(1:2) / pos2d(3);
             end

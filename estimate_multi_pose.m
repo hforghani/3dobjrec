@@ -75,14 +75,14 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, co
         % Draw inliers.
         figure(2);
         hold on;
-        scatter(matches2d(1,:), matches2d(2,:), 'MarkerEdgeColor', colors{mod(model_index,length(colors))});
+        scatter(matches2d(1,:), matches2d(2,:), 'MarkerEdgeColor', colors{mod(model_index,length(colors))+1});
         scatter(matches2d(1,inliers), matches2d(2,inliers), 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))});
 
         % Map points with the found transformation.
         points2d = model.project_points(rotation_mat, translation_mat);
         figure(3);
         hold on;
-        scatter(points2d(1,:), points2d(2,:), 5, 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))});
+        scatter(points2d(1,:), points2d(2,:), 5, 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))+1});
     end
 
 end
