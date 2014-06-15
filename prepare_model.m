@@ -22,7 +22,7 @@ descriptors = [];
 desc_point_indexes = [];
 for i = 1:length(model.cameras)
     cam = model.cameras{i};
-    [cam_desc, cam_desc_point_indexes] = cam.calc_multi_desc(model.points, model.calibration, model_data_path);
+    [cam_desc, cam_desc_point_indexes] = cam.calc_desc(model.points, model.calibration, model_data_path);
     descriptors = [descriptors, cam_desc];
     desc_point_indexes = [desc_point_indexes, cam_desc_point_indexes];
 end

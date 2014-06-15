@@ -31,6 +31,7 @@ classdef Camera
                 desc_point_indexes(i) = measurements{i}.point_index;
             end
             descriptors = devide_and_compute_daisy(im_gray, meas_poses);
+            
             fprintf('Descriptors of cemera %d with %d measurements calculated.\n', self.index, length(measurements));
         end
         

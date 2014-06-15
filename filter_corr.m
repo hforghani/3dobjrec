@@ -100,9 +100,7 @@ function adj_mat = corr_close_matrix(correspondences, points, model_points)
 
     % Put 3d point poses in a 3*P matrix.
     point_poses = zeros(3, points_count);
-    point_instances = cell(1, points_count);
     for i = 1:points_count
-        point_instances{i} = model_points{points(2,i)};
         point_poses(:,i) = model_points{points(2,i)}.pos;
     end
 
