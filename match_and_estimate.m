@@ -7,8 +7,8 @@ addpath daisy;
 
 % Set these parameters:
 case_name = 'all25';
-query_im_name = 'test_img/test8.jpg';
-ply_fname = 'result/test8.ply';
+query_im_name = 'test_img/test7.jpg';
+ply_fname = 'result/test7.ply';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');

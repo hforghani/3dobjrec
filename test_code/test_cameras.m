@@ -41,6 +41,9 @@ function varargout = test_cameras(varargin)
     else
         gui_mainfcn(gui_State, varargin{:});
     end
+    
+    addpath('..\');
+    addpath('..\model');
     % End initialization code - DO NOT EDIT
 
 
@@ -65,7 +68,7 @@ function test_cameras_OpeningFcn(hObject, eventdata, handles, varargin)
     cam_index = 1;
 
     model_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
-    model_fname = 'data\model\anchiceratops';
+    model_fname = '..\data\model\anchiceratops';
     container = load(model_fname);
     model = container.model;
 
@@ -117,26 +120,18 @@ function show_camera(cam_i, axes)
     global model_path model;
     
     cam = model.cameras{cam_i};
-    measurements = cam.get_measurements(model.points);
-    meas_count = length(measurements);
-    features = zeros(2, meas_count);
-    for i = 1:meas_count
-        features(:,i) = measurements{i}.pos;
-    end
-
+    [features, measurements] = cam.get_points_poses(model.points, model.calibration);
     im = cam.get_image(model_path);
     f_num = size(features, 2);
     cal = model.calibration;
     center = [cal.cx; cal.cy];
-    Kc = [1 0 cal.cx; 0 cal.fy/cal.fx cal.cy; 0 0 1];
-    features = Kc * [features; ones(1,f_num)];
     
     imshow(im, 'Parent', axes)
     hold on;
     scatter(center(1), center(2), 100 , 'r+');
     scatter(features(1,:), features(2,:), ones(1,f_num)*20 , 'y');
 
-    for i = 1:meas_count
+    for i = 1:f_num
         text(features(1,i), features(2,i), num2str(measurements{i}.point_index), 'Color', 'r');
     end
 

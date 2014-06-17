@@ -16,7 +16,7 @@ model_fname = [model_data_path 'model.nvm'];
 model = read_model(model_fname);
 save (prepared_model_fname, 'model');
 
-%% Offline model preparation
+%% Calculating descriptors
 fprintf('calculating descriptors in %d cameras ...\n', length(model.cameras));
 descriptors = [];
 desc_point_indexes = [];

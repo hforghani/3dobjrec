@@ -50,6 +50,27 @@ classdef Camera
             end
         end
         
+        function [poses, measurements] = get_points_poses(self, points, calibration)
+        % Get 2d poses of measurements visible in the camera.
+        % poses : 2*N matrix of poses
+        % measurements : 1*N cell array of measurements.
+            measurements = {};
+            poses = [];
+            for i = 1:length(points)
+                pt = points{i};
+                for j = 1:length(pt.measurements)
+                    meas = pt.measurements{j};
+                    if meas.image_index == self.index
+                        poses = [poses, meas.pos];
+                        measurements = [measurements {meas}];
+                    end
+                end
+            end
+            f_num = size(poses, 2);
+            poses = calibration.get_Kc * [poses; ones(1,f_num)];
+            poses = poses(1:2, :);
+        end
+        
         function im = get_image(self, model_path)
             im = imread([model_path 'db_img\' self.file_name]);
         end
