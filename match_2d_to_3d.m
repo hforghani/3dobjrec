@@ -9,7 +9,7 @@ function [query_frames, correspondences, points] = match_2d_to_3d(color_im, desc
     query_im = single(rgb2gray(color_im));
     
     % Use SIFT key-points:
-    [query_frames, ~] = vl_sift(query_im, 'Octaves', 8, 'Levels', 2, 'EdgeThresh' , 50);
+    [query_frames, ~] = vl_sift(query_im, 'Octaves', 8, 'Levels', 4, 'EdgeThresh' , 50);
     query_poses = query_frames(1:2, :);
     [query_poses, u_indexes, ~] = unique(query_poses', 'rows'); % Remove repeated points.
     query_poses = query_poses';

@@ -31,13 +31,13 @@ classdef Model
             end
         end
     
-        function trans_points3d = trans_to_cam_coord(self, R, C)
-        % Transform points to camera coordinates specified by R and C.
+        function trans_points3d = transform_points(self, R, T)
+        % Transform points to camera coordinates specified by R and T.
         % R : camera rotation
-        % C : camera center
+        % T : camera center
             points_count = length(self.points);
             poses = self.get_poses();
-            trans_points3d = R * poses + repmat(C, 1, points_count);
+            trans_points3d = R * poses + repmat(T, 1, points_count);
         end
 
         function points2d = project_points(self, R, T)

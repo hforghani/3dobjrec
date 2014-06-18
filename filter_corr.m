@@ -42,7 +42,7 @@ function new_corr = filter_corr(query_frames, points, correspondences, models, o
 %         adj_matrices{model_i} = conf_adj_mat;
 
         % Calculate final compatibility adjucency matrix.
-        adj_mat = corr_comp_matrix(correspondences, query_frames, model_points, models{model_i}, conf_adj_mat, adj_3d_covis);
+        adj_mat = corr_comp_matrix(model_corr, query_frames, model_points, models{model_i}, conf_adj_mat, adj_3d_covis);
         adj_matrices{model_i} = adj_mat;
         
         % Plot consistency graph of query poses
@@ -159,7 +159,6 @@ function adj_mat = corr_covis_matrix(correspondences, points, points_arr)
 end
 
 function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model, conf_adj_mat, covis_adj_mat)
-    points_count = size(points,2);
     corr_count = size(correspondences, 2);
 
     % Include correspondences of covisible points.
@@ -170,6 +169,7 @@ function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model
     adj_mat(~retained_corr, :) = 0;
     adj_mat(:, ~retained_corr) = 0;
     
+    % Remove correspondences with same query pose or 3d point.
     for i = 1:corr_count
         same_q_pos = correspondences(1,:) == correspondences(1,i);
         same_p_pos = correspondences(2,:) == correspondences(2,i);
@@ -177,7 +177,7 @@ function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model
     end
     adj_mat = adj_mat & adj_mat';
     
-    % Estimate pos of points in the query camera.
+    % Estimate pose of points in the query camera.
     point_poses = model.get_poses();
     point_poses = point_poses(:, points(2, correspondences(2, :)));
     sizes = model.point_sizes(points(2, correspondences(2, :)));
