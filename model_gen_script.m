@@ -4,6 +4,7 @@ clearvars; clc;
 % run('VLFEATROOT/toolbox/vl_setup');
 addpath daisy;
 addpath model;
+addpath utils;
 
 base_path = [get_dataset_path() '0-24(1)\0-24\'];
 folders = dir(base_path);

@@ -22,14 +22,8 @@ classdef Camera
         end
         
         function R = rotation_matrix(self)
-            normed = self.q_rotation / norm(self.q_rotation);
-            qw = normed(1);
-            qx = normed(2);
-            qy = normed(3);
-            qz = normed(4);
-            R = [1 - 2*qy^2 - 2*qz^2, 2*qx*qy - 2*qz*qw, 2*qx*qz + 2*qy*qw;
-                2*qx*qy + 2*qz*qw, 1 - 2*qx^2 - 2*qz^2, 2*qy*qz - 2*qx*qw;
-                2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx^2 - 2*qy^2];
+            R = quaternion2matrix(self.q_rotation);
+            R = R(1:3, 1:3);
         end
         
         function [descriptors, desc_point_indexes] = calc_desc(self, points, calibration, model_path)
