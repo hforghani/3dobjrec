@@ -21,18 +21,54 @@ classdef Camera
             obj.r_distortion = r_distortion;
         end
         
+        function R = rotation_matrix(self)
+            normed = self.q_rotation / norm(self.q_rotation);
+            qw = normed(1);
+            qx = normed(2);
+            qy = normed(3);
+            qz = normed(4);
+            R = [1 - 2*qy^2 - 2*qz^2, 2*qx*qy - 2*qz*qw, 2*qx*qz + 2*qy*qw;
+                2*qx*qy + 2*qz*qw, 1 - 2*qx^2 - 2*qz^2, 2*qy*qz - 2*qx*qw;
+                2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx^2 - 2*qy^2];
+        end
+        
         function [descriptors, desc_point_indexes] = calc_desc(self, points, calibration, model_path)
+            % Calculate Daisy descriptors of points visible in the camera.
             im_gray = single(rgb2gray(self.get_image(model_path)));
-            measurements = self.get_measurements(points);
-            meas_poses = zeros(2, length(measurements));
+            [meas_poses, measurements] = self.get_points_poses(points, calibration);
             desc_point_indexes = zeros(1, length(measurements));
             for i = 1:length(measurements)
-                meas_poses(:,i) = measurements{i}.get_pos_in_camera(calibration);
                 desc_point_indexes(i) = measurements{i}.point_index;
             end
             descriptors = devide_and_compute_daisy(im_gray, meas_poses);
             
             fprintf('Descriptors of cemera %d with %d measurements calculated.\n', self.index, length(measurements));
+        end
+        
+        function scales = calc_scales(self, points, calibration, model_path)
+            % Caluclate scales. Extract SIFT and get scale of nearest
+            % neighbor feature to each pose as its estimated scale. Crop
+            % the portion of image in which poses exist to extract SIFT.
+            max_feature_dist = 2;
+            
+            im_gray = single(rgb2gray(self.get_image(model_path)));
+            [meas_poses, ~] = self.get_points_poses(points, calibration);
+
+            hull = convhull(meas_poses(1,:), meas_poses(2,:));
+            hull_poses = meas_poses(:, hull);
+            [h,w] = size(im_gray);
+            top_left = floor(max(min(hull_poses, [], 2) - [50; 50], [1;1]));
+            bottom_right = ceil(min(max(hull_poses, [], 2) + [50; 50], [w;h]));
+            crop_im = im_gray(top_left(2):bottom_right(2), top_left(1):bottom_right(1));
+            [frame, ~] = vl_sift(single(crop_im), 'Octaves', 7, 'Levels', 15, 'EdgeThresh', 50);
+%             surf_points = detectSURFFeatures(crop_im, 'MetricThreshold', 10, 'NumOctaves', 8, 'NumScaleLevels', 10);
+            extracted_poses = frame(1:2,:) + repmat(top_left, 1, size(frame,2)) - 1;
+%             extracted_poses = double(surf_points.Location');
+            kdtree = vl_kdtreebuild(extracted_poses);
+            [indexes, dist] = vl_kdtreequery(kdtree, extracted_poses, meas_poses);
+            scales = frame(3, indexes);
+%             scales = surf_points.Scale(indexes)';
+            scales(dist > max_feature_dist ^ 2) = 0;
         end
         
         function measurements = get_measurements(self, points)

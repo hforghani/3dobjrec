@@ -31,31 +31,42 @@
 %         fr1(3,i), fr2(3,min_i), min_dist);
 % end
 
-%% Test sift scale search.
-addpath test_code;
-addpath model;
-% load 'data/model/axe_knight';
+%% Compare sift vs surf.
+obj_name = 'anchiceratops';
+% desc_name = 'sift';
+desc_name = 'surf';
+
+addpath('../');
+addpath('../model');
+model_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
+
+load(['../data/model/' obj_name]);
 cam = model.cameras{1};
-% image = imread([get_dataset_path() '0-24(1)\0-24\axe_knight\db_img\' cam.file_name]);
-model_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
 image = cam.get_image(model_path);
 gray_im = rgb2gray(image);
-tic;
-[frame, desc] = vl_sift(single(gray_im), 'Octaves', 8, 'Levels', 15, 'EdgeThresh', 50);
-% points = detectSURFFeatures(gray_im, 'MetricThreshold', 0);
-% [features, valid_points] = extractFeatures(gray_im, points);
-toc;
 
-desc_poses = frame(1:2,:);
-% desc_poses = double(valid_points.Location');
-kdtree = vl_kdtreebuild(double(desc_poses));
+if strcmp(desc_name, 'sift')
+    tic;
+    [frame, desc] = vl_sift(single(gray_im), 'Octaves', 4, 'Levels', 2, 'EdgeThresh', 10);
+    toc;
+    desc_poses = double(frame(1:2,:));
+else
+    tic;
+    points = detectSURFFeatures(gray_im, 'NumOctaves', 4, 'NumScaleLevels', 10, 'MetricThreshold', 10);
+    toc;
+    desc_poses = double(points.Location');
+end
+
+% kdtree = vl_kdtreebuild(desc_poses);
 
 measurements = cam.get_measurements(model.points);
 poses = zeros(2, length(measurements));
 for i = 1:length(measurements)
     poses(:,i) = measurements{i}.get_pos_in_camera(model.calibration);
 end
-[indexes, dist] = vl_kdtreequery(kdtree, desc_poses, poses);
+% [indexes, dist] = vl_kdtreequery(kdtree, desc_poses, poses);
 imshow(image); hold on;
 scatter(desc_poses(1,:), desc_poses(2,:), 5, 'r', 'filled');
 scatter(poses(1,:), poses(2,:), 30, 'g');
+
+fprintf('using %s : %d features detected\n', desc_name, size(desc_poses, 2));

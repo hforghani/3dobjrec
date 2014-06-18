@@ -30,14 +30,13 @@ classdef Model
             end
         end
     
-        function trans_points3d = transform_points(self, R, T)
+        function trans_points3d = trans_to_cam_coord(self, R, C)
+        % Transform points to camera coordinates specified by R and C.
+        % R : camera rotation
+        % C : camera center
             points_count = length(self.points);
-            trans_points3d = zeros(3, points_count);
-            for i = 1:points_count
-                pos3d = self.points{i}.pos;
-                transformed = R * pos3d + T;
-                trans_points3d(:,i) = transformed;
-            end
+            poses = self.get_poses();
+            trans_points3d = R * poses + repmat(C, 1, points_count);
         end
 
         function points2d = project_points(self, R, T)
@@ -54,6 +53,14 @@ classdef Model
                 K = self.calibration.get_calib_matrix();
                 pos2d = K * transformed;
                 points2d(:,i) = pos2d(1:2) / pos2d(3);
+            end
+        end
+        
+        function poses = get_poses(self)
+            points_count = length(self.points);
+            poses = zeros(3, points_count);
+            for i = 1:points_count
+                poses(:, i) = self.points{i}.pos;
             end
         end
         

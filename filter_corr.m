@@ -158,13 +158,13 @@ function adj_mat = corr_covis_matrix(correspondences, points, model_points)
 end
 
 function adj_mat = corr_comp_matrix(correspondences, conf_adj_mat, covis_adj_mat)
-    corr_count = size(correspondences, 2);
-    
     adj_mat = covis_adj_mat;
+    
     retained_corr = any(conf_adj_mat, 1);
     adj_mat(~retained_corr, :) = 0;
     adj_mat(:, ~retained_corr) = 0;
     
+    corr_count = size(correspondences, 2);
     for i = 1:corr_count
         same_q_pos = correspondences(1,:) == correspondences(1,i);
         same_p_pos = correspondences(2,:) == correspondences(2,i);
