@@ -9,9 +9,9 @@ base_path = [get_dataset_path() '0-24(1)\0-24\'];
 folders = dir(base_path);
 folders = folders(3:end);
 
-start_i = 6;
+start_i = 11;
 % end_i = length(folders);
-end_i = 10;
+end_i = 13;
 for i = start_i:end_i
     obj_name = folders(i).name;
     fprintf('preparing model "%s"\n', obj_name);

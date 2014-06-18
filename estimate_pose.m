@@ -1,9 +1,9 @@
-function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, model, sample_count, threshold)
+function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, calibration, sample_count, threshold)
 
 %% Run P3P with RANSAC.
 addpath EPnP;
 
-K = model.get_calib_matrix(); % calibration matrix
+K = calibration.get_calib_matrix(); % calibration matrix
 
 corr_data = [matches2d; matches3d];
 

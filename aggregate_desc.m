@@ -4,9 +4,10 @@ base_path = [get_dataset_path() '0-24(1)\0-24\'];
 folders = dir(base_path);
 folders = folders(3:end);
 
-result_name = 'all25';
+result_name = 'all10';
 start_i = 1;
-end_i = length(folders);
+% end_i = length(folders);
+end_i = 10;
 
 obj_names = cell(end_i - start_i + 1, 1);
 for i = start_i:end_i

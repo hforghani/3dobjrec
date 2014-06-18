@@ -11,7 +11,6 @@ desc_model_fname = ['data/model_desc/' obj_name];
 % %% Read model
 % model_fname = [model_data_path 'model.nvm'];
 % model = read_model(model_fname);
-% save (simple_model_fname, 'model');
 % 
 % %% Calculating descriptors
 % fprintf('calculating descriptors in %d cameras ...\n', length(model.cameras));
@@ -33,7 +32,7 @@ desc_model_fname = ['data/model_desc/' obj_name];
 
 %% Load models if saved.
 load(simple_model_fname);
-load(desc_model_fname, 'desc_point_indexes');
+load(desc_model_fname);
 
 %% Calculate scale of each measurement.
 fprintf('calculating scales ...\n');
@@ -73,12 +72,13 @@ for i = 1:length(model.points)
         point_sizes(i) = mean(p_scales(valid) .* p_depths(valid) ./ p_focal_len(valid));
     end
 end
+model.point_sizes = point_sizes;
 fprintf('done\n');
 
-
+%% Save variables.
 fprintf('saving ... ');
-load(desc_model_fname, 'descriptors', 'desc_point_indexes', 'desc_model_indexes', 'kdtree', 'obj_names');
-save (desc_model_fname, 'descriptors', 'point_sizes', 'desc_point_indexes', 'desc_model_indexes', 'kdtree', 'obj_names');
+save (simple_model_fname, 'model');
+save (desc_model_fname, 'descriptors', 'desc_point_indexes', 'desc_model_indexes', 'kdtree', 'obj_names');
 fprintf('done\n');
 
 toc;

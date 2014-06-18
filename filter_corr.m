@@ -1,4 +1,4 @@
-function new_corr = filter_corr(query_poses, points, correspondences, desc_model, points_array, query_im_name)
+function new_corr = filter_corr(query_frames, points, correspondences, models, obj_names, query_im_name)
 
     addpath utils;
     
@@ -7,6 +7,7 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
     colors = {'r','g','b','c','m','y','k','w'};
     
     % 2d local consistency
+    query_poses = query_frames(1:2, :);
     adj_mat_2d = get_2d_cons_matrix(correspondences, query_poses);
     
     % Create empty matrices.
@@ -17,7 +18,7 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
     adj_matrices = cell(max(models_i), 1);
 
     for i = 1 : model_count
-        fprintf('validating hyp "%s" ... ', desc_model.obj_names{i});
+        fprintf('validating hyp "%s" ... ', obj_names{i});
         
         % Separate points and correspondences related to this model.
         model_i = models_i(i);
@@ -29,8 +30,8 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
         model_corr(2,:) = reindex_arr(model_indexes, model_corr(2,:));
         
         % 3d local consistency
-        adj_3d_close = corr_close_matrix(model_corr, model_points, points_array{model_i});
-        adj_3d_covis = corr_covis_matrix(model_corr, model_points, points_array{model_i});
+        adj_3d_close = corr_close_matrix(model_corr, model_points, models{model_i}.points);
+        adj_3d_covis = corr_covis_matrix(model_corr, model_points, models{model_i}.points);
         adj_mat_3d = adj_3d_close & adj_3d_covis;
 
         % Calculate adjacency matrix of consistency graph then compute
@@ -38,23 +39,23 @@ function new_corr = filter_corr(query_poses, points, correspondences, desc_model
         conf_adj_mat = adj_mat_2d(model_corr_indexes, model_corr_indexes) & adj_mat_3d;
         confidence = sum(sum(conf_adj_mat));
         confidences(model_i) = confidence;
-        adj_matrices{model_i} = conf_adj_mat;
+%         adj_matrices{model_i} = conf_adj_mat;
 
         % Calculate final compatibility adjucency matrix.
-%         adj_mat = corr_comp_matrix(correspondences, conf_adj_mat, adj_3d_covis);
-%         adj_matrices{model_i} = adj_mat;
+        adj_mat = corr_comp_matrix(correspondences, query_frames, model_points, models{model_i}, conf_adj_mat, adj_3d_covis);
+        adj_matrices{model_i} = adj_mat;
         
         % Plot consistency graph of query poses
         figure(1); hold on;
         model_query_poses = query_poses(:, model_corr(1,:)); % May have repeated poses.
-        gplot(conf_adj_mat, model_query_poses', ['-o' colors{mod(model_i,length(colors))+1}]);
+        gplot(adj_mat, model_query_poses', ['-o' colors{mod(model_i,length(colors))+1}]);
         fprintf('done, confidence = %d\n', confidence);
     end
     
     % Choose N top hypotheses, then filter correspondences not present in 
     % 3-complete subgraphs.
     N = 5;
-    new_corr = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, desc_model.obj_names);
+    new_corr = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, obj_names);
 end
 
 
@@ -88,7 +89,7 @@ function adj_mat = get_2d_cons_matrix(correspondences, query_poses)
     adj_mat = adj_mat - eye(corr_count) .* adj_mat; % Zero diagonal elemets.
 end
 
-function adj_mat = corr_close_matrix(correspondences, points, model_points)
+function adj_mat = corr_close_matrix(correspondences, points, points_arr)
 % Get adjucency matrix of 3d closeness matrix of correspondences.
 % correspondences: correspondences related to points of an object
 % points: 2*P matrix of points of an abject; each column contains model
@@ -101,7 +102,7 @@ function adj_mat = corr_close_matrix(correspondences, points, model_points)
     % Put 3d point poses in a 3*P matrix.
     point_poses = zeros(3, points_count);
     for i = 1:points_count
-        point_poses(:,i) = model_points{points(2,i)}.pos;
+        point_poses(:,i) = points_arr{points(2,i)}.pos;
     end
 
     % Find spatially close points.
@@ -128,7 +129,7 @@ function adj_mat = corr_close_matrix(correspondences, points, model_points)
     adj_mat = adj_mat - eye(corr_count) .* adj_mat; % Zero diagonal elemets.
 end
 
-function adj_mat = corr_covis_matrix(correspondences, points, model_points)
+function adj_mat = corr_covis_matrix(correspondences, points, points_arr)
 % Get adjucency matrix of covisibility graph of correspondences. There is
 % an edge between two nodes if their 3d points are covisible in any camera.
     points_count = size(points,2);
@@ -137,7 +138,7 @@ function adj_mat = corr_covis_matrix(correspondences, points, model_points)
     % Put 3d point poses in a 3*P matrix.
     point_instances = cell(1, points_count);
     for i = 1:points_count
-        point_instances{i} = model_points{points(2,i)};
+        point_instances{i} = points_arr{points(2,i)};
     end
     
     % Construct points covisibility graph.
@@ -157,18 +158,51 @@ function adj_mat = corr_covis_matrix(correspondences, points, model_points)
     end
 end
 
-function adj_mat = corr_comp_matrix(correspondences, conf_adj_mat, covis_adj_mat)
+function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model, conf_adj_mat, covis_adj_mat)
+    points_count = size(points,2);
+    corr_count = size(correspondences, 2);
+
+    % Include correspondences of covisible points.
     adj_mat = covis_adj_mat;
     
+    % Remove filtered correspondences in the local filtering stage.
     retained_corr = any(conf_adj_mat, 1);
     adj_mat(~retained_corr, :) = 0;
     adj_mat(:, ~retained_corr) = 0;
     
-    corr_count = size(correspondences, 2);
     for i = 1:corr_count
         same_q_pos = correspondences(1,:) == correspondences(1,i);
         same_p_pos = correspondences(2,:) == correspondences(2,i);
         adj_mat(i, same_q_pos | same_p_pos) = 0;
+    end
+    adj_mat = adj_mat & adj_mat';
+    
+    % Estimate pos of points in the query camera.
+    point_poses = model.get_poses();
+    point_poses = point_poses(:, points(2, correspondences(2, :)));
+    sizes = model.point_sizes(points(2, correspondences(2, :)));
+    scales = query_frames(3, correspondences(1, :));
+    est_poses = zeros(3, corr_count);
+    nonzero = sizes ~= 0;
+    sizes = sizes(nonzero);
+    scales = scales(nonzero);
+    coef = sizes ./ scales;
+    for i = 1:3
+        est_poses(i,nonzero) = coef .* point_poses(i,nonzero);
+    end
+    
+    % Check tolerance interval.
+    toler1 = 0.8;
+    toler2 = 1.25;
+    for i = 1 : corr_count-1
+        for j = i+1 : corr_count
+            if adj_mat(i,j) && any(est_poses(:,i) ~= 0) && any(est_poses(:,j) ~= 0)
+                geo_comp = norm(est_poses(:,i) - est_poses(:,j)) / norm(point_poses(:,i) - point_poses(:,j));
+                if (geo_comp < toler1 || geo_comp > toler2)
+                    adj_mat(i,j) = 0;
+                end
+            end
+        end
     end
     adj_mat = adj_mat & adj_mat';
 end
@@ -178,7 +212,7 @@ function new_corr = choose_top_hyp(confidences, adj_matrices, N, points, query_p
     result_corr_indexes = [];
     colors = {'r','g','b','c','m','y','k','w'};
     
-    for i = 1:N
+    for i = 1 : min(N, length(confidences))
         model_i = sort_indexes(i);
         adj_mat = adj_matrices{model_i};
         adj_path_3 = adj_mat ^ 3;

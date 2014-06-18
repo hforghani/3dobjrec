@@ -33,8 +33,8 @@
 
 %% Compare sift vs surf.
 obj_name = 'anchiceratops';
-% desc_name = 'sift';
-desc_name = 'surf';
+desc_name = 'sift';
+% desc_name = 'surf';
 
 addpath('../');
 addpath('../model');
@@ -47,7 +47,7 @@ gray_im = rgb2gray(image);
 
 if strcmp(desc_name, 'sift')
     tic;
-    [frame, desc] = vl_sift(single(gray_im), 'Octaves', 4, 'Levels', 2, 'EdgeThresh', 10);
+    [frame, desc] = vl_sift(single(gray_im), 'Octaves', 7, 'Levels', 15, 'EdgeThresh', 50);
     toc;
     desc_poses = double(frame(1:2,:));
 else
@@ -67,6 +67,6 @@ end
 % [indexes, dist] = vl_kdtreequery(kdtree, desc_poses, poses);
 imshow(image); hold on;
 scatter(desc_poses(1,:), desc_poses(2,:), 5, 'r', 'filled');
-scatter(poses(1,:), poses(2,:), 30, 'g');
+scatter(poses(1,:), poses(2,:), 200, 'g');
 
 fprintf('using %s : %d features detected\n', desc_name, size(desc_poses, 2));

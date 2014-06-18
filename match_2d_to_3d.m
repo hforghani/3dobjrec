@@ -1,4 +1,4 @@
-function [query_poses, correspondences, points] = match_2d_to_3d(color_im, desc_model)
+function [query_frames, correspondences, points] = match_2d_to_3d(color_im, desc_model)
 % query_poses : 2*N; points of query image.
 % correspondences : 2*M matrix; each column is an array of [query_pos_index; point_index_in_points_array]
 % points: 2*P; points of 3d model; each column is in the format [model_index, point_index]
@@ -8,22 +8,18 @@ function [query_poses, correspondences, points] = match_2d_to_3d(color_im, desc_
     fprintf('extracting feature from query image ... ');
     query_im = single(rgb2gray(color_im));
     
-    % dense sampling:
-%     [h, w] = size(query_im);
-% 	step = 3;
-%     [x, y] = meshgrid(step : step : w - step, step : step : h - step);
-% 	query_points = [x(:), y(:)]';
-    
     % Use SIFT key-points:
-    edge_thresh = 100;
-    [sift_frames, ~] = vl_sift(query_im, 'EdgeThresh' , edge_thresh);
-    query_poses = sift_frames(1:2, :);
-    query_poses = unique(query_poses', 'rows')'; % Remove repeated points.
+    [query_frames, ~] = vl_sift(query_im, 'Octaves', 8, 'Levels', 2, 'EdgeThresh' , 50);
+    query_poses = query_frames(1:2, :);
+    [query_poses, u_indexes, ~] = unique(query_poses', 'rows'); % Remove repeated points.
+    query_poses = query_poses';
+    query_frames = query_frames(:, u_indexes);
 
     query_descriptors = devide_and_compute_daisy(query_im, query_poses);
     zero_indexes = find(~any(query_descriptors));
     query_descriptors(:, zero_indexes) = [];
-    query_poses(:, zero_indexes) = [];
+%     query_poses(:, zero_indexes) = [];
+    query_frames(:, zero_indexes) = [];
     fprintf('done\n');
 
     query_points_num = size(query_descriptors, 2);

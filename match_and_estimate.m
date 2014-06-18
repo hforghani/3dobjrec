@@ -6,9 +6,9 @@ addpath daisy;
 % run('VLFEATROOT/toolbox/vl_setup');
 
 % Set these parameters:
-case_name = 'all25';
-query_im_name = 'test_img/test7.jpg';
-ply_fname = 'result/test7.ply';
+case_name = 'all10';
+query_im_name = 'test_img/test5.jpg';
+ply_fname = 'result/test5.ply';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
@@ -19,32 +19,33 @@ fprintf('loading model ... ');
 desc_model_f_name = ['data/model_desc/' case_name];
 desc_model = load(desc_model_f_name);
 obj_count = length(desc_model.obj_names);
-points_array = cell(obj_count, 1);
+models = cell(obj_count, 1);
 for i = 1:obj_count
     model_f_name = ['data/model/' desc_model.obj_names{i}];
     load(model_f_name);
-    points_array{i} = model.points;
+    models{i} = model;
 end
 fprintf('done\n');
 
 %% Match 2d to 3d
 tic;
 image = imread(query_im_name);
-[query_poses, correspondences, points] = match_2d_to_3d(image, desc_model);
-save(matches_f_name, 'query_poses', 'points', 'correspondences');
+[query_frames, correspondences, points] = match_2d_to_3d(image, desc_model);
+save(matches_f_name, 'query_frames', 'points', 'correspondences');
 toc;
 
 %% Filter correspondences.
 fprintf('filtering correspondences ...\n');
 tic;
 correspondences = ...
-    filter_corr(query_poses, points, correspondences, desc_model, points_array, query_im_name);
+    filter_corr(query_frames, points, correspondences, models, desc_model.obj_names, query_im_name);
 toc;
 fprintf('done\n');
 
 %% Estimate pose.
 tic;
-[transforms, rec_indexes] = estimate_multi_pose(query_poses, points, correspondences, points_array, desc_model.obj_names, query_im_name);
+query_poses = query_frames(1:2,:);
+[transforms, rec_indexes] = estimate_multi_pose(query_poses, points, correspondences, models, desc_model.obj_names, query_im_name);
 toc;
 
 %% Create ply output.

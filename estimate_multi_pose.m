@@ -1,6 +1,6 @@
-function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, correspondences, points_array, obj_names, query_im_name)
+function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, correspondences, models, obj_names, query_im_name)
 
-    sample_count = 5;
+    sample_count = 3;
     error_threshold = 10;
 
     image = imread(query_im_name);
@@ -19,7 +19,7 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, co
     for i = 1:corr_count
         poses2d(:,i) = query_poses(:,correspondences(1,i));
         point_index = correspondences(2,i);
-        model_points = points_array{points(1,point_index)};
+        model_points = models{points(1,point_index)}.points;
         poses3d(:,i) = model_points{points(2,point_index)}.pos;
     end
 
@@ -55,7 +55,7 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, co
             continue;
         end
         try
-            [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(hyp_poses2d, hyp_poses3d, model, sample_count, error_threshold);
+            [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(hyp_poses2d, hyp_poses3d, model.calibration, sample_count, error_threshold);
             show_results(hyp_poses2d, rotation_mat, translation_mat, inliers, model, model_i)
             transforms = [transforms; [rotation_mat, translation_mat]];
             rec_indexes = [rec_indexes; i];
@@ -76,7 +76,7 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, co
         figure(2);
         hold on;
         scatter(matches2d(1,:), matches2d(2,:), 'MarkerEdgeColor', colors{mod(model_index,length(colors))+1});
-        scatter(matches2d(1,inliers), matches2d(2,inliers), 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))});
+        scatter(matches2d(1,inliers), matches2d(2,inliers), 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))+1});
 
         % Map points with the found transformation.
         points2d = model.project_points(rotation_mat, translation_mat);

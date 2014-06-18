@@ -1,4 +1,4 @@
-function [ pos, scale, orient, desc ] = lowe_sift( im, octaves, intervals, object_mask, contrast_threshold, curvature_threshold, interactive )
+function [ pos, scale, orient, desc ] = lowe_sift( im, interactive, octaves, intervals, object_mask, contrast_threshold, curvature_threshold )
 
 % [ pos, scale, orient, desc ] = SIFT( im, octaves, intervals, object_mask, contrast_threshold, curvature_threshold, interactive )
 %
@@ -230,7 +230,7 @@ if interactive >= 2
    end
    fig = figure;
    clf;
-   showIm(pic);
+   imshow(pic);
    resizeImageFig( fig, size(pic), 0.25 );
    fprintf( 2, 'The gaussian pyramid (0.25 scale).\nPress any key to continue.\n' );
    pause;
@@ -257,7 +257,7 @@ if interactive >= 2
    end
    fig = figure;
    clf;
-   showIm(pic);
+   imshow(pic);
    resizeImageFig( fig, size(pic), 0.25 );
    fprintf( 2, 'The DOG pyramid (0.25 scale).\nPress any key to continue.\n' );
    pause;
@@ -370,7 +370,7 @@ end
 if interactive >= 2
    fig = figure;
    clf;
-   showIm(im);
+   imshow(im);
    hold on;
    plot(raw_keypoints(:,1),raw_keypoints(:,2),'y+');
    resizeImageFig( fig, size(im), 2 );
@@ -379,7 +379,7 @@ if interactive >= 2
    close(fig);
    fig = figure;
    clf;
-   showIm(im);
+   imshow(im);
    hold on;
    plot(contrast_keypoints(:,1),contrast_keypoints(:,2),'y+');
    resizeImageFig( fig, size(im), 2 );
@@ -388,7 +388,7 @@ if interactive >= 2
    close(fig);
    fig = figure;
    clf;
-   showIm(im);
+   imshow(im);
    hold on;
    plot(curve_keypoints(:,1),curve_keypoints(:,2),'y+');
    resizeImageFig( fig, size(im), 2 );
@@ -560,7 +560,7 @@ end
 if interactive >= 2
    fig = figure;
    clf;
-   showIm(im);
+   imshow(im);
    hold on;
    display_keypoints( pos, scale(:,3), orient, 'y' );
    resizeImageFig( fig, size(im), 2 );
