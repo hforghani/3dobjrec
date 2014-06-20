@@ -53,11 +53,12 @@ classdef Camera
             [h,w] = size(im_gray);
             top_left = floor(max(min(hull_poses, [], 2) - [50; 50], [1;1]));
             bottom_right = ceil(min(max(hull_poses, [], 2) + [50; 50], [w;h]));
-            crop_im = im_gray(top_left(2):bottom_right(2), top_left(1):bottom_right(1));
+            crop_im = uint8(im_gray(top_left(2):bottom_right(2), top_left(1):bottom_right(1)));
             [frame, ~] = vl_sift(single(crop_im), 'Octaves', 7, 'Levels', 15, 'EdgeThresh', 50);
-%             surf_points = detectSURFFeatures(crop_im, 'MetricThreshold', 10, 'NumOctaves', 8, 'NumScaleLevels', 10);
-            extracted_poses = frame(1:2,:) + repmat(top_left, 1, size(frame,2)) - 1;
+%             surf_points = detectSURFFeatures(crop_im, 'NumOctaves', 10, 'NumScaleLevels', 20, 'MetricThreshold', 0);
+            extracted_poses = frame(1:2,:);
 %             extracted_poses = double(surf_points.Location');
+            extracted_poses = extracted_poses + repmat(top_left, 1, size(extracted_poses,2)) - 1;
             kdtree = vl_kdtreebuild(extracted_poses);
             [indexes, dist] = vl_kdtreequery(kdtree, extracted_poses, meas_poses);
             scales = frame(3, indexes);

@@ -33,14 +33,13 @@
 
 %% Compare sift vs surf.
 obj_name = 'anchiceratops';
-desc_name = 'sift';
-% desc_name = 'surf';
+% desc_name = 'sift';
+desc_name = 'surf';
 
-addpath('../');
-addpath('../model');
+addpath('model');
 model_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
 
-load(['../data/model/' obj_name]);
+load(['data/model/' obj_name]);
 cam = model.cameras{1};
 image = cam.get_image(model_path);
 gray_im = rgb2gray(image);

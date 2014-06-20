@@ -67,9 +67,9 @@ for i = 1:length(model.points)
         p_depths(j) = transformed_points(cam_index, i, 3);
         p_focal_len(j) = model.cameras{cam_index}.focal_length;
     end
-    valid = p_scales ~= 0;
-    if sum(valid)
-        point_sizes(i) = mean(p_scales(valid) .* p_depths(valid) ./ p_focal_len(valid));
+    nonzero = p_scales ~= 0;
+    if sum(nonzero)
+        point_sizes(i) = mean(p_scales(nonzero) .* p_depths(nonzero) ./ p_focal_len(nonzero));
     end
 end
 model.point_sizes = point_sizes;
