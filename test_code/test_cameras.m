@@ -42,8 +42,7 @@ function varargout = test_cameras(varargin)
         gui_mainfcn(gui_State, varargin{:});
     end
     
-    addpath('..\');
-    addpath('..\model');
+    addpath('model');
     % End initialization code - DO NOT EDIT
 
 
@@ -67,8 +66,9 @@ function test_cameras_OpeningFcn(hObject, eventdata, handles, varargin)
     global cam_index model_path model;
     cam_index = 1;
 
-    model_path = [get_dataset_path() '0-24(1)\0-24\anchiceratops\'];
-    model_fname = '..\data\model\anchiceratops';
+    obj_name = 'bengal_tiger';
+    model_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
+    model_fname = ['data\model\' obj_name];
     container = load(model_fname);
     model = container.model;
 
@@ -120,21 +120,28 @@ function show_camera(cam_i, axes)
     global model_path model;
     
     cam = model.cameras{cam_i};
-    [features, measurements] = cam.get_points_poses(model.points, model.calibration);
-    im = cam.get_image(model_path);
-    f_num = size(features, 2);
     cal = model.calibration;
+    [poses, measurements] = cam.get_points_poses(model.points, model.calibration);
+%     R = cam.rotation_matrix();
+%     T = cam.center;
+%     points = model.transform_points(R, T);
+%     poses = cal.get_calib_matrix() * points;
+%     poses = poses ./ repmat(poses(3,:), 3, 1);
+%     poses(3,:) = [];
+
+    im = cam.get_image(model_path);
+    f_num = size(poses, 2);
+%     cal = model.calibration;
     center = [cal.cx; cal.cy];
     
     imshow(im, 'Parent', axes)
     hold on;
     scatter(center(1), center(2), 100 , 'r+');
-    scatter(features(1,:), features(2,:), ones(1,f_num)*20 , 'y');
+    scatter(poses(1,:), poses(2,:), ones(1,f_num)*20 , 'y');
 
     for i = 1:f_num
-        text(features(1,i), features(2,i), num2str(measurements{i}.point_index), 'Color', 'r');
+        text(poses(1,i), poses(2,i), num2str(measurements{i}.point_index), 'Color', 'r');
     end
-
 
 
 function index_edit_Callback(hObject, eventdata, handles)

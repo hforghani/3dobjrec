@@ -37,7 +37,7 @@ classdef Model
         % T : camera center
             points_count = length(self.points);
             poses = self.get_poses();
-            trans_points3d = R * poses + repmat(T, 1, points_count);
+            trans_points3d = R * (poses - repmat(T, 1, points_count));
         end
 
         function points2d = project_points(self, R, T)
