@@ -218,15 +218,15 @@ if interactive >= 2
       sz(1) = sz(1) + size(gauss_pyr{octave,1},1);
    end
    pic = zeros(sz);
-   y = 1;
+   y = sz(1);
    for octave = 1:octaves
       x = 1;
       sz = size(gauss_pyr{octave,1});
       for interval = 1:(intervals + 3)
-			pic(y:(y+sz(1)-1),x:(x+sz(2)-1)) = gauss_pyr{octave,interval};		         
+			pic((y-sz(1)+1):y,x:(x+sz(2)-1)) = gauss_pyr{octave,interval};		         
          x = x + sz(2);
       end
-      y = y + sz(1);
+      y = y - sz(1);
    end
    fig = figure;
    clf;
@@ -245,15 +245,15 @@ if interactive >= 2
       sz(1) = sz(1) + size(DOG_pyr{octave}(:,:,1),1);
    end
    pic = zeros(sz);
-   y = 1;
+   y = sz(1);
    for octave = 1:octaves
       x = 1;
       sz = size(DOG_pyr{octave}(:,:,1));
       for interval = 1:(intervals + 2)
-			pic(y:(y+sz(1)-1),x:(x+sz(2)-1)) = DOG_pyr{octave}(:,:,interval);		         
+			pic((y-sz(1)+1):y,x:(x+sz(2)-1)) = DOG_pyr{octave}(:,:,interval);		         
          x = x + sz(2);
       end
-      y = y + sz(1);
+      y = y - sz(1);
    end
    fig = figure;
    clf;

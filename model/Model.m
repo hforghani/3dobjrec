@@ -30,31 +30,43 @@ classdef Model
 %                 toc;
             end
         end
-    
-        function trans_points3d = transform_points(self, R, T)
-        % Transform points to camera coordinates specified by R and T.
-        % R : camera rotation
-        % T : camera center
+        
+        function res_points = transform_points(self, R, T)
+        % Transform points by R and T.
+        % R : rotation matrix
+        % T : translation matrix
             points_count = length(self.points);
             poses = self.get_poses();
-            trans_points3d = R * (poses - repmat(T, 1, points_count));
+            res_points = R * poses + repmat(T, 1, points_count);
         end
 
-        function points2d = project_points(self, R, T)
-            points_count = length(self.points);
-            points2d = zeros(2, points_count);
-            points3d = zeros(3, points_count);
-            proj_points3d = zeros(3, points_count);
-            for i = 1:points_count
-                pos3d = self.points{i}.pos;
-                transformed = R * pos3d + T;
-                proj_points3d(:,i) = transformed;
-                points3d(:,i) = pos3d;
-                
-                K = self.calibration.get_calib_matrix();
-                pos2d = K * transformed;
-                points2d(:,i) = pos2d(1:2) / pos2d(3);
-            end
+        function trans_points3d = trans_to_cam_coord(self, R, T)
+        % Transform points to camera coordinates specified by R and T.
+        % R : world to camera rotation
+        % T : camera center in world coordinates
+            trans_points3d = self.transform_points(R, -R*T);
+        end
+
+        function points2d = project_to_img_plane(self, R, T)
+            % Project points to image plane of given camera.
+            % R : world to camera rotation
+            % T : world to camera translation
+%             points_count = length(self.points);
+%             points2d = zeros(2, points_count);
+%             points3d = zeros(3, points_count);
+%             for i = 1:points_count
+%                 pos3d = self.points{i}.pos;
+%                 transformed = R * pos3d + T;
+%                 points3d(:,i) = pos3d;
+%                 
+%                 K = self.calibration.get_calib_matrix();
+%                 pos2d = K * transformed;
+%                 points2d(:,i) = pos2d(1:2) / pos2d(3);
+%             end
+            pos3d = self.transform_points(R, T);
+            K = self.calibration.get_calib_matrix();
+            pos2d = K * pos3d;
+            points2d = pos2d(1:2, :) ./ repmat(pos2d(3, :), 2, 1);
         end
         
         function poses = get_poses(self)

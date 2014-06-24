@@ -54,7 +54,7 @@ function new_corr = filter_corr(query_frames, points, correspondences, models, o
     
     % Choose N top hypotheses, then filter correspondences not present in 
     % 3-complete subgraphs.
-    N = 5;
+    N = 6;
     new_corr = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, obj_names);
 end
 

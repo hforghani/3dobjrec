@@ -51,7 +51,8 @@ fprintf('calculating sizes ... ');
 transformed_points = zeros(length(model.cameras), length(model.points), 3);
 for i = 1:length(model.cameras)
     cam = model.cameras{i};
-    transformed_points(i, :, :) = model.transform_points(cam.rotation_matrix(), cam.center)';
+    points = model.tans_to_cam_coord(cam.rotation_matrix(), cam.center)';
+    transformed_points(i, :, :) = points;
 end
 
 % Calculate size of each point.
