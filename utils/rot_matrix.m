@@ -6,7 +6,7 @@ z = u(3);
 
 % Create a 3x3 zero matrix
 R = zeros(3,3);
-% We use the formual for rotationg matrix about a unit vector k
+% We use the formula for rotationg matrix about a unit vector u
 
 R(1,1) = cos(fi)+x^2*(1-cos(fi));
 R(1,2) = x*y*(1-cos(fi))-z*sin(fi);

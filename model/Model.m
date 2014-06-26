@@ -8,9 +8,6 @@ classdef Model
         points;
 
         point_sizes;
-        descriptors;
-        desc_point_indexes;
-        kdtree;
     end
     
     methods

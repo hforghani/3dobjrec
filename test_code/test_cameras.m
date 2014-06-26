@@ -63,12 +63,15 @@ function test_cameras_OpeningFcn(hObject, eventdata, handles, varargin)
     % UIWAIT makes test_cameras wait for user response (see UIRESUME)
     % uiwait(handles.figure1);
     addpath model;
-    global cam_index model_path model;
+    global cam_index model_path model POINTS_MODE;
     cam_index = 1;
 
-    obj_name = 'bengal_tiger';
-    model_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
-    model_fname = ['data\model\' obj_name];
+    OBJ_NAME = 'appaloosa_horse';
+    POINTS_MODE = '3dmodel';
+%     POINTS_MODE = 'measurements';
+    
+    model_path = [get_dataset_path() '0-24(1)\0-24\' OBJ_NAME '\'];
+    model_fname = ['data\model\' OBJ_NAME];
     container = load(model_fname);
     model = container.model;
 
@@ -117,30 +120,36 @@ function next_button_Callback(hObject, eventdata, handles)
 
 
 function show_camera(cam_i, axes)
-    global model_path model;
+    global model_path model POINTS_MODE;
     
     cam = model.cameras{cam_i};
     cal = model.calibration;
-    [poses, measurements] = cam.get_points_poses(model.points, model.calibration);
-%     R = cam.rotation_matrix();
-%     T = cam.center;
-%     points = model.transform_points(R, T);
-%     poses = cal.get_calib_matrix() * points;
-%     poses = poses ./ repmat(poses(3,:), 3, 1);
-%     poses(3,:) = [];
-
     im = cam.get_image(model_path);
+    
+    if strcmp(POINTS_MODE, 'measurements')
+        [poses, measurements] = cam.get_points_poses(model.points, model.calibration);
+    else
+        R = cam.rotation_matrix();
+        T = cam.center;
+        points = model.trans_to_cam_coord(R, T);
+        poses = cal.get_calib_matrix() * points;
+        poses = poses ./ repmat(poses(3,:), 3, 1);
+        poses(3,:) = [];
+    end
+
     f_num = size(poses, 2);
 %     cal = model.calibration;
     center = [cal.cx; cal.cy];
     
-    imshow(im, 'Parent', axes)
-    hold on;
-    scatter(center(1), center(2), 100 , 'r+');
-    scatter(poses(1,:), poses(2,:), ones(1,f_num)*20 , 'y');
+    imshow(im, 'Parent', axes);
+    hold(axes, 'on');
+    scatter(axes, center(1), center(2), 100 , 'r+');
+    scatter(axes, poses(1,:), poses(2,:), ones(1,f_num)*20 , 'y');
 
-    for i = 1:f_num
-        text(poses(1,i), poses(2,i), num2str(measurements{i}.point_index), 'Color', 'r');
+    if strcmp(POINTS_MODE, 'measurements')
+        for i = 1:f_num
+            text(poses(1,i), poses(2,i), num2str(measurements{i}.point_index), 'Color', 'r');
+        end
     end
 
 
@@ -174,3 +183,4 @@ function show_button_Callback(hObject, eventdata, handles)
     show_camera(cam_i, handles.axes1);
     global cam_index;
     cam_index = cam_i;
+    
