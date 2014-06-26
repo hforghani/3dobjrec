@@ -61,7 +61,7 @@ end
 
 function adj_mat = get_2d_cons_matrix(correspondences, query_poses)
     % Find 2d local consistent poses for each query pos.
-    nei_thr_2d = 100 ^ 2;
+    nei_thr_2d = 50 ^ 2;
     q_pos_count = size(query_poses, 2);
     nei_num = max(q_pos_count / 2 , 2);
     

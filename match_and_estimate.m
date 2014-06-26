@@ -6,9 +6,9 @@ addpath daisy;
 % run('VLFEATROOT/toolbox/vl_setup');
 
 % Set these parameters:
-case_name = 'all10';
-query_im_name = 'test_img/test5.jpg';
-ply_fname = 'result/test5.ply';
+case_name = 'all25';
+query_im_name = 'test_img/auto_test/3.jpg';
+ply_fname = 'result/auto3.ply';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');

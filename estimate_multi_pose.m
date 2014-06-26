@@ -1,6 +1,6 @@
 function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, correspondences, models, obj_names, query_im_name)
 
-    sample_count = 3;
+    sample_count = 4;
     error_threshold = 10;
 
     image = imread(query_im_name);
