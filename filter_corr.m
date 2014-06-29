@@ -1,10 +1,9 @@
-function new_corr = filter_corr(query_frames, points, correspondences, models, obj_names, query_im_name)
+function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(query_frames, points, correspondences, models, obj_names, query_im_name)
 
     addpath utils;
     
+    global colors image;
     image = imread(query_im_name);
-    figure(1); imshow(image);
-    global colors;
     colors = {'r','g','b','c','m','y','k','w'};
     
     % 2d local consistency
@@ -60,7 +59,7 @@ function new_corr = filter_corr(query_frames, points, correspondences, models, o
     % Choose top hypotheses, then filter correspondences not present in 
     % 3-complete subgraphs.
     N = min(10, model_count);
-    new_corr = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, obj_names);
+    [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, obj_names);
 end
 
 
@@ -211,29 +210,43 @@ function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model
     adj_mat = adj_mat & adj_mat';
 end
 
-function new_corr = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, obj_names)
-    [~, sort_indexes] = sort(confidences, 'descend');
-    result_corr_indexes = [];
-    global colors;
+function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, obj_names)
+    % sel_model_i : N*1 matrix of selected model indexes
+    % sel_corr : N*1 cell of selected correspondences which each element is
+    % the 2*P matrix of correspondences
+    % sel_adj_mat : N*1 cell of selected adjacent marices each one related 
+    % to the corresponding element of sel_corr.
+    global colors image;
     
+    [~, sort_indexes] = sort(confidences, 'descend');
+    sel_model_i = zeros(N,1);
+    sel_corr = cell(N,1);
+    sel_adj_mat = cell(N,1);
+
     for i = 1 : N
+        % Find nodes in 3-complete subgraphs.
         model_i = sort_indexes(i);
+        sel_model_i(i) = model_i;
         adj_mat = adj_matrices{model_i};
         adj_path_3 = adj_mat ^ 3;
         is_in_3complete = diag(adj_path_3) >= 2;
         
+        % Separated correspondences related to top hypotheses.
         points_model_indexes = points(1,:);
         model_indexes = find(points_model_indexes == model_i);
         model_corr_indexes = find(ismember(correspondences(2,:), model_indexes));
-        result_corr_indexes = [result_corr_indexes, model_corr_indexes(is_in_3complete)];
+        sel_corr{i} = correspondences(:, model_corr_indexes(is_in_3complete));
+        adj_mat(~is_in_3complete, :) = [];
+        adj_mat(:, ~is_in_3complete) = [];
+        sel_adj_mat{i} = adj_mat;
 
-        model_corr = correspondences(:, model_corr_indexes);
-        model_query_poses = query_poses(:, model_corr(1,:));
+        % Show compatibility graphs and nodes in 3-complete subgraphs.
+        model_query_poses = query_poses(:, sel_corr{i}(1,:));
         color = colors{mod(model_i,length(colors))+1};
-        figure(1); hold on;
+        figure(1); subplot(floor(sqrt(N)), ceil(sqrt(N)), i);
+        imshow(image); hold on; 
         gplot(adj_mat, model_query_poses', ['-o' color]);
-        scatter(model_query_poses(1, is_in_3complete), model_query_poses(2, is_in_3complete), 'filled', 'MarkerFaceColor', color);
+        title(obj_names{model_i}, 'Interpreter', 'none');
         fprintf('hyp ''%s'' chose (%s)\n', obj_names{model_i}, color);
     end
-    new_corr = correspondences(:, result_corr_indexes);
 end

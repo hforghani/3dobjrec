@@ -1,19 +1,19 @@
-function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, calibration, sample_count, threshold)
+function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, adj_mat, calibration, sample_count, threshold)
 
-%% Run P3P with RANSAC.
 addpath EPnP;
 
 K = calibration.get_calib_matrix(); % calibration matrix
-
 corr_data = [matches2d; matches3d];
 
-[M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold);
+% Run P3P with RANSAC.
+[M, inliers] = ransac_graph_samp(corr_data, adj_mat, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold);
+
 rotation_mat = M(:,1:3);
 translation_mat = M(:,4);
 final_err = reprojection_error_usingRT(matches3d(:,inliers)', matches2d(:,inliers)', rotation_mat, translation_mat, K);
 
 function M = epnp_fittingfn(data)
-%% Estimate camera position by EPnP.
+% Estimate camera position by EPnP.
     count = size(data, 2);
     x3d_h = [data(3:5,:); ones(1,count)];
     x2d_h = [data(1:2,:); ones(1,count)];
@@ -22,7 +22,7 @@ function M = epnp_fittingfn(data)
 end
 
 function [inliers, M] = epnp_distfn(M, data, t)
-%% Get best camera position with maximum number of inliers.
+% Get best camera position with maximum number of inliers.
     if ~iscell(M)
         M = {M};
     end
@@ -53,7 +53,7 @@ function [inliers, M] = epnp_distfn(M, data, t)
 end
 
 function r = degenfn(data)
-%% degeneration function
+% degeneration function
     r = 0;
 end
 

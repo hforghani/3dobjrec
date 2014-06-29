@@ -8,8 +8,8 @@ addpath utils;
 
 % Set these parameters:
 case_name = 'all25';
-query_im_name = 'test_img/auto_test/1.jpg';
-ply_fname = 'result/auto1.ply';
+query_im_name = 'test_img/test5.jpg';
+ply_fname = 'result/test5.ply';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
@@ -38,7 +38,7 @@ toc;
 %% Filter correspondences.
 fprintf('filtering correspondences ...\n');
 tic;
-correspondences = ...
+[sel_model_i, sel_corr, sel_adj_mat] = ...
     filter_corr(query_frames, points, correspondences, models, desc_model.obj_names, query_im_name);
 toc;
 fprintf('done\n');
@@ -46,7 +46,7 @@ fprintf('done\n');
 %% Estimate pose.
 tic;
 query_poses = query_frames(1:2,:);
-[transforms, rec_indexes] = estimate_multi_pose(query_poses, points, correspondences, models, desc_model.obj_names, query_im_name);
+[transforms, rec_indexes] = estimate_multi_pose(query_poses, points, sel_model_i, sel_corr, sel_adj_mat, models, desc_model.obj_names, query_im_name);
 toc;
 
 %% Create ply output.
