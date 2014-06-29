@@ -36,8 +36,8 @@ function trans_im = apply_transform(im, depth_mult, R, cal)
     res = imresize(im, 1 / depth_mult);
     [xs, ys, ~] = size(res);
     [x, y, ~] = size(im);
-    top_x = floor((x-xs)/2);
-    left_y = floor((y-ys)/2);
+    top_x = ceil((x-xs)/2);
+    left_y = ceil((y-ys)/2);
     trans_im = zeros(size(im));
     trans_im(top_x : top_x+xs-1, left_y : left_y+ys-1, :) = res;
     

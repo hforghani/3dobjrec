@@ -1,7 +1,8 @@
 function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, correspondences, models, obj_names, query_im_name)
 
-    sample_count = 4;
-    error_threshold = 10;
+    SAMPLE_COUNT = 3;
+    ERROR_THRESH = 8;
+    MIN_INLIERS = 10;
 
     image = imread(query_im_name);
     figure(2);
@@ -50,20 +51,25 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, co
         model = load(model_f_name);
         model = model.model;
 
-        if size(hyp_poses2d, 2) < sample_count
+        if size(hyp_poses2d, 2) < SAMPLE_COUNT
             fprintf('not enough points\n');
             continue;
         end
         try
-            [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(hyp_poses2d, hyp_poses3d, model.calibration, sample_count, error_threshold);
-            show_results(hyp_poses2d, rotation_mat, translation_mat, inliers, model, model_i)
-            transforms = [transforms; [rotation_mat, translation_mat]];
-            rec_indexes = [rec_indexes; i];
-            fprintf('successfuly done. Final error = %f\n', final_err);
+            [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(hyp_poses2d, hyp_poses3d, model.calibration, SAMPLE_COUNT, ERROR_THRESH);
+            if length(inliers) >= MIN_INLIERS
+                show_results(hyp_poses2d, rotation_mat, translation_mat, inliers, model, model_i)
+                transforms = [transforms; [rotation_mat, translation_mat]];
+                rec_indexes = [rec_indexes; i];
+                fprintf('successfuly done. Final error = %f\n', final_err);
+            else
+                fprintf('not enough inliers\n');
+            end
         catch e
             if strcmp(e.message, 'ransac was unable to find a useful solution')
                 fprintf('object not found\n');
             else
+                disp(e);
                 fprintf('%s\n', e.message);
             end
         end

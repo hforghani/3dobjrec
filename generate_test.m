@@ -9,13 +9,13 @@ desc_model = load(desc_model_f_name);
 obj_names = desc_model.obj_names;
 clear desc_model;
 
-% Load test backgounds.
+% Load test backgrounds.
 bckg_path = 'test_img/background/';
 backg_files = dir(bckg_path);
 backg_files = backg_files(3:end);
 
 % parameters:
-TEST_COUNT = 1;
+TEST_COUNT = 10;
 MAX_OBJ_PER_TEST = 4;
 IMAGE_HEIGHT = 720;
 IMAGE_WIDTH = 1280;
@@ -39,7 +39,7 @@ for i = 1:TEST_COUNT
     test_im = imresize(test_im, [IMAGE_HEIGHT, IMAGE_WIDTH]);
     
     test_obj_names = '';
-    obj_per_test = randi(MAX_OBJ_PER_TEST + 1) - 1;
+    obj_per_test = randi(MAX_OBJ_PER_TEST);
     
     for j = 1:obj_per_test
         fprintf('\tobject %d\n', j);
@@ -51,7 +51,7 @@ for i = 1:TEST_COUNT
         cam_index = randi(length(model.cameras));
 
         [obj_im, bw, R, T] = apply_random_homo(model, model_path, cam_index);
-%         bw = logical(bwmorph(double(bw), 'thin', 3));
+        bw = logical(bwmorph(double(bw), 'erode', 3));
 
         for c = 1:3
             ch_obj = obj_im(:,:,c); ch_test = test_im(:,:,c);

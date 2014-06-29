@@ -1,14 +1,15 @@
 clearvars; close all; clc;
 addpath model;
 addpath daisy;
+addpath utils;
 
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 
 % Set these parameters:
 case_name = 'all25';
-query_im_name = 'test_img/auto_test/3.jpg';
-ply_fname = 'result/auto3.ply';
+query_im_name = 'test_img/auto_test/1.jpg';
+ply_fname = 'result/auto1.ply';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');

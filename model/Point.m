@@ -36,6 +36,14 @@ classdef Point
             end
         end
         
+        function indexes = cameras_visible_in(self)
+            % Get camera indexes in which this point is visible.
+            indexes = zeros(self.measure_num, 1);
+            for i = 1:self.measure_num
+                indexes(i) = self.measurements{i}.image_index;
+            end
+        end
+        
         function show_measurements(self, model, model_data_path)
             % Show up to 6 measurements in their camera images.
             figure(2);

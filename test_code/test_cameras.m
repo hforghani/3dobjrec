@@ -138,7 +138,6 @@ function show_camera(cam_i, axes)
     end
 
     f_num = size(poses, 2);
-%     cal = model.calibration;
     center = [cal.cx; cal.cy];
     
     imshow(im, 'Parent', axes);
