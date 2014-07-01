@@ -6,19 +6,21 @@ addpath utils;
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
 
+%% Initialize.
 % Set these parameters:
 case_name = 'all25';
-query_im_name = 'test_img/test5.jpg';
-ply_fname = 'result/test5.ply';
+query_im_name = 'test_img/auto/4.jpg';
+ply_fname = 'result/auto4.ply';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
 exact_name = parts{1}{1};
 matches_f_name = ['data/matches/' case_name '_' exact_name];
-
-fprintf('loading model ... ');
 desc_model_f_name = ['data/model_desc/' case_name];
 desc_model = load(desc_model_f_name);
+
+%% Load models.
+fprintf('loading models ... ');
 obj_count = length(desc_model.obj_names);
 models = cell(obj_count, 1);
 for i = 1:obj_count

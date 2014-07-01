@@ -1,7 +1,7 @@
 function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, model_indexes, correspondences, adj_matrices, models, obj_names, query_im_name)
 
     SAMPLE_COUNT = 3;
-    ERROR_THRESH = 8;
+    ERROR_THRESH = 4;
     MIN_INLIERS = 10;
 
     image = imread(query_im_name);
@@ -41,14 +41,14 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
 
         try
             [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH);
-            if length(inliers) >= MIN_INLIERS
+%             if length(inliers) >= MIN_INLIERS
                 show_results(poses2d, rotation_mat, translation_mat, inliers, model, model_i)
                 transforms = [transforms; [rotation_mat, translation_mat]];
                 rec_indexes = [rec_indexes; model_i];
                 fprintf('successfuly done. Final error = %f\n', final_err);
-            else
-                fprintf('not enough inliers\n');
-            end
+%             else
+%                 fprintf('not enough inliers\n');
+%             end
         catch e
             if strcmp(e.message, 'ransac was unable to find a useful solution')
                 fprintf('object not found\n');

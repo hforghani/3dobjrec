@@ -32,14 +32,14 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(query_frames, points
         model_corr(2,:) = reindex_arr(model_indexes, model_corr(2,:));
         
         % 3d local consistency
-%         tic;
         adj_3d_close = corr_close_matrix(model_corr, model_points, models{i}.points);
+%         tic;
         adj_3d_covis = corr_covis_matrix(model_corr, model_points, models{i}.points);
+%         fprintf('3d covisibility check: %f\n', toc);
         adj_mat_3d = adj_3d_close & adj_3d_covis;
-%         fprintf('3d local consistency: %f\n', toc);
 
         % Show 3d local consistency graph of model points.
-%         all_poses3d = models{model_i}.get_poses();
+%         all_poses3d = models{i}.get_poses();
 %         point_indexes = model_points(2, model_corr(2,:));
 %         poses3d = all_poses3d(:, point_indexes);
 %         figure; scatter3(all_poses3d(1,:), all_poses3d(2,:), all_poses3d(3,:), 5);
@@ -73,7 +73,7 @@ end
 
 
 function adj_mat = get_2d_cons_matrix(correspondences, query_frames)
-    SCALE_BASED_NEI = 150;
+    SCALE_BASED_NEI = 50;
     query_poses = query_frames(1:2, :);
     corr_count = size(correspondences, 2);
 
@@ -105,7 +105,6 @@ function adj_mat = corr_close_matrix(correspondences, points, points_arr)
 % points: 2*P matrix of points of an abject; each column contains model
 % index and point index
 % model_points: cell array of object points of type Point
-    nei_thr_3d = 1 ^ 2;
     points_count = size(points,2);
     nei_num = max(points_count / 2 , 2);
 
@@ -115,6 +114,9 @@ function adj_mat = corr_close_matrix(correspondences, points, points_arr)
         point_poses(:,i) = points_arr{points(2,i)}.pos;
     end
     corr_poses = point_poses(:, correspondences(2,:));
+    
+%     nei_thr_3d = 0.7 ^ 2;
+    nei_thr_3d = (norm(min(point_poses, 2) - max(point_poses, 2)) / 100) ^ 2;
 
     % Find spatially close points.
     kdtree = vl_kdtreebuild(double(corr_poses));
@@ -196,13 +198,12 @@ function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model
     sizes = model.point_sizes(points(2, correspondences(2, :)));
     scales = query_frames(3, correspondences(1, :));
     est_poses = zeros(3, corr_count);
+    f = model.calibration.fx; % Focal length
+    image_coord_poses = [query_frames(1:2,correspondences(1, :));
+                        ones(1,corr_count) * f];
     nonzero = sizes ~= 0;
-    sizes = sizes(nonzero);
-    scales = scales(nonzero);
-    coef = sizes ./ scales;
-    for i = 1:3
-        est_poses(i,nonzero) = coef .* point_poses(i,nonzero);
-    end
+    est_poses(:,nonzero) = repmat((sizes(nonzero) ./ scales(nonzero)), 3, 1) ...
+                        .* image_coord_poses(:, nonzero);
     
     % Check tolerance interval.
     TOLER1 = 0.8;
