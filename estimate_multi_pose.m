@@ -5,17 +5,10 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
     MIN_INLIERS = 10;
 
     image = imread(query_im_name);
-    figure(2);
-    imshow(image);
-    figure(3);
-    imshow(image);
-    h3 = figure(4);
-    delete(h3);
+    figure(4); imshow(image);
+    figure(5); imshow(image);
     colors = {'r','g','b','c','m','y','k','w'};
     
-%     points_model_indexes = points(1,:);
-%     models_i = unique(points_model_indexes);
-%     model_count = length(models_i);
     transforms = {};
     rec_indexes = [];
 
@@ -33,27 +26,23 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
         end
         
         % Gather poses of all correspondences.
-        hyp_poses2d = zeros(2, corr_count);
-        hyp_poses3d = zeros(3, corr_count);
+        poses2d = zeros(2, corr_count);
+        poses3d = zeros(3, corr_count);
         for j = 1:corr_count
-            hyp_poses2d(:,j) = query_poses(:,corr(1,j));
+            poses2d(:,j) = query_poses(:,corr(1,j));
             point_index = corr(2,j);
             model_points = models{points(1,point_index)}.points;
-            hyp_poses3d(:,j) = model_points{points(2,point_index)}.pos;
+            poses3d(:,j) = model_points{points(2,point_index)}.pos;
         end
-
-        figure(2);
-        hold on;
-        scatter(hyp_poses2d(1,:), hyp_poses2d(2,:), 'MarkerEdgeColor', colors{mod(i,length(colors))+1});
 
         model_f_name = ['data/model/' obj_names{model_i}];
         model = load(model_f_name);
         model = model.model;
 
         try
-            [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(hyp_poses2d, hyp_poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH);
+            [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH);
             if length(inliers) >= MIN_INLIERS
-                show_results(hyp_poses2d, rotation_mat, translation_mat, inliers, model, model_i)
+                show_results(poses2d, rotation_mat, translation_mat, inliers, model, model_i)
                 transforms = [transforms; [rotation_mat, translation_mat]];
                 rec_indexes = [rec_indexes; model_i];
                 fprintf('successfuly done. Final error = %f\n', final_err);
@@ -64,7 +53,6 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
             if strcmp(e.message, 'ransac was unable to find a useful solution')
                 fprintf('object not found\n');
             else
-%                 disp(getReport(e,'extended'));
                 fprintf('%s\n', e.message);
             end
         end
@@ -74,15 +62,13 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
 
     function show_results(matches2d, rotation_mat, translation_mat, inliers, model, model_index)
         % Draw inliers.
-        figure(2);
-        hold on;
+        figure(4); hold on;
         scatter(matches2d(1,:), matches2d(2,:), 'MarkerEdgeColor', colors{mod(model_index,length(colors))+1});
         scatter(matches2d(1,inliers), matches2d(2,inliers), 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))+1});
 
         % Map points with the found transformation.
         points2d = model.project_to_img_plane(rotation_mat, translation_mat);
-        figure(3);
-        hold on;
+        figure(5); hold on;
         scatter(points2d(1,:), points2d(2,:), 5, 'filled', 'MarkerFaceColor', colors{mod(model_index,length(colors))+1});
     end
 
