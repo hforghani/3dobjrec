@@ -67,7 +67,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(query_frames, points
     
     % Choose top hypotheses, then filter correspondences not present in 
     % 3-complete subgraphs.
-    N = min(10, model_count);
+    N = min(5, model_count);
     [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, adj_matrices, N, points, query_poses, correspondences, obj_names);
 end
 

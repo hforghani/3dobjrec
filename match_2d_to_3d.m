@@ -9,7 +9,7 @@ function [query_frames, correspondences, points] = match_2d_to_3d(color_im, desc
     query_im = single(rgb2gray(color_im));
     
     % Use SIFT key-points:
-    [query_frames, ~] = vl_sift(query_im, 'Levels', 3, 'EdgeThresh' , 10);
+    [query_frames, ~] = vl_sift(query_im, 'Levels', 5, 'EdgeThresh' , 10);
     
 %     figure; imshow(color_im); hold on;
 %     h2 = vl_plotframe(query_frames) ;
