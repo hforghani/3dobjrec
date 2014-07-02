@@ -32,11 +32,10 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(query_frames, points
         model_corr(2,:) = reindex_arr(model_indexes, model_corr(2,:));
         
         % 3d local consistency
-        adj_3d_close = corr_close_matrix(model_corr, model_points, models{i}.points);
 %         tic;
-        adj_3d_covis = corr_covis_matrix(model_corr, model_points, models{i}.points);
+        pnt_adj_covis = covis_matrix(model_points, models{i}.points);
 %         fprintf('3d covisibility check: %f\n', toc);
-        adj_mat_3d = adj_3d_close & adj_3d_covis;
+        adj_mat_3d = local_cons_matrix(model_corr, model_points, models{i}.points, pnt_adj_covis);
 
         % Show 3d local consistency graph of model points.
 %         all_poses3d = models{i}.get_poses();
@@ -53,7 +52,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(query_frames, points
         confidences(i) = confidence;
 
         % Calculate final compatibility adjucency matrix.
-        adj_mat = corr_comp_matrix(model_corr, query_frames, model_points, models{i}, conf_adj_mat, adj_3d_covis);
+        adj_mat = corr_comp_matrix(model_corr, query_frames, model_points, models{i}, conf_adj_mat, pnt_adj_covis);
         adj_matrices{i} = adj_mat;
         
         % Plot consistency graph of query poses
@@ -73,7 +72,7 @@ end
 
 
 function adj_mat = get_2d_cons_matrix(correspondences, query_frames)
-    SCALE_BASED_NEI = 50;
+    SCALE_BASED_NEI = 100;
     query_poses = query_frames(1:2, :);
     corr_count = size(correspondences, 2);
 
@@ -99,51 +98,54 @@ function adj_mat = get_2d_cons_matrix(correspondences, query_frames)
 end
 
 
-function adj_mat = corr_close_matrix(correspondences, points, points_arr)
-% Get adjucency matrix of 3d closeness matrix of correspondences.
+function adj_mat = local_cons_matrix(correspondences, points, points_arr, covis_mat)
+% Get adjucency matrix of 3d local consistency matrix of correspondences.
 % correspondences: correspondences related to points of an object
 % points: 2*P matrix of points of an abject; each column contains model
 % index and point index
-% model_points: cell array of object points of type Point
+% points_arr: cell array of object points of type Point
     points_count = size(points,2);
-    nei_num = max(points_count / 2 , 2);
+    nei_num = floor(length(points_arr) * 0.05);
 
     % Put 3d point poses in a 3*P matrix.
-    point_poses = zeros(3, points_count);
-    for i = 1:points_count
-        point_poses(:,i) = points_arr{points(2,i)}.pos;
+    all_poses = zeros(3, length(points_arr));
+    for i = 1:length(points_arr)
+        all_poses(:,i) = points_arr{i}.pos;
     end
-    corr_poses = point_poses(:, correspondences(2,:));
-    
-%     nei_thr_3d = 0.7 ^ 2;
-    nei_thr_3d = (norm(min(point_poses, 2) - max(point_poses, 2)) / 100) ^ 2;
+    point_poses = all_poses(:, points(2, :));
 
     % Find spatially close points.
-    kdtree = vl_kdtreebuild(double(corr_poses));
-    [nei_indexes, distances] = vl_kdtreequery(kdtree, corr_poses, corr_poses, 'NUMNEIGHBORS', nei_num);
-    nei_indexes(distances > nei_thr_3d) = 0;
+    kdtree = vl_kdtreebuild(double(all_poses));
+    [indexes, ~] = vl_kdtreequery(kdtree, all_poses, point_poses, 'NUMNEIGHBORS', nei_num + 1);
+    indexes(1,:) = [];
     
     % Construct graph of 3d local consistency.
-    corr_count = size(correspondences, 2);
-    adj_mat = false(corr_count);
-    for i = 1:corr_count
-        nn_i = nei_indexes(:, i);
-        dist_i = distances(:, i);
-        % Check neighborhood distance.
-        nn_i = nn_i(dist_i < nei_thr_3d);
-        adj_mat(i, nn_i) = 1;
+    pnt_adj_mat = false(points_count);
+    for i = 1:points_count
+        nn_i = indexes(:, i);
+        [~, inn, ~] = intersect(nn_i, points(2, covis_mat(i, :)));
+        sorted_inn = sort(inn);
+        nei_indexes = nn_i(sorted_inn(1:min(nei_num, length(sorted_inn))));
+        [~, ipoints, ~] = intersect(points(2,:), nei_indexes);
+        pnt_adj_mat(i, ipoints) = 1;
     end
     
     % Make the matrix symmetric and with zero diagonal.
-    adj_mat = adj_mat | adj_mat';
-    adj_mat = adj_mat .* ~eye(corr_count);
+    pnt_adj_mat = pnt_adj_mat | pnt_adj_mat';
+    pnt_adj_mat = pnt_adj_mat .* ~eye(points_count);
+
+    % Construct correspondences 3d local consistency graph.
+    corr_count = size(correspondences, 2);
+    adj_mat = false(corr_count);
+    for i = 1 : corr_count
+        adj_mat(i, :) = pnt_adj_mat(correspondences(2,i), correspondences(2,:));
+    end
 end
 
-function adj_mat = corr_covis_matrix(correspondences, points, points_arr)
+function pnt_adj_mat = covis_matrix(points, points_arr)
 % Get adjucency matrix of covisibility graph of correspondences. There is
 % an edge between two nodes if their 3d points are covisible in any camera.
     points_count = size(points,2);
-    corr_count = size(correspondences, 2);
 
     % Put 3d point poses in a 3*P matrix.
     point_instances = cell(1, points_count);
@@ -165,22 +167,29 @@ function adj_mat = corr_covis_matrix(correspondences, points, points_arr)
         end
     end
     pnt_adj_mat = pnt_adj_mat | pnt_adj_mat';
-    
-    % Construct correspondences covisibility graph.
-    adj_mat = false(corr_count);
-    for i = 1 : corr_count
-        adj_mat(i, :) = pnt_adj_mat(correspondences(2,i), correspondences(2,:));
-    end
 end
 
-function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model, conf_adj_mat, covis_adj_mat)
+function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model, cons_adj_mat, covis_adj_mat)
+% correspondences :     2*C matrix
+% query_frames :        4*Q matrix
+% point :               2*P matrix
+% model :               instance of Model
+% cons_adj_mat :        C*C adjucency matrix of local consistence
+% covis_adj_mat :       P*P adjucency matrix of covisibility
+% adj_mat :             C*C adjucency matrix of general consistency
     corr_count = size(correspondences, 2);
 
+    % Construct correspondences covisibility graph.
+    cor_covis_adj_mat = false(corr_count);
+    for i = 1 : corr_count
+        cor_covis_adj_mat(i, :) = covis_adj_mat(correspondences(2,i), correspondences(2,:));
+    end
+    
     % Include correspondences of covisible points.
-    adj_mat = covis_adj_mat;
+    adj_mat = cor_covis_adj_mat;
     
     % Remove filtered correspondences in the local filtering stage.
-    retained_corr = any(conf_adj_mat, 1);
+    retained_corr = any(cons_adj_mat, 1);
     adj_mat(~retained_corr, :) = 0;
     adj_mat(:, ~retained_corr) = 0;
     
