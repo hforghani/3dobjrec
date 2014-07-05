@@ -1,14 +1,13 @@
-function [query_frames, correspondences, points] = match_2d_to_3d(color_im, desc_model)
-% query_poses : 2*N; points of query image.
+function [query_frames, correspondences, points, corr_dist] = match_2d_to_3d(color_im, desc_model)
+% query_frames : 4*N; data of keypoints extracted from 
 % correspondences : 2*M matrix; each column is an array of [query_pos_index; point_index_in_points_array]
 % points: 2*P; points of 3d model; each column is in the format [model_index, point_index]
+% corr_dist: 1*M matrix of correspondences descriptor distances
     addpath model;
 
-    %% Extract features.
+    % Extract keypoints using SIFT.
     fprintf('extracting feature from query image ... ');
-    query_im = single(rgb2gray(color_im));
-    
-    % Use SIFT key-points:
+    query_im = single(rgb2gray(color_im));    
     [query_frames, ~] = vl_sift(query_im, 'Levels', 5, 'EdgeThresh' , 10);
     
 %     figure; imshow(color_im); hold on;
@@ -20,21 +19,19 @@ function [query_frames, correspondences, points] = match_2d_to_3d(color_im, desc
     query_poses = query_poses';
     query_frames = query_frames(:, u_indexes);
 
+    % Calcualate Daisy descriptor of keypoints.
     query_descriptors = devide_and_compute_daisy(query_im, query_poses);
     zero_indexes = find(~any(query_descriptors));
     query_descriptors(:, zero_indexes) = [];
-%     query_poses(:, zero_indexes) = [];
     query_frames(:, zero_indexes) = [];
     fprintf('done\n');
 
     query_points_num = size(query_descriptors, 2);
     fprintf('%d descriptors extracted.\n', query_points_num);
 
-    %% Register 2d to 3d.
+    % Register 2d to 3d. Find some nearest neighbors for each query pose.
     fprintf('registering 2d to 3d ... ');
     max_error = 0.7;
-
-    % Match 2d to 3d; some nearest neighbors for each query pose.
     models_count = length(unique(desc_model.desc_model_indexes));
     nei_num = ceil(models_count/10);
     [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors, 'NUMNEIGHBORS', nei_num);
@@ -43,28 +40,27 @@ function [query_frames, correspondences, points] = match_2d_to_3d(color_im, desc
     is_less_than_error = distances < max_error;
     point_general_indexes = unique(indexes(is_less_than_error));
     points_count = length(point_general_indexes);
-    points = zeros(2, points_count);
-    for i = 1:points_count
-        points(1, i) = desc_model.desc_model_indexes(point_general_indexes(i));
-        points(2, i) = desc_model.desc_point_indexes(point_general_indexes(i));
-    end
+    points = [desc_model.desc_model_indexes(point_general_indexes);
+              desc_model.desc_point_indexes(point_general_indexes)];
     
-    % Construct correspondences.
-    correspondences = zeros(2, sum(sum(is_less_than_error)));
+    % Determine correspondences and their distances.
+    corr_count = sum(sum(is_less_than_error));
+    correspondences = zeros(2, corr_count);
+    corr_dist = zeros(1, corr_count);
     corr_i = 1;
-    for i = 1:size(is_less_than_error,2)
+    for i = 1 : size(indexes,2)
         indexes_i = indexes(:,i);
         match_count = sum(is_less_than_error(:,i) == 1);
         correspondences(1, corr_i : corr_i+match_count-1) = i;
         correspondences(2, corr_i : corr_i+match_count-1) = indexes_i(1 : match_count);
+        corr_dist(corr_i : corr_i+match_count-1) = distances(1 : match_count, i);
         corr_i = corr_i + match_count;
     end
     
-    % Set second row of correspondences to the index of point column in 'points' array.
+    % Set second row of correspondences equal to the index of point column in 'points' array.
     addpath utils;
     correspondences(2,:) = reindex_arr(point_general_indexes, correspondences(2,:));
     
-    %% Delete repeated points.
     % Correct references in correspondences which will be removed.
     corrected = false(1, points_count);
     for i = 1:points_count
@@ -75,13 +71,19 @@ function [query_frames, correspondences, points] = match_2d_to_3d(color_im, desc
             corrected(repeated_indexes) = true;
         end
     end
+    
     % Remove repeated points.
     points_ids = 1:size(points,2);
     [new_points, i_p, ~] = unique(points', 'rows');
     points_ids = points_ids(i_p);
     points = new_points';
+    
     % Change references as they refer to the related column of points.
     correspondences(2,:) = reindex_arr(points_ids, correspondences(2,:));
 
+    % Remove repeated correspondences.
+    [new_corr, ~, ~] = unique(correspondences', 'rows');
+    correspondences = new_corr';
+    
     fprintf('done\n');
 end

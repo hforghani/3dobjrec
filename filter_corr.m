@@ -35,7 +35,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(query_frames, points
 %         tic;
         pnt_adj_covis = covis_matrix(model_points, models{i}.points);
 %         fprintf('3d covisibility check: %f\n', toc);
-        adj_mat_3d = local_cons_matrix(model_corr, model_points, models{i}.points, pnt_adj_covis);
+        adj_mat_3d = local_cons3d_matrix(model_corr, model_points, models{i}.points, pnt_adj_covis);
 
         % Show 3d local consistency graph of model points.
 %         all_poses3d = models{i}.get_poses();
@@ -98,7 +98,7 @@ function adj_mat = get_2d_cons_matrix(correspondences, query_frames)
 end
 
 
-function adj_mat = local_cons_matrix(correspondences, points, points_arr, covis_mat)
+function adj_mat = local_cons3d_matrix(correspondences, points, points_arr, covis_mat)
 % Get adjucency matrix of 3d local consistency matrix of correspondences.
 % correspondences: correspondences related to points of an object
 % points: 2*P matrix of points of an abject; each column contains model

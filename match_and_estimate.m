@@ -9,8 +9,8 @@ addpath utils;
 %% Initialize.
 % Set these parameters:
 case_name = 'all25';
-query_im_name = 'test_img/auto/4.jpg';
-ply_fname = 'result/auto4.ply';
+query_im_name = 'test_img/test5.jpg';
+ply_fname = 'result/test5.ply';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
@@ -33,8 +33,8 @@ fprintf('done\n');
 %% Match 2d to 3d
 tic;
 image = imread(query_im_name);
-[query_frames, correspondences, points] = match_2d_to_3d(image, desc_model);
-save(matches_f_name, 'query_frames', 'points', 'correspondences');
+[query_frames, correspondences, points, corr_dist] = match_2d_to_3d(image, desc_model);
+save(matches_f_name, 'query_frames', 'points', 'correspondences', 'corr_dist');
 toc;
 
 %% Filter correspondences.
