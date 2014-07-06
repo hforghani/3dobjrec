@@ -1,7 +1,6 @@
 clearvars; close all; clc;
-addpath model;
-addpath daisy;
-addpath utils;
+
+addpath model daisy utils EPnP PairwiseMatching;
 
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
@@ -10,14 +9,17 @@ addpath utils;
 % Set these parameters:
 case_name = 'all25';
 query_im_name = 'test_img/test5.jpg';
-ply_fname = 'result/test5.ply';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
 exact_name = parts{1}{1};
 matches_f_name = ['data/matches/' case_name '_' exact_name];
+
 desc_model_f_name = ['data/model_desc/' case_name];
 desc_model = load(desc_model_f_name);
+
+ply_fname = ['result/res_' exact_name '.ply'];
+res_fname = ['result/res_' exact_name '.txt'];
 
 %% Load models.
 fprintf('loading models ... ');
@@ -41,7 +43,9 @@ toc;
 fprintf('filtering correspondences ...\n');
 tic;
 [sel_model_i, sel_corr, sel_adj_mat] = ...
-    filter_corr(query_frames, points, correspondences, models, desc_model.obj_names, query_im_name);
+    filter_corr(query_frames, points, correspondences, corr_dist, models, desc_model.obj_names, query_im_name);
+% [sel_model_i, sel_corr, sel_adj_mat] = ...
+%     match_corr_graph(query_frames, points, correspondences, corr_dist, models, desc_model.obj_names, query_im_name);
 toc;
 fprintf('done\n');
 
@@ -51,5 +55,12 @@ query_poses = query_frames(1:2,:);
 [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, sel_model_i, sel_corr, sel_adj_mat, models, desc_model.obj_names, query_im_name);
 toc;
 
-%% Create ply output.
+%% Save results as ply and txt.
 create_ply(transforms, rec_indexes, desc_model.obj_names, ply_fname);
+
+fid = fopen(res_fname, 'w');
+fprintf(fid, 'recognized objects:\n\n');
+for i = 1:length(rec_indexes)
+    fprintf(fid, '%s\n', desc_model.obj_names{rec_indexes(i)});
+end
+fclose(fid);

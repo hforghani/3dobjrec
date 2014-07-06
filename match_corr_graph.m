@@ -19,7 +19,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
         fprintf('validating hyp "%s" graph ... ', obj_names{i});
         
         % Separate data related to the hypothesis.
-        [model_points, model_corr, ~, model_cons2d] = separate_hyp_data(i, points, corr, corr_dist, cons2d);
+        [model_points, model_corr, model_cons2d, ~] = separate_hyp_data(i, points, corr, cons2d);
         pcount = size(model_points, 2);
         
         % 3d local consistency
@@ -53,7 +53,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
         figure(3); subplot(2,3,i); title(obj_names{hyp_i});
 
         % Separate data related to the hypothesis.
-        [model_points, model_corr, model_corr_dist, ~] = separate_hyp_data(hyp_i, points, corr, corr_dist, cons2d);
+        [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(hyp_i, points, corr, cons2d, corr_dist);
         local_cons = adj_matrices{hyp_i};
         pcount = size(model_points, 2);
 
