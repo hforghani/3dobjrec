@@ -29,7 +29,7 @@ X12: binary matrix of size n1xn2 indicating final matches (permutation matrix)
 
 %}
 
-%%set default options
+%% set default options
 optionsDefault.constraintMode='both'; %'both' for 1-1 graph matching
 optionsDefault.isAffine=1;% affine constraint
 optionsDefault.isOrth=1;%orthonormalization before discretization
