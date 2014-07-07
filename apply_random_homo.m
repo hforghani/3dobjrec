@@ -6,8 +6,9 @@ function [trans_im, trans_bw, cam_R, cam_T] = apply_random_homo(model, model_pat
     [seg_im, bw] = segment_obj(im, model, cam_index);
     
     % Create random depth multiplicant.
-    max_depth_mult = 1.5;
-    depth_mult = rand * (max_depth_mult-1) + 1;
+    max_depth_mult = 1.2;
+    min_depth_mult = 0.8;
+    depth_mult = rand * (max_depth_mult - min_depth_mult) + min_depth_mult;
 
     % Create random rotation matrix.
     phi_z = rand * 2*pi - pi;
@@ -36,10 +37,16 @@ function trans_im = apply_transform(im, depth_mult, R, cal)
     res = imresize(im, 1 / depth_mult);
     [xs, ys, ~] = size(res);
     [x, y, ~] = size(im);
-    top_x = ceil((x-xs)/2);
-    left_y = ceil((y-ys)/2);
-    trans_im = zeros(size(im));
-    trans_im(top_x : top_x+xs-1, left_y : left_y+ys-1, :) = res;
+    if xs < x
+        top_x = ceil((x-xs)/2);
+        left_y = ceil((y-ys)/2);
+        trans_im = zeros(size(im));
+        trans_im(top_x : top_x+xs-1, left_y : left_y+ys-1, :) = res;
+    else
+        top_x = ceil((xs-x)/2);
+        left_y = ceil((ys-y)/2);
+        trans_im = res(top_x : top_x+x-1, left_y : left_y+y-1, :);
+    end
     
     % Apply homography by rotation matrix R.
     K = cal.get_calib_matrix();

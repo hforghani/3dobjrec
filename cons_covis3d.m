@@ -1,6 +1,8 @@
-function pnt_adj_mat = cons_covis3d( points, points_arr, corr, cons2d )
+function pnt_adj_mat = cons_covis3d( points, points_arr, corr, corr_cons )
 % Get adjucency matrix of covisibility graph of correspondences. There is
 % an edge between two nodes if their 3d points are covisible in any camera.
+% If corr and corr_cons are given, check covisibility just for points with 
+% a correspondence consistent with another one.
 
 points_count = size(points,2);
 check_cons = exist('cons2d', 'var');
@@ -14,7 +16,7 @@ end
 % Find camera indexes in which each point is visible.
 cam_indexes = cell(points_count, 1);
 for i = 1:points_count
-    if ~check_cons || any(any(cons2d(corr(2,:) == i, :)))
+    if ~check_cons || any(any(corr_cons(corr(2,:) == i, :)))
         cam_indexes{i} = point_instances{i}.cameras_visible_in();
     end
 end
@@ -23,7 +25,7 @@ end
 pnt_adj_mat = false(points_count);
 for i = 1 : points_count - 1
     for j = i+1 : points_count
-        if ~check_cons || any(any(cons2d(corr(2,:) == i, corr(2,:) == j)))
+        if ~check_cons || any(any(corr_cons(corr(2,:) == i, corr(2,:) == j)))
             pnt_adj_mat(i, j) = ~isempty(intersect(cam_indexes{i}, cam_indexes{j}));
         end
     end

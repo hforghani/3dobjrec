@@ -15,11 +15,11 @@ backg_files = dir(bckg_path);
 backg_files = backg_files(3:end);
 
 % parameters:
-TEST_COUNT = 10;
+TEST_COUNT = 1;
 MAX_OBJ_PER_TEST = 4;
 IMAGE_HEIGHT = 720;
 IMAGE_WIDTH = 1280;
-TEST_PATH = 'test_img/auto_test/';
+TEST_PATH = 'test_img/auto/';
 
 % Count test images and open data file.
 data_fname = [TEST_PATH 'data.txt'];
@@ -34,14 +34,15 @@ for i = 1:TEST_COUNT
     fprintf('test number %d\n', i);
     
     % Read background image and initialize test image.
-    index = randi(numel(backg_files));
-    test_im = imread([bckg_path, backg_files(index).name]);
-    test_im = imresize(test_im, [IMAGE_HEIGHT, IMAGE_WIDTH]);
+%     index = randi(numel(backg_files));
+%     test_im = imread([bckg_path, backg_files(index).name]);
+%     test_im = imresize(test_im, [IMAGE_HEIGHT, IMAGE_WIDTH]);
+    test_im = uint8(ones(IMAGE_HEIGHT, IMAGE_WIDTH, 3)) * 255;
     
     test_obj_names = '';
-    obj_per_test = randi(MAX_OBJ_PER_TEST);
+    obj_count = randi(MAX_OBJ_PER_TEST);
     
-    for j = 1:obj_per_test
+    for j = 1:obj_count
         fprintf('\tobject %d\n', j);
         
         obj_name = obj_names{randi(length(obj_names))};
@@ -62,7 +63,7 @@ for i = 1:TEST_COUNT
     cur_test_count = cur_test_count + 1;
     fname = [num2str(cur_test_count) '.jpg'];
     imwrite(test_im, [TEST_PATH fname]);
-    fprintf(fid, '%s\n%d%s\n', fname, obj_per_test, test_obj_names);
+    fprintf(fid, '%s\n%d%s\n', fname, obj_count, test_obj_names);
 end
 
 fclose(fid);

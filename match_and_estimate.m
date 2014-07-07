@@ -8,7 +8,7 @@ addpath model daisy utils EPnP PairwiseMatching;
 %% Initialize.
 % Set these parameters:
 case_name = 'all25';
-query_im_name = 'test_img/test5.jpg';
+query_im_name = 'test_img/auto/12.jpg';
 
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
@@ -59,7 +59,8 @@ toc;
 create_ply(transforms, rec_indexes, desc_model.obj_names, ply_fname);
 
 fid = fopen(res_fname, 'w');
-fprintf(fid, 'recognized objects:\n\n');
+fprintf(fid, 'recognized objects:\n');
+fprintf(fid, '%d\n', length(rec_indexes));
 for i = 1:length(rec_indexes)
     fprintf(fid, '%s\n', desc_model.obj_names{rec_indexes(i)});
 end

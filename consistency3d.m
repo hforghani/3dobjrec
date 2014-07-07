@@ -1,12 +1,16 @@
-function adj_mat = consistency3d( correspondences, points, points_arr, covis_mat )
+function adj_mat = consistency3d( correspondences, points, points_arr, covis_mat, nei3d_ratio )
 % Get adjucency matrix of 3d local consistency matrix of correspondences.
 % correspondences: correspondences related to points of an object
 % points: 2*P matrix of points of an abject; each column contains model
 % index and point index
 % points_arr: cell array of object points of type Point
 
+if ~exist('nei3d_ratio', 'var')
+    nei3d_ratio = 0.05;
+end
+
 points_count = size(points,2);
-nei_num = floor(length(points_arr) * 0.05);
+nei_num = floor(length(points_arr) * nei3d_ratio);
 
 % Put 3d point poses in a 3*P matrix.
 all_poses = zeros(3, length(points_arr));

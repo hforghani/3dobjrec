@@ -65,7 +65,10 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
         fprintf('number of final matches: %d\n', nnz(matched_corr_i));
         
         sel_model_i(i) = hyp_i;
-        sel_corr{i} = matched_corr;
+        points_model_indexes = points(1,:);
+        model_indexes = find(points_model_indexes == hyp_i);
+        model_corr_indexes = ismember(corr(2,:), model_indexes);
+        sel_corr{i} = corr(:, model_corr_indexes);
 
         % Plot consistency graph of query poses
         color = colors{mod(i,length(colors))+1};

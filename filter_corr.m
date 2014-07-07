@@ -4,9 +4,12 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
     
+    SCALE_FACTOR = 100;
+    NEI3D_RATIO = 0.05;
+    
     % 2d local consistency
-    cons2d = consistency2d(corr, q_frames, 100);
-    q_poses = q_frames(1:2, :);
+    cons2d = consistency2d(corr, q_frames, SCALE_FACTOR);
+%     q_poses = q_frames(1:2, :);
 %     figure(1); imshow(image); hold on;
 %     gplot(adj_mat_2d, q_poses(:,corr(1,:))', '-.');
     
@@ -24,10 +27,8 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
         [model_points, model_corr, model_cons2d, ~] = separate_hyp_data(i, points, corr, cons2d);
         
         % 3d local consistency
-%         tic;
         pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
-%         fprintf('3d covisibility check: %f\n', toc);
-        adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis);
+        adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, NEI3D_RATIO);
 
         % Show 3d local consistency graph of model points.
 %         all_poses3d = models{i}.get_poses();
@@ -40,12 +41,23 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
         % Calculate adjacency matrix of consistency graph then compute
         % confidence of each model hypothesis.
         local_cons = model_cons2d & adj_mat_3d;
+%         % Calculate final compatibility adjucency matrix.
+%         adj_mat = corr_comp_matrix(model_corr, q_frames, model_points, models{i}, local_cons);
         conf = sum(sum(local_cons));
+%         conf = sum(sum(adj_mat));
         confidences(i) = conf;
         local_cons_arr{i} = local_cons;
 
         fprintf('done, confidence = %d\n', conf);
     end
+    
+    % Write confidences to output file.
+    [~, si] = sort(confidences, 'descend');
+    fid = fopen('result/conf.txt', 'w');
+    for i = 1:model_count
+        fprintf(fid, '%s\t%d\n', obj_names{si(i)}, confidences(si(i)));
+    end
+    fclose(fid);
     
     % Choose top hypotheses.
     N = 5;
@@ -54,46 +66,39 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
 end
 
 
-function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model, cons_adj_mat, covis_adj_mat)
+function adj_mat = corr_comp_matrix(model_corr, q_frames, model_points, model, local_cons)
 % correspondences :     2*C matrix
 % query_frames :        4*Q matrix
 % point :               2*P matrix
 % model :               instance of Model
-% cons_adj_mat :        C*C adjucency matrix of local consistence
-% covis_adj_mat :       P*P adjucency matrix of covisibility
+% local_cons :          C*C adjucency matrix of local consistency
 % adj_mat :             C*C adjucency matrix of general consistency
-    corr_count = size(correspondences, 2);
+    corr_count = size(model_corr, 2);
 
-    % Construct correspondences covisibility graph.
-    cor_covis_adj_mat = false(corr_count);
-    for i = 1 : corr_count
-        cor_covis_adj_mat(i, :) = covis_adj_mat(correspondences(2,i), correspondences(2,:));
-    end
-    
     % Include correspondences of covisible points.
-    adj_mat = cor_covis_adj_mat;
+    adj_mat = true(corr_count);
     
     % Remove filtered correspondences in the local filtering stage.
-    retained_corr = any(cons_adj_mat, 1);
+    retained_corr = any(local_cons, 1);
     adj_mat(~retained_corr, :) = 0;
     adj_mat(:, ~retained_corr) = 0;
     
     % Remove correspondences with same query pose or 3d point.
     for i = 1:corr_count
-        same_q_pos = correspondences(1,:) == correspondences(1,i);
-        same_p_pos = correspondences(2,:) == correspondences(2,i);
+        same_q_pos = model_corr(1,:) == model_corr(1,i);
+        same_p_pos = model_corr(2,:) == model_corr(2,i);
         adj_mat(i, same_q_pos | same_p_pos) = 0;
     end
     adj_mat = adj_mat & adj_mat';
     
     % Estimate pose of points in the query camera.
     point_poses = model.get_poses();
-    point_poses = point_poses(:, points(2, correspondences(2, :)));
-    sizes = model.point_sizes(points(2, correspondences(2, :)));
-    scales = query_frames(3, correspondences(1, :));
+    point_poses = point_poses(:, model_points(2, model_corr(2, :)));
+    sizes = model.point_sizes(model_points(2, model_corr(2, :)));
+    scales = q_frames(3, model_corr(1, :));
     est_poses = zeros(3, corr_count);
     f = model.calibration.fx; % Focal length
-    image_coord_poses = [query_frames(1:2,correspondences(1, :));
+    image_coord_poses = [q_frames(1:2,model_corr(1, :));
                         ones(1,corr_count) * f];
     nonzero = sizes ~= 0;
     est_poses(:,nonzero) = repmat((sizes(nonzero) ./ scales(nonzero)), 3, 1) ...
@@ -113,7 +118,15 @@ function adj_mat = corr_comp_matrix(correspondences, query_frames, points, model
         end
     end
     adj_mat = adj_mat & adj_mat';
+
+    % Add covisibility check.
+    covis_adj_mat = cons_covis3d(model_points, model.points, model_corr, adj_mat);
+    for i = 1 : corr_count
+        adj_mat(i, :) = adj_mat(i, :) & covis_adj_mat(model_corr(2,i), model_corr(2,:));
+    end
+
 end
+
 
 function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, local_cons_arr, points, q_frames, corr, models, obj_names)
     % sel_model_i : N*1 matrix of selected model indexes
@@ -139,8 +152,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, l
         local_cons = local_cons_arr{hyp_i};
 
         % Calculate final compatibility adjucency matrix.
-        pnt_adj_covis = cons_covis3d(model_points, models{hyp_i}.points);
-        adj_mat = corr_comp_matrix(model_corr, q_frames, model_points, models{hyp_i}, local_cons, pnt_adj_covis);
+        adj_mat = corr_comp_matrix(model_corr, q_frames, model_points, models{hyp_i}, local_cons);
         
         % Find nodes in 3-complete subgraphs.
         adj_path_3 = adj_mat ^ 3;
