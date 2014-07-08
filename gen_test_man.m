@@ -22,7 +22,7 @@ function varargout = gen_test_man(varargin)
 
 % Edit the above text to modify the response to help gen_test_man
 
-% Last Modified by GUIDE v2.5 08-Jul-2014 12:10:32
+% Last Modified by GUIDE v2.5 08-Jul-2014 16:04:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -682,3 +682,32 @@ global camera_fnames;
 camera_fnames{index} = str_arr;
 
 set(editcam, 'Max', length(cam_files));
+
+
+% --- Executes on button press in buttonclear1.
+function buttonclear1_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonclear1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global obj_bw IMAGE_HEIGHT IMAGE_WIDTH;
+obj_bw{1} = false(IMAGE_HEIGHT, IMAGE_WIDTH);
+render_im(handles.axes);
+
+% --- Executes on button press in buttonclear2.
+function buttonclear2_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonclear2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global obj_bw IMAGE_HEIGHT IMAGE_WIDTH;
+obj_bw{2} = false(IMAGE_HEIGHT, IMAGE_WIDTH);
+render_im(handles.axes);
+
+
+% --- Executes on button press in buttonclear3.
+function buttonclear3_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonclear3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global obj_bw IMAGE_HEIGHT IMAGE_WIDTH;
+obj_bw{3} = false(IMAGE_HEIGHT, IMAGE_WIDTH);
+render_im(handles.axes);
