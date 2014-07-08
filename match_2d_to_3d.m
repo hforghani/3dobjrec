@@ -8,7 +8,7 @@ function [query_frames, correspondences, points, corr_dist] = match_2d_to_3d(col
     % Extract keypoints using SIFT.
     fprintf('extracting feature from query image ... ');
     query_im = single(rgb2gray(color_im));    
-    [query_frames, ~] = vl_sift(query_im, 'Levels', 5, 'EdgeThresh' , 10);
+    [query_frames, ~] = vl_sift(query_im, 'Levels', 3, 'EdgeThresh' , 10);
     
 %     figure; imshow(color_im); hold on;
 %     h2 = vl_plotframe(query_frames) ;

@@ -17,7 +17,13 @@ function M = epnp_fittingfn(data)
     x3d_h = [data(3:5,:); ones(1,count)];
     x2d_h = [data(1:2,:); ones(1,count)];
     [R, T, ~, ~, ~] = efficient_pnp_gauss(x3d_h', x2d_h', K);
-    M = [R, T];
+    error = reprojection_error_usingRT(data(3:5,:)', data(1:2,:)', R, T, K);
+    if error > threshold * 10
+        M = [];
+    else
+        M = [R, T];
+    end
+    
 end
 
 function [inliers, M] = epnp_distfn(M, data, t)

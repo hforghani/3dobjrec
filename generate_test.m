@@ -51,8 +51,17 @@ for i = 1:TEST_COUNT
         load (['data/model/' obj_name]);
         cam_index = randi(length(model.cameras));
 
-        [obj_im, bw, R, T] = apply_random_homo(model, model_path, cam_index);
-        bw = logical(bwmorph(double(bw), 'erode', 3));
+        % Create random depth multiplicant.
+        max_depth_mult = 1.2;
+        min_depth_mult = 0.8;
+        depth_mult = rand * (max_depth_mult - min_depth_mult) + min_depth_mult;
+
+        % Create random rotation matrix.
+        phi_z = rand * 2*pi - pi;
+        phi_x = rand * 2*pi/7 - pi/7;
+        phi_y = rand * 2*pi/10 - pi/10;
+
+        [obj_im, bw, R, T] = apply_homo(model, model_path, cam_index, depth_mult, phi_x, phi_y, phi_z);
 
         for c = 1:3
             ch_obj = obj_im(:,:,c); ch_test = test_im(:,:,c);

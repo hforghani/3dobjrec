@@ -123,7 +123,7 @@ function [M, inliers] = ransac(x, fittingfn, distfn, degenfn, s, t, feedback, ..
     error ( nargchk ( 6, 9, nargin ) );
     
     if nargin < 9; maxTrials = 100;    end;
-    if nargin < 8; maxDataTrials = 100; end;
+    if nargin < 8; maxDataTrials = 20; end;
     if nargin < 7; feedback = 0;        end;
     
     [rows, npts] = size(x);

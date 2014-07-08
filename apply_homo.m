@@ -1,22 +1,11 @@
-function [trans_im, trans_bw, cam_R, cam_T] = apply_random_homo(model, model_path, cam_index)
+function [trans_im, trans_bw, cam_R, cam_T] = apply_homo(model, model_path, cam_index, depth_mult, phi_x, phi_y, phi_z)
 
     % Segment the object.
     cam = model.cameras{cam_index};
     im = cam.get_image(model_path);
     [seg_im, bw] = segment_obj(im, model, cam_index);
     
-    % Create random depth multiplicant.
-    max_depth_mult = 1.2;
-    min_depth_mult = 0.8;
-    depth_mult = rand * (max_depth_mult - min_depth_mult) + min_depth_mult;
-
-    % Create random rotation matrix.
-    phi_z = rand * 2*pi - pi;
-    R = rot_matrix([0 0 1], phi_z);
-    phi_x = rand * 2*pi/7 - pi/7;
-    R = R * rot_matrix([1 0 0], phi_x);
-    phi_y = rand * 2*pi/10 - pi/10;
-    R = R * rot_matrix([0 1 0], phi_y);
+    R = rot_matrix([1 0 0], phi_x) * rot_matrix([0 1 0], phi_y) * rot_matrix([0 0 1], phi_z);
     R = R(1:3, 1:3);
 %     fprintf('phi_x = %f, phi_y = %f, phi_z = %f\n', phi_x, phi_y, phi_z);
     
@@ -24,6 +13,8 @@ function [trans_im, trans_bw, cam_R, cam_T] = apply_random_homo(model, model_pat
     trans_bw = apply_transform(single(bw), depth_mult, R, model.calibration);
     trans_bw(isnan(trans_bw)) = 0;
     trans_bw = logical(trans_bw);
+
+    trans_bw = logical(bwmorph(double(trans_bw), 'erode', 3));
 
     cam_T = cam.center * depth_mult;
     cam_R = cam.rotation_matrix() * R;
@@ -38,13 +29,13 @@ function trans_im = apply_transform(im, depth_mult, R, cal)
     [xs, ys, ~] = size(res);
     [x, y, ~] = size(im);
     if xs < x
-        top_x = ceil((x-xs)/2);
-        left_y = ceil((y-ys)/2);
+        top_x = ceil((x-xs)/2) + 1;
+        left_y = ceil((y-ys)/2) + 1;
         trans_im = zeros(size(im));
         trans_im(top_x : top_x+xs-1, left_y : left_y+ys-1, :) = res;
     else
-        top_x = ceil((xs-x)/2);
-        left_y = ceil((ys-y)/2);
+        top_x = ceil((xs-x)/2) + 1;
+        left_y = ceil((ys-y)/2) + 1;
         trans_im = res(top_x : top_x+x-1, left_y : left_y+y-1, :);
     end
     

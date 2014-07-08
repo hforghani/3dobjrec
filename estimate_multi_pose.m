@@ -35,7 +35,7 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
             poses3d(:,j) = model_points{points(2,point_index)}.pos;
         end
         figure(4); hold on;
-        scatter(poses2d(1,:), poses2d(2,:), 'MarkerEdgeColor', colors{mod(model_i,length(colors))+1});
+        scatter(poses2d(1,:), poses2d(2,:), 'MarkerEdgeColor', colors{mod(i,length(colors))+1});
 
         model_f_name = ['data/model/' obj_names{model_i}];
         model = load(model_f_name);
@@ -44,7 +44,7 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
         try
             [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH);
             if length(inliers) >= MIN_INLIERS
-                show_results(poses2d, rotation_mat, translation_mat, inliers, model, model_i)
+                show_results(poses2d, rotation_mat, translation_mat, inliers, model, i)
                 transforms = [transforms; [rotation_mat, translation_mat]];
                 rec_indexes = [rec_indexes; model_i];
                 fprintf('successfuly done. Final error = %f\n', final_err);
@@ -55,17 +55,17 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
             if strcmp(e.message, 'ransac was unable to find a useful solution')
                 fprintf('object not found\n');
             else
-                fprintf('%s\n', e.message);
+                disp(getReport(e,'extended'));
             end
         end
         clear model;
     end
 
 
-    function show_results(matches2d, rotation_mat, translation_mat, inliers, model, model_index)
+    function show_results(matches2d, rotation_mat, translation_mat, inliers, model, index)
         % Draw inliers.
         figure(4); hold on;
-        color = colors{mod(model_index,length(colors))+1};
+        color = colors{mod(index,length(colors))+1};
         scatter(matches2d(1,inliers), matches2d(2,inliers), 'filled', 'MarkerFaceColor', color);
 
         % Map points with the found transformation.

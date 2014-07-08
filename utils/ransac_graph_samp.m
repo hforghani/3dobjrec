@@ -127,7 +127,7 @@ function [M, inliers] = ransac_graph_samp(x, adj_mat, fittingfn, distfn, degenfn
     error ( nargchk ( 6, 9, nargin ) );
     
     if nargin < 10; maxTrials = 100;    end;
-    if nargin < 9; maxDataTrials = 50; end;
+    if nargin < 9; maxDataTrials = 20; end;
     if nargin < 8; feedback = 0;        end;
     
     [rows, npts] = size(x);
@@ -149,19 +149,12 @@ function [M, inliers] = ransac_graph_samp(x, adj_mat, fittingfn, distfn, degenfn
         degenerate = 1;
         count = 1;
         while degenerate
-            % Generate s random indicies in the range 1..npts
-            % (If you do not have the statistics toolbox with randsample(),
-            % use the function RANDOMSAMPLE from my webpage)
-%             if ~exist('randsample', 'file')
-%                 ind = randomsample(npts, s);
-%             else
-%                 ind = randsample(npts, s);
-%             end
+            % Generate 3 random indicies in the range 1..npts
             edge_on_3complete = (adj_mat ^ 2) & adj_mat;
-            edges = find(edge_on_3complete);
-            rand_edge = edges(randi(length(edges)));
-            node1 = mod(rand_edge-1, npts) + 1;
-            node2 = ceil(rand_edge / npts);
+            [rows, cols] = find(edge_on_3complete);
+            edge_i = randi(length(rows));
+            node1 = rows(edge_i);
+            node2 = cols(edge_i);
             common_neigh = find(adj_mat(node1, :) & adj_mat(node2, :));
             node3 = common_neigh(randi(length(common_neigh)));
             ind = [node1 node2 node3]';
