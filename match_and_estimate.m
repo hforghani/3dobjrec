@@ -18,31 +18,31 @@ if ~exist('load_fil_match', 'var')
 end
 
 % Match 2d to 3d
-tic;
 if ~load_match
     image = imread(query_im_name);
+    tic;
     [query_frames, correspondences, points, corr_dist] = match_2d_to_3d(image, desc_model);
+    toc;
     save(matches_f_name, 'query_frames', 'points', 'correspondences', 'corr_dist');
 else
     load(matches_f_name);
     fprintf('matches loaded\n');
 end
-toc;
 
 % Filter correspondences.
-fprintf('filtering correspondences ...\n');
-tic;
 if ~load_fil_match
+    fprintf('filtering correspondences ...\n');
+    tic;
     [sel_model_i, sel_corr, sel_adj_mat] = ...
         filter_corr(query_frames, points, correspondences, corr_dist, models, desc_model.obj_names, query_im_name);
     % [sel_model_i, sel_corr, sel_adj_mat] = ...
     %     match_corr_graph(query_frames, points, correspondences, corr_dist, models, desc_model.obj_names, query_im_name);
+    toc;
     save(fil_match_f_name, 'sel_model_i', 'sel_corr', 'sel_adj_mat');
 else
     load(fil_match_f_name);
     fprintf('filtered matches loaded\n');
 end
-toc;
 
 % Estimate pose.
 tic;
