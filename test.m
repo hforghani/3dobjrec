@@ -23,19 +23,18 @@ fprintf('done\n');
 % Fetch test image names.
 test_path = 'test_img/auto/';
 files = dir(test_path);
-files = files(3:end);
-str_arr = cell(numel(files), 1);
+str_arr = {};
 for i = 1:numel(files)
-    if ~strcmp(files(i).name(end-2 : end), 'txt')
-        str_arr{i} = files(i).name;
-    else
-        str_arr(i) = [];
+    name = files(i).name;
+    if ~strcmp(name, '.') && ~strcmp(name, '..') && ~strcmp(name(end-2 : end), 'txt')
+        str_arr = [str_arr, {files(i).name}];
     end
 end
 
+
 % Run the algorithm for all test images.
-MIN_INDEX = 3;
-MAX_INDEX = length(str_arr);
+MIN_INDEX = 7;
+MAX_INDEX = 8;
 for i = MIN_INDEX : MAX_INDEX
     q_im_name = [test_path str_arr{i}];
     fprintf('========== testing %s ==========\n', q_im_name);

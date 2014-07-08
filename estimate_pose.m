@@ -28,6 +28,10 @@ end
 
 function [inliers, M] = epnp_distfn(M, data, t)
 % Get best camera position with maximum number of inliers.
+    if isempty(M)
+        inliers = [];
+        return;
+    end
     if ~iscell(M)
         M = {M};
     end
