@@ -1,7 +1,7 @@
 function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, model_indexes, correspondences, adj_matrices, models, obj_names, query_im_name)
 
     SAMPLE_COUNT = 3;
-    ERROR_THRESH = 4;
+    ERROR_THRESH = 5;
     MIN_INLIERS = 5;
 
     image = imread(query_im_name);

@@ -61,7 +61,9 @@ for i = 1:TEST_COUNT
         phi_x = rand * 2*pi/7 - pi/7;
         phi_y = rand * 2*pi/10 - pi/10;
 
-        [obj_im, bw, R, T] = apply_homo(model, model_path, cam_index, depth_mult, phi_x, phi_y, phi_z);
+        cam = model.cameras{cam_index};
+        im = cam.get_image(model_path);
+        [obj_im, bw, R, T] = apply_homo(model, im, depth_mult, phi_x, phi_y, phi_z);
 
         for c = 1:3
             ch_obj = obj_im(:,:,c); ch_test = test_im(:,:,c);

@@ -22,7 +22,7 @@ function varargout = gen_test_man(varargin)
 
 % Edit the above text to modify the response to help gen_test_man
 
-% Last Modified by GUIDE v2.5 08-Jul-2014 03:00:54
+% Last Modified by GUIDE v2.5 08-Jul-2014 12:10:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,11 +75,11 @@ TEST_PATH = 'test_img/auto/';
 
 backg_files = dir(BKG_PATH);
 backg_files = backg_files(3:end);
-str_cell = cell(numel(backg_files), 1);
+str_arr = cell(numel(backg_files), 1);
 for i = 1:numel(backg_files)
-    str_cell{i} = backg_files(i).name;
+    str_arr{i} = backg_files(i).name;
 end
-set(handles.popupmenubkg, 'String', str_cell);
+set(handles.popupmenubkg, 'String', str_arr);
 
 global bck_im obj_im obj_bw;
 bck_im = uint8(zeros(IMAGE_HEIGHT, IMAGE_WIDTH, 3));
@@ -89,6 +89,12 @@ end
 for i = 1:3
     obj_bw{i} = false(IMAGE_HEIGHT, IMAGE_WIDTH);
 end
+
+addpath model utils;
+
+set_cameras(1, handles.popupmenu1, handles.editcam1);
+set_cameras(2, handles.popupmenu2, handles.editcam2);
+set_cameras(3, handles.popupmenu3, handles.editcam3);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -110,6 +116,8 @@ function popupmenu1_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenu1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenu1
+set_cameras(1, hObject, handles.editcam1);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -225,6 +233,7 @@ function popupmenu2_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenu2 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenu2
+set_cameras(2, hObject, handles.editcam2);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -340,6 +349,7 @@ function popupmenu3_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenu3 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenu3
+set_cameras(3, hObject, handles.editcam3);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -631,19 +641,44 @@ val = get(popupmenu, 'Value');
 model_path = [get_dataset_path() '0-24(1)\0-24\' str{val} '\'];
 load (['data/model/' str{val}]);
 
-cam_index = str2double(get(editcam, 'String'));
-depth_mult = get(editd, 'Value');
-phi_x = get(editx, 'Value');
-phi_y = get(edity, 'Value');
-phi_z = get(editz, 'Value');
+cam_f_index = round(get(editcam, 'Value'));
+global camera_fnames obj_im obj_bw;
+fname = camera_fnames{index}{cam_f_index};
+for i = 1:length(model.cameras)
+    if strcmp(model.cameras{i}.file_name, fname)
+        cam_index = i;
 
-[obj_im1, bw1, R, T] = apply_homo(model, model_path, cam_index, depth_mult, phi_x, phi_y, phi_z);
-global obj_im obj_bw;
-obj_im{index} = obj_im1;
-obj_bw{index} = bw1;
+        depth_mult = get(editd, 'Value');
+        phi_x = get(editx, 'Value');
+        phi_y = get(edity, 'Value');
+        phi_z = get(editz, 'Value');
 
-render_im(axes);
+        [obj_im1, bw1, R, T] = apply_homo(model, model_path, cam_index, depth_mult, phi_x, phi_y, phi_z);
+        obj_im{index} = obj_im1;
+        obj_bw{index} = bw1;
+
+        render_im(axes);
+    end
+end
 
 fprintf('done\n');
 
 
+
+
+function set_cameras(index, popupmenu, editcam)
+
+str = get(popupmenu, 'String');
+val = get(popupmenu, 'Value');
+model_path = [get_dataset_path() '0-24(1)\0-24\' str{val} '\'];
+
+cam_files = dir([model_path 'db_img\']);
+cam_files = cam_files(3:end);
+str_arr = cell(numel(cam_files), 1);
+for i = 1:numel(cam_files)
+    str_arr{i} = cam_files(i).name;
+end
+global camera_fnames;
+camera_fnames{index} = str_arr;
+
+set(editcam, 'Max', length(cam_files));
