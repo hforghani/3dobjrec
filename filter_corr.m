@@ -4,23 +4,21 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
     
-    SCALE_FACTOR = 50;
+    SCALE_FACTOR = 100;
     NEI3D_RATIO = 0.05;
     N = 7;
     
     % 2d local consistency
     cons2d = consistency2d(corr, q_frames, SCALE_FACTOR);
-%     q_poses = q_frames(1:2, :);
-%     figure(1); imshow(image); hold on;
-%     gplot(adj_mat_2d, q_poses(:,corr(1,:))', '-.');
+    q_poses = q_frames(1:2, :);
+    figure; imshow(image); hold on;
+    gplot(cons2d, q_poses(:,corr(1,:))', '-.');
     
     % Create empty matrices.
     model_count = length(models);
     confidences = zeros(model_count, 1);
     local_cons_arr = cell(model_count, 1);
     
-%     figure(2); imshow(image);
-
     for i = 1 : model_count
         fprintf('validating hyp "%s" ... ', obj_names{i});
         
@@ -147,6 +145,8 @@ function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, l
     sel_model_i = zeros(N,1);
     sel_corr = cell(N,1);
     sel_adj_mat = cell(N,1);
+    
+    fig_h = figure;
 
     for i = 1 : N
         hyp_i = sort_indexes(i);
@@ -175,7 +175,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, l
         % Show compatibility graphs and nodes in 3-complete subgraphs.
         model_query_poses = q_frames(1:2, sel_corr{i}(1,:));
         color = colors{mod(i,length(colors))+1};
-        figure(3); subplot(ceil(sqrt(N)), ceil(sqrt(N)), i);
+        figure(fig_h); subplot(ceil(sqrt(N)), ceil(sqrt(N)), i);
         imshow(image); hold on; 
         gplot(adj_mat, model_query_poses', ['-o' color]);
         title(obj_names{hyp_i}, 'Interpreter', 'none');

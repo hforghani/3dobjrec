@@ -1,4 +1,4 @@
-clearvars; close all; clc;
+clearvars; clc;
 
 addpath model daisy utils EPnP PairwiseMatching;
 
@@ -33,11 +33,11 @@ end
 
 
 % Run the algorithm for all test images.
-MIN_INDEX = 7;
-MAX_INDEX = 8;
+MIN_INDEX = 12;
+MAX_INDEX = 12;
 for i = MIN_INDEX : MAX_INDEX
     q_im_name = [test_path str_arr{i}];
     fprintf('========== testing %s ==========\n', q_im_name);
-    match_and_estimate(case_name, q_im_name, models)
+    match_and_estimate(case_name, q_im_name, models);
     fprintf('========== done ==========\n'); 
 end

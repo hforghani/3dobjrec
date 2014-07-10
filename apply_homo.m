@@ -69,7 +69,7 @@ function [im_seg, bw] = segment_obj(im, model, cam_index)
     bw = bwmorph(double(bw), 'thin', 17);
     
     % Add gray threshold segmentation result.
-    level = 0.3;
+    level = 0.35;
     bw = bw | ~im2bw(im, level);
     
     % Segment region of im specified by bw.

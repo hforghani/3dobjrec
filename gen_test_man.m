@@ -595,7 +595,8 @@ cur_test_count = numel(dir(TEST_PATH)) - 2;
 if exist(data_fname, 'file') > 0
     cur_test_count = cur_test_count - 1;
 end
-fname = [num2str(cur_test_count + 1) '.jpg'];
+name_number = num2str(cur_test_count + 1);
+fname = [repmat('0', 1,3-length(name_number)) , name_number, '.jpg'];
 
 obj_count = 0;
 test_obj_names = '';

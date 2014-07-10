@@ -127,7 +127,7 @@ function [M, inliers] = ransac_graph_samp(x, adj_mat, fittingfn, distfn, degenfn
     error ( nargchk ( 6, 9, nargin ) );
     
     if nargin < 10; maxTrials = 100;    end;
-    if nargin < 9; maxDataTrials = 20; end;
+    if nargin < 9; maxDataTrials = 100; end;
     if nargin < 8; feedback = 0;        end;
     
     [rows, npts] = size(x);
