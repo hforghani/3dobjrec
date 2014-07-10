@@ -4,8 +4,8 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
     
-    SCALE_FACTOR = 100;
-    NEI3D_RATIO = 0.05;
+    SCALE_FACTOR = 150;
+    NEI3D_RATIO = 0.1;
     N = 7;
     
     % 2d local consistency

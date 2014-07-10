@@ -11,9 +11,9 @@ case_name = 'all25';
 fprintf('loading models ... ');
 desc_model_f_name = ['data/model_desc/' case_name];
 load(desc_model_f_name, 'obj_names');
-obj_count = length(obj_names);
-models = cell(obj_count, 1);
-for i = 1:obj_count
+objcount = length(obj_names);
+models = cell(objcount, 1);
+for i = 1:objcount
     model_f_name = ['data/model/' obj_names{i}];
     load(model_f_name);
     models{i} = model;
@@ -33,11 +33,18 @@ end
 
 
 % Run the algorithm for all test images.
-MIN_INDEX = 12;
-MAX_INDEX = 12;
+MIN_INDEX = 16;
+MAX_INDEX = 16;
 for i = MIN_INDEX : MAX_INDEX
     q_im_name = [test_path str_arr{i}];
     fprintf('========== testing %s ==========\n', q_im_name);
     match_and_estimate(case_name, q_im_name, models);
     fprintf('========== done ==========\n'); 
 end
+
+
+% Compute precision and recall.
+test_data = read_test_data([test_path 'data.txt']);
+test_result = read_test_result('result/', test_data);
+[precision, recall] = compute_p_r(test_data, test_result);
+fprintf('RECALL = %f, PRECISION = %f\n', recall, precision);

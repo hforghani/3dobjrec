@@ -2,7 +2,7 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
 
 SAMPLE_COUNT = 3;
 ERROR_THRESH = 10;
-MIN_INLIERS = 5;
+MIN_INLIERS = 4;
 
 image = imread(query_im_name);
 global feat_fig proj_fig colors;
