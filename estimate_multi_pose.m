@@ -35,7 +35,7 @@ for i = 1 : length(correspondences)
         model_points = models{points(1,point_index)}.points;
         poses3d(:,j) = model_points{points(2,point_index)}.pos;
     end
-    figure(4); hold on;
+    figure(feat_fig); hold on;
     scatter(poses2d(1,:), poses2d(2,:), 'MarkerEdgeColor', colors{mod(i,length(colors))+1});
 
     model_f_name = ['data/model/' obj_names{model_i}];

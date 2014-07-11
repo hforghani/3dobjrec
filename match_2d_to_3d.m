@@ -36,8 +36,10 @@ col_thr = 50;
 models_count = length(unique(desc_model.desc_model_indexes));
 nei_num = ceil(models_count/10);
 [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors, 'NUMNEIGHBORS', nei_num);
+fprintf('done\n');
 
 % Filter high errors and determine points.
+fprintf('applying error and color threshold ...');
 is_less_than_error = distances < max_error;
 has_same_color = match_color(query_frames(1:2,:), indexes, color_im, desc_model, models, col_thr);
 retained = is_less_than_error & has_same_color;
@@ -45,6 +47,7 @@ point_general_indexes = unique(indexes(retained));
 points_count = length(point_general_indexes);
 points = [desc_model.desc_model_indexes(point_general_indexes);
           desc_model.desc_point_indexes(point_general_indexes)];
+fprintf('done\n');
 
 % Determine correspondences and their distances.
 corr_count = sum(sum(retained));
@@ -88,7 +91,6 @@ correspondences(2,:) = reindex_arr(points_ids, correspondences(2,:));
 [new_corr, ~, ~] = unique(correspondences', 'rows');
 correspondences = new_corr';
 
-fprintf('done\n');
 
 
 

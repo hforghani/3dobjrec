@@ -31,17 +31,17 @@ for i = 1:numel(files)
     end
 end
 
-
 % Run the algorithm for all test images.
-MIN_INDEX = 16;
-MAX_INDEX = 16;
+MIN_INDEX = 19;
+MAX_INDEX = 24;
 for i = MIN_INDEX : MAX_INDEX
     q_im_name = [test_path str_arr{i}];
     fprintf('========== testing %s ==========\n', q_im_name);
+    start = tic;
     match_and_estimate(case_name, q_im_name, models);
-    fprintf('========== done ==========\n'); 
+    time = toc - start;
+    fprintf('========== done (elapsed time is %f) ==========\n', time); 
 end
-
 
 % Compute precision and recall.
 test_data = read_test_data([test_path 'data.txt']);
