@@ -25,7 +25,7 @@ function [sol, stats]  = ipfp_gm(M, sol0, labels, nodes)
 
 %%  scores, dX, best_score, discreteRate, stepSize_t, stepSize_norm]
 
-tic;
+% tic;
 
 maxSteps = 50;
 
@@ -163,6 +163,6 @@ stats.discreteRate = discreteRate;
 stats.stepSize_t = stepSize_t;
 stats.stepSize_norm = stepSize_norm;
 
-toc;
+% toc;
 
 return

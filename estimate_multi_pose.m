@@ -1,8 +1,8 @@
-function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, model_indexes, correspondences, adj_matrices, models, obj_names, query_im_name)
+function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, model_indexes, correspondences, adj_matrices, models, obj_names, query_im_name, param, value)
 
 SAMPLE_COUNT = 3;
 ERROR_THRESH = 10;
-MIN_INLIERS = 4;
+MIN_INL_RATIO = 0.2;
 
 image = imread(query_im_name);
 global feat_fig proj_fig colors;
@@ -35,6 +35,8 @@ for i = 1 : length(correspondences)
         model_points = models{points(1,point_index)}.points;
         poses3d(:,j) = model_points{points(2,point_index)}.pos;
     end
+    
+    % Show all hypothesis 2d poses.
     figure(feat_fig); hold on;
     scatter(poses2d(1,:), poses2d(2,:), 'MarkerEdgeColor', colors{mod(i,length(colors))+1});
 
@@ -43,8 +45,13 @@ for i = 1 : length(correspondences)
     model = model.model;
 
     try
-        [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH);
-        if length(inliers) >= MIN_INLIERS
+        if ~exist('param', 'var')
+            param = '';
+            value = '';
+        end
+        [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH, param, value);
+        inlier_ratio = length(inliers) / size(poses2d, 2);
+        if inlier_ratio >= MIN_INL_RATIO
             show_results(poses2d, rotation_mat, translation_mat, inliers, model, i)
             transforms = [transforms; [rotation_mat, translation_mat]];
             rec_indexes = [rec_indexes; model_i];
@@ -68,10 +75,10 @@ end
 function show_results(matches2d, rotation_mat, translation_mat, inliers, model, index)
 
 global feat_fig proj_fig colors;
+color = colors{mod(index,length(colors))+1};
 
 % Draw inliers.
 figure(feat_fig); hold on;
-color = colors{mod(index,length(colors))+1};
 scatter(matches2d(1,inliers), matches2d(2,inliers), 'filled', 'MarkerFaceColor', color);
 
 % Map points with the found transformation.

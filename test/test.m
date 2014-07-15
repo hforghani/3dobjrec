@@ -32,19 +32,22 @@ for i = 1:numel(files)
 end
 
 % Run the algorithm for all test images.
-MIN_INDEX = 19;
-MAX_INDEX = 24;
+
+alg = 'graphmatch';
+
+MIN_INDEX = 1;
+MAX_INDEX = 50;
 for i = MIN_INDEX : MAX_INDEX
     q_im_name = [test_path str_arr{i}];
     fprintf('========== testing %s ==========\n', q_im_name);
     start = tic;
-    match_and_estimate(case_name, q_im_name, models);
-    time = toc - start;
-    fprintf('========== done (elapsed time is %f) ==========\n', time); 
+    match_and_estimate(case_name, q_im_name, models, true, false, 'Algorithm', alg);
+    time = toc(start);
+    fprintf('========== done (elapsed time is %f minutes) ==========\n', time/60); 
 end
 
 % Compute precision and recall.
 test_data = read_test_data([test_path 'data.txt']);
-test_result = read_test_result('result/', test_data);
+test_result = read_test_result('result/', alg, test_data);
 [precision, recall] = compute_p_r(test_data, test_result);
 fprintf('RECALL = %f, PRECISION = %f\n', recall, precision);

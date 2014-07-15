@@ -1,11 +1,23 @@
-function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, adj_mat, calibration, sample_count, threshold)
+function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, adj_mat, calibration, sample_count, threshold, param, value)
+
+graph_samp = false;
+if exist('param', 'var') && strcmp(param, 'SamplingMode')
+    if strcmp(value, 'graph')
+        graph_samp = true;
+    elseif strcmp(value, 'regular')
+        graph_samp = false;
+    end
+end
 
 K = calibration.get_calib_matrix(); % calibration matrix
 corr_data = [matches2d; matches3d];
 
 % Run P3P with RANSAC.
-[M, inliers] = ransac_graph_samp(corr_data, adj_mat, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold);
-% [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold);
+if graph_samp
+    [M, inliers] = ransac_graph_samp(corr_data, adj_mat, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 100, 100);
+else
+    [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 100, 100);
+end
 
 rotation_mat = M(:,1:3);
 translation_mat = M(:,4);

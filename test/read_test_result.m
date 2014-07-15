@@ -1,9 +1,14 @@
-function res = read_test_result(result_path, test_data)
+function res = read_test_result(result_path, alg, test_data)
 
 res = cell(length(test_data), 1);
 
 for i = 1 : length(test_data)
-    fname = [result_path 'res_' test_data{i}.fname(1:end-4) '.txt'];
+    if strcmp(alg, 'graphmatch')
+        suffix = '_gr';
+    else
+        suffix = '';
+    end
+    fname = [result_path 'res_' test_data{i}.fname(1:end-4) suffix '.txt'];
     if ~exist(fname, 'file')
         continue;
     end
