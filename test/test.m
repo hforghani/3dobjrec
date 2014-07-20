@@ -49,5 +49,5 @@ end
 % Compute precision and recall.
 test_data = read_test_data([test_path 'data.txt']);
 test_result = read_test_result('result/', alg, test_data);
-[precision, recall] = compute_p_r(test_data, test_result);
+[precision, recall] = compute_p_r(test_data, test_result, 1);
 fprintf('RECALL = %f, PRECISION = %f\n', recall, precision);

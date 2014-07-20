@@ -38,7 +38,7 @@ function [adj_mat, cons_score] = cons_pairwise_geo(model_corr, model_points, q_f
     adj_mat = adj_mat & ratios > min_toler & ratios < max_toler;
     
     % Apply gaussian on consistency scores.
-    sigma = 0.1;
+    sigma = 0.2;
     cons_score = cons_score + cons_score';
     cons_score = exp(-.5 * (cons_score/sigma) .^ 2);
     cons_score(logical(eye(corr_count))) = 0;

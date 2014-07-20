@@ -2,16 +2,17 @@ function [adj_mat, nei_score] = consistency2d(corr, q_frames, points, scale_fact
 % Calculate adjucency matrix of 2d consistency graph.
 
 if ~exist('scale_factor', 'var')
-    scale_factor = 100;
+    scale_factor = 8;
 end
 query_poses = q_frames(1:2, :);
 corr_count = size(corr, 2);
 
 % Find nearest neighbors for each query pose.
 corr_poses = query_poses(:, corr(1,:));
-nei_num = max(floor(corr_count / 10) , 2);
+nei_num = max(floor(corr_count / 5) , 2);
 kdtree = vl_kdtreebuild(double(corr_poses));
 [nei_indexes, distances] = vl_kdtreequery(kdtree, corr_poses, corr_poses, 'NUMNEIGHBORS', nei_num);
+distances = sqrt(distances);
 nei_indexes(1, :) = [];
 distances(1, :) = [];
 

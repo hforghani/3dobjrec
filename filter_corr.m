@@ -4,15 +4,15 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
     
-    SCALE_FACTOR = 150;
+    SCALE_FACTOR = 8;
     NEI3D_RATIO = 0.05;
     N = 7;
     
     % 2d local consistency
     cons2d = consistency2d(corr, q_frames, points, SCALE_FACTOR);
-%     q_poses = q_frames(1:2, :);
-%     figure; imshow(image); hold on;
-%     gplot(cons2d, q_poses(:,corr(1,:))', '-.');
+    q_poses = q_frames(1:2, :);
+    figure; imshow(image); hold on;
+    gplot(cons2d, q_poses(:,corr(1,:))', '-.');
     
     % Create empty matrices.
     model_count = length(models);
@@ -150,6 +150,6 @@ function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, l
 %         gplot(adj_mat, model_query_poses', ['-o' color]);
 %         title(obj_names{hyp_i}, 'Interpreter', 'none');
 %         
-        fprintf('hyp ''%s'' chose\n', obj_names{hyp_i});
+%         fprintf('hyp ''%s'' chose\n', obj_names{hyp_i});
     end
 end

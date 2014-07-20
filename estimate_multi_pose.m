@@ -36,7 +36,7 @@ for i = 1 : length(correspondences)
         poses3d(:,j) = model_points{points(2,point_index)}.pos;
     end
     
-    % Show all hypothesis 2d poses.
+%     Show all hypothesis 2d poses.
     figure(feat_fig); hold on;
     scatter(poses2d(1,:), poses2d(2,:), 'MarkerEdgeColor', colors{mod(i,length(colors))+1});
 

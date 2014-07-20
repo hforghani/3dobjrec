@@ -31,11 +31,12 @@ fprintf('%d descriptors extracted.\n', query_points_num);
 
 % Register 2d to 3d. Find some nearest neighbors for each query pose.
 fprintf('registering 2d to 3d ... ');
-max_error = 0.7;
+max_error = 0.8;
 col_thr = 50;
 models_count = length(unique(desc_model.desc_model_indexes));
 nei_num = ceil(models_count/10);
 [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors, 'NUMNEIGHBORS', nei_num);
+distances = sqrt(distances);
 fprintf('done\n');
 
 % Filter high errors and determine points.

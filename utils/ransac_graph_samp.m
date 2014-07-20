@@ -124,7 +124,7 @@ function [M, inliers] = ransac_graph_samp(x, adj_mat, fittingfn, distfn, degenfn
                                maxDataTrials, maxTrials)
 
     % Test number of parameters
-    error ( nargchk ( 6, 9, nargin ) );
+    error ( nargchk ( 7, 10, nargin ) );
     
     if nargin < 10; maxTrials = 100;    end;
     if nargin < 9; maxDataTrials = 100; end;

@@ -22,6 +22,7 @@ point_poses = all_poses(:, points(2, :));
 % Find spatially close points.
 kdtree = vl_kdtreebuild(double(all_poses));
 [indexes, dist] = vl_kdtreequery(kdtree, all_poses, point_poses, 'NUMNEIGHBORS', nei_num + 1);
+dist = sqrt(dist);
 indexes(1,:) = [];
 dist(1,:) = [];
 
