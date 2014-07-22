@@ -49,9 +49,6 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
         %%%% Compute confidence by graph matching.
         
         % by spectral matching
-        if strcmp(obj_names{i}, 'box_turtle')
-            0;
-        end
         [sol, score, W] = graph_matching_spectral(model_corr, model_corr_dist, q_frames, model_points, models{i}, true);
         nondiag = W(~logical(eye(size(W))));
         figure; hist(nondiag(nondiag > 10^-4), 20); title(obj_names{i}, 'Interpreter', 'none');
