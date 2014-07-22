@@ -30,7 +30,7 @@
 function [sol, stats]  = spectral_matching_ipfp(M, labels, nodes)
 
 
-tic;
+% tic;
 
 n = length(labels);
 
@@ -93,7 +93,9 @@ new_sol = sol0;
 best_sol = sol0;
 
 
-best_score = 0; 
+% best_score = 0; 
+% Edited by Forghani:
+best_score = new_sol'*M*new_sol;
 
 nSteps = 0;
 
@@ -218,6 +220,6 @@ stats.discreteRate = discreteRate;
 stats.stepSize_t = stepSize_t;
 stats.stepSize_norm = stepSize_norm;
 
-toc;
+% toc;
 
 return

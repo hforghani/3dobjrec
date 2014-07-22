@@ -19,7 +19,7 @@ distances(1, :) = [];
 % Construct graph of 2d local consistency.
 adj_mat = false(corr_count);
 nei_score = zeros(corr_count);
-fil_dist = [];
+% fil_dist = [];
 for i = 1:corr_count
     nn_i = nei_indexes(:, i);
     dist_i = distances(:, i);
@@ -31,10 +31,11 @@ for i = 1:corr_count
     adj_mat(i, fil_nn_i) = 1;
     
     % Set neighborhood score.
-    sigma = scale_factor * q_frames(3, corr(1,i));
+    sigma = 10 * scale_factor * q_frames(3, corr(1,i));
     nei_score(i, nn_i) = exp(-.5 * (dist_i/sigma) .^ 2);
+%     nei_score(i, nn_i) = 1 ./ (dist_i + 1);
     
-    fil_dist = [fil_dist; dist_i(dist_i < scale_factor * q_frames(3, corr(1,i)))];
+%     fil_dist = [fil_dist; dist_i(dist_i < scale_factor * q_frames(3, corr(1,i)))];
 end
 
 % Make the matrix symmetric and with zero diagonal.

@@ -23,7 +23,7 @@
 
 function [sol, x_opt, score, score_sol]  = ipfp(M, D, sol0, labels, nodes, maxIter)
 
-tic;
+% tic;
 
 %% initializations
 
@@ -36,7 +36,9 @@ xc = sol0;
 
 sol = sol0;
 
-score_sol = 0;
+% score_sol = 0;
+% Edited by Forghani:
+score_sol = new_sol'*M*new_sol;
 
 score(1) =  xc'*M*xc+D'*xc;
 
@@ -113,6 +115,6 @@ end
 
 x_opt = xc;
 
-toc;
+% toc;
 
 return

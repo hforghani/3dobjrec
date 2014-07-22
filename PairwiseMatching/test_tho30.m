@@ -117,15 +117,17 @@ sol0 = sol0/norm(sol0);
 
 
 %% test ipfp stand-alone starting from a flat/uniform solution
-
+tic;
 [sol_ipfp, stats_ipfp]  = ipfp_gm(M, sol0, labels, nodes);
+toc;
 
 score_ipfp = sol_ipfp'*M*sol_ipfp/2;
 
 
 %% test ipfp starting from the solution returned by spectral matching
-
+tic;
 [sol_ipfp_sm, stats_ipfp_sm]  = spectral_matching_ipfp(M, labels, nodes);
+toc;
 
 score_ipfp_sm = sol_ipfp_sm'*M*sol_ipfp_sm/2;
 
@@ -134,7 +136,9 @@ score_ipfp_sm = sol_ipfp_sm'*M*sol_ipfp_sm/2;
 
 D = zeros(length(sol0), 1);
 
+tic;
 [sol_ipfp2, x_opt, score, score_sol]  = ipfp(M, D, sol0, labels, nodes, 50);
+toc;
 
 score_ipfp2 = sol_ipfp2'*M*sol_ipfp2/2;
 

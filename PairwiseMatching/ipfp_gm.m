@@ -38,7 +38,9 @@ new_sol = sol0;
 best_sol = sol0;
 
 
-best_score = 0; 
+% best_score = 0; 
+% Edited by Forghani:
+best_score = new_sol'*M*new_sol;
 
 nSteps = 0;
 
