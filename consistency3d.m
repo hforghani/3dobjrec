@@ -1,4 +1,4 @@
-function [adj_mat, nei_score] = consistency3d( correspondences, points, points_arr, covis_mat, nei3d_ratio )
+function [adj_mat, nei_score] = consistency3d( corr, points, points_arr, covis_mat, nei3d_ratio )
 % Get adjucency matrix of 3d local consistency matrix of correspondences.
 % correspondences: correspondences related to points of an object
 % points: 2*P matrix of points of an abject; each column contains model
@@ -10,7 +10,16 @@ if ~exist('nei3d_ratio', 'var')
 end
 
 points_count = size(points,2);
+corr_count = size(corr, 2);
 nei_num = floor(length(points_arr) * nei3d_ratio);
+
+% Create output matrices.
+adj_mat = false(corr_count);
+nei_score = zeros(corr_count);
+
+if corr_count == 1
+    return;
+end
 
 % Put 3d point poses in a 3*P matrix.
 all_poses = zeros(3, length(points_arr));
@@ -40,20 +49,16 @@ for i = 1:points_count
     pnt_nei_score(i, ipoints) = exp(-.5 * (dist_i/sigma) .^ 2);
 end
 
-% Make the matrix symmetric and with zero diagonal.
+% Make the matrices symmetric and with zero diagonal.
 pnt_adj_mat = pnt_adj_mat | pnt_adj_mat';
 pnt_adj_mat = pnt_adj_mat .* ~eye(points_count);
-
 pnt_nei_score = max(pnt_nei_score, pnt_nei_score');
 pnt_nei_score(logical(eye(points_count))) = 0;
 
 % Construct correspondences 3d local consistency graph.
-corr_count = size(correspondences, 2);
-adj_mat = false(corr_count);
-nei_score = zeros(corr_count);
 for i = 1 : corr_count
-    adj_mat(i, :) = pnt_adj_mat(correspondences(2,i), correspondences(2,:));
-    nei_score(i, :) = pnt_nei_score(correspondences(2,i), correspondences(2,:));
+    adj_mat(i, :) = pnt_adj_mat(corr(2,i), corr(2,:));
+    nei_score(i, :) = pnt_nei_score(corr(2,i), corr(2,:));
 end
 
 end

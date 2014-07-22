@@ -21,13 +21,15 @@
 % Note: sol0 is the initial solution
 
 
-function [sol, stats]  = ipfp_gm(M, sol0, labels, nodes)
+function [sol, stats]  = ipfp_gm(M, sol0, labels, nodes, maxSteps)
 
 %%  scores, dX, best_score, discreteRate, stepSize_t, stepSize_norm]
 
 % tic;
 
-maxSteps = 50;
+if nargin < 5
+    maxSteps = 50;
+end
 
 n = length(labels);
 

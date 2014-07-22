@@ -4,8 +4,16 @@ function [adj_mat, nei_score] = consistency2d(corr, q_frames, points, scale_fact
 if ~exist('scale_factor', 'var')
     scale_factor = 8;
 end
+
 query_poses = q_frames(1:2, :);
 corr_count = size(corr, 2);
+
+adj_mat = false(corr_count);
+nei_score = zeros(corr_count);
+
+if corr_count == 1
+    return;
+end
 
 % Find nearest neighbors for each query pose.
 corr_poses = query_poses(:, corr(1,:));
@@ -17,8 +25,6 @@ nei_indexes(1, :) = [];
 distances(1, :) = [];
 
 % Construct graph of 2d local consistency.
-adj_mat = false(corr_count);
-nei_score = zeros(corr_count);
 % fil_dist = [];
 for i = 1:corr_count
     nn_i = nei_indexes(:, i);

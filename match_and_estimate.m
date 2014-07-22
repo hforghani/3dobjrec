@@ -72,7 +72,7 @@ switch alg
     case 'filter'
         mode = 'graph';
     case 'graphmatch'
-        mode = 'regular';
+        mode = 'graph';
 end    
 [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, sel_model_i, sel_corr, sel_adj_mat, models, desc_model.obj_names, query_im_name, 'SamplingMode', mode);
 toc;

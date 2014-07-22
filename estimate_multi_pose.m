@@ -21,9 +21,17 @@ for i = 1 : length(correspondences)
     model_i = model_indexes(i);
     fprintf('estimating pose of hyp %s ... ', obj_names{model_i});
 
+    % Check if not enough correspondences.
     if size(corr, 2) < SAMPLE_COUNT
-        fprintf('not enough points\n');
+        fprintf('not enough correspondences\n');
         continue;
+    end
+    
+    % Check if not enough consistent correspondences when sampling guided by graph.
+    if exist('param', 'var') && strcmp(param, 'SamplingMode') && strcmp(value, 'graph') ...
+            && (nnz(adj_mat) < SAMPLE_COUNT * 2 || (SAMPLE_COUNT == 3 && nnz(adj_mat^2 & adj_mat) == 0))
+        fprintf('not enough consistent correspondences\n');
+        continue;        
     end
 
     % Gather poses of all correspondences.
