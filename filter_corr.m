@@ -1,5 +1,9 @@
-function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, corr, corr_dist, models, obj_names, q_im_name)
+function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, corr, models, obj_names, q_im_name, interactive)
 
+    if nargin < 7
+        interactive = false;
+    end
+    
     global colors image;
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
@@ -10,9 +14,11 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
     
     % 2d local consistency
     cons2d = consistency2d(corr, q_frames, points, SCALE_FACTOR);
-    q_poses = q_frames(1:2, :);
-    figure; imshow(image); hold on;
-    gplot(cons2d, q_poses(:,corr(1,:))', '-.');
+    if interactive
+        q_poses = q_frames(1:2, :);
+        figure; imshow(image); hold on;
+        gplot(cons2d, q_poses(:,corr(1,:))', '-.');
+    end
     
     % Create empty matrices.
     model_count = length(models);
@@ -29,14 +35,6 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
         pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
         adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, NEI3D_RATIO);
 
-        % Show 3d local consistency graph of model points.
-%         all_poses3d = models{i}.get_poses();
-%         point_indexes = model_points(2, model_corr(2,:));
-%         poses3d = all_poses3d(:, point_indexes);
-%         figure; scatter3(all_poses3d(1,:), all_poses3d(2,:), all_poses3d(3,:), 5);
-%         hold on; gplot3(adj_mat_3d, poses3d');
-%         title(obj_names{i}, 'Interpreter', 'none');
-
         % Calculate adjacency matrix of consistency graph then compute
         % confidence of each model hypothesis.
         local_cons = model_cons2d & adj_mat_3d;
@@ -44,6 +42,28 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
         confidences(i) = conf;
         local_cons_arr{i} = local_cons;
 
+        if interactive
+            % Show 3d local consistency graph of model points.
+%             all_poses3d = models{i}.get_poses();
+%             point_indexes = model_points(2, model_corr(2,:));
+%             poses3d = all_poses3d(:, point_indexes);
+%             figure; scatter3(all_poses3d(1,:), all_poses3d(2,:), all_poses3d(3,:), 5);
+%             hold on; gplot3(adj_mat_3d, poses3d');
+%             title(obj_names{i}, 'Interpreter', 'none');
+
+            color = colors{mod(i,length(colors))+1};
+            q_poses = q_frames(1:2, model_corr(1,:));
+            retained_q_poses = q_frames(1:2, model_corr(1, any(local_cons)));
+            figure; imshow(image); hold on;
+            scatter(q_poses(1,:), q_poses(2,:), ['o' color]);
+            gplot(local_cons, q_poses', ['-o' color]);
+            scatter(retained_q_poses(1,:), retained_q_poses(2,:), ['o' color], 'filled');
+            for j = 1:size(q_poses,2)
+                text(q_poses(1,j), q_poses(2,j), num2str(j), 'Color', 'r');
+            end
+            title(obj_names{i}, 'Interpreter', 'none');
+        end
+        
         fprintf('done, confidence = %d\n', conf);
     end
     
@@ -69,8 +89,6 @@ function adj_mat = corr_comp_matrix(model_corr, q_frames, model_points, model, l
 % local_cons :          C*C adjucency matrix of local consistency
 % adj_mat :             C*C adjucency matrix of general consistency
     corr_count = size(model_corr, 2);
-
-    % Include correspondences of covisible points.
     adj_mat = true(corr_count);
     
     % Remove filtered correspondences in the local filtering stage.
@@ -100,12 +118,17 @@ function adj_mat = corr_comp_matrix(model_corr, q_frames, model_points, model, l
 end
 
 
-function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, local_cons_arr, points, q_frames, corr, models, obj_names)
+function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, local_cons_arr, points, q_frames, corr, models, obj_names, interactive)
     % sel_model_i : N*1 matrix of selected model indexes
     % sel_corr : N*1 cell of selected correspondences which each element is
     % the 2*P matrix of correspondences
     % sel_adj_mat : N*1 cell of selected adjacent marices each one related 
     % to the corresponding element of sel_corr.
+    
+    if nargin < 9
+        interactive = false;
+    end
+    
     global colors image;
     
     [~, sort_indexes] = sort(confidences, 'descend');
@@ -143,13 +166,15 @@ function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, l
         sel_adj_mat{i} = adj_mat;
 
         % Show compatibility graphs and nodes in 3-complete subgraphs.
-%         model_query_poses = q_frames(1:2, sel_corr{i}(1,:));
-%         color = colors{mod(i,length(colors))+1};
-%         figure(fig_h); subplot(ceil(sqrt(N)), ceil(sqrt(N)), i);
-%         imshow(image); hold on; 
-%         gplot(adj_mat, model_query_poses', ['-o' color]);
-%         title(obj_names{hyp_i}, 'Interpreter', 'none');
-%         
-%         fprintf('hyp ''%s'' chose\n', obj_names{hyp_i});
+        if interactive
+            model_query_poses = q_frames(1:2, sel_corr{i}(1,:));
+            color = colors{mod(i,length(colors))+1};
+            figure(fig_h); subplot(ceil(sqrt(N)), ceil(sqrt(N)), i);
+            imshow(image); hold on; 
+            gplot(adj_mat, model_query_poses', ['-o' color]);
+            title(obj_names{hyp_i}, 'Interpreter', 'none');
+        end
+        
+        fprintf('hyp ''%s'' chose\n', obj_names{hyp_i});
     end
 end

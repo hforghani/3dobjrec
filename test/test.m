@@ -1,6 +1,8 @@
 clearvars; clc;
 
-addpath model daisy utils EPnP PairwiseMatching;
+addpath model daisy utils EPnP;
+addpath PairwiseMatching;
+addpath(genpath('RRWM'));
 
 % You may run just once.
 % run('VLFEATROOT/toolbox/vl_setup');
@@ -33,21 +35,19 @@ end
 
 % Run the algorithm for all test images.
 
-alg = 'graphmatch';
-
 MIN_INDEX = 1;
 MAX_INDEX = 50;
 for i = MIN_INDEX : MAX_INDEX
     q_im_name = [test_path str_arr{i}];
     fprintf('========== testing %s ==========\n', q_im_name);
     start = tic;
-    match_and_estimate(case_name, q_im_name, models, true, false, 'Algorithm', alg);
+    match_and_estimate(case_name, q_im_name, models, 'LoadMatches', true, 'LoadFiltered', false, 'Method', 'gm', 'Interactive', true);
     time = toc(start);
     fprintf('========== done (elapsed time is %f minutes) ==========\n', time/60); 
 end
 
 % Compute precision and recall.
 test_data = read_test_data([test_path 'data.txt']);
-test_result = read_test_result('result/', alg, test_data);
+test_result = read_test_result('result/', method, test_data);
 [precision, recall] = compute_p_r(test_data, test_result, 1);
 fprintf('RECALL = %f, PRECISION = %f\n', recall, precision);

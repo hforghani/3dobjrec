@@ -1,6 +1,9 @@
-function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, points, corr, corr_dist, models, obj_names, q_im_name)
+function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, points, corr, corr_dist, models, obj_names, q_im_name, interactive)
 
-%     global colors image;
+    if nargin < 7
+        interactive = false;
+    end
+    
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
     
@@ -20,10 +23,6 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
     qcount = size(q_frames,2);    
     confidences = zeros(model_count, 1);
     retained_corr = cell(model_count, 1);
-    
-%     conf_fig = figure;
-%     subplotx = floor(sqrt(model_count));
-%     subploty = ceil(model_count/subplotx);
 
     for i = 1 : model_count
         fprintf('validating hyp "%s" graph ... \n', obj_names{i});
@@ -49,31 +48,30 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
         %%%% Compute confidence by graph matching.
         
         % by spectral matching
-        [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, true);
+        [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, 'IsLocal', true, 'Method', 'rrwm');
         sol = logical(sol);
 %         confidences(i) = sum(matched_corr_i);
         confidences(i) = score;
         retained_corr{i} = sol;
-%         adj_mat = W > 0.7;
 
         % Plot histogram of W values.
 %         nondiag = W(~logical(eye(size(W))));
 %         figure; hist(nondiag(nondiag > 10^-4), 20); title(obj_names{i}, 'Interpreter', 'none');
         
         % Plot matched correspondences.
-%         color = colors{mod(i,length(colors))+1};
-%         q_poses = q_frames(1:2, model_corr(1,:));
-%         matched_q_poses = q_frames(1:2, model_corr(1, sol));
-%         figure;
-% %         subplot(1,2,1);
-%         imshow(image); hold on;
-%         scatter(q_poses(1,:), q_poses(2,:), ['o' color]);
-%         gplot(adj_mat, q_poses', ['-o' color]);
-%         scatter(matched_q_poses(1,:), matched_q_poses(2,:), ['o' color], 'filled');
-%         for j = 1:size(q_poses,2)
-%             text(q_poses(1,j), q_poses(2,j), num2str(j), 'Color', 'r');
-%         end
-%         title(obj_names{i}, 'Interpreter', 'none');
+        if interactive
+            color = colors{mod(i,length(colors))+1};
+            q_poses = q_frames(1:2, model_corr(1,:));
+            matched_q_poses = q_frames(1:2, model_corr(1, sol));
+            figure; imshow(image); hold on;
+            scatter(q_poses(1,:), q_poses(2,:), ['o' color]);
+            gplot(W > 0.6, q_poses', ['-o' color]);
+            scatter(matched_q_poses(1,:), matched_q_poses(2,:), ['o' color], 'filled');
+            for j = 1:size(q_poses,2)
+                text(q_poses(1,j), q_poses(2,j), num2str(j), 'Color', 'r');
+            end
+            title(obj_names{i}, 'Interpreter', 'none');
+        end
 
         fprintf('confidence = %f\n', confidences(i));
     end
@@ -87,18 +85,11 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
     sel_model_i = zeros(N, 1);
     sel_corr = cell(N, 1);
     sel_adj_mat = cell(N, 1);
-%     
-%     matrix_fig = figure;
-%     points_fig = figure;
-%     subplotx = floor(sqrt(N));
-%     subploty = ceil(N/subplotx);
     
     for i = 1 : length(top_indexes)
         hyp_i = top_indexes(i);
         fprintf('=== matching graph of %s ===\n', obj_names{hyp_i});
         
-%         figure(matrix_fig); subplot(subplotx,subploty,i);
-
         % Separate data related to the hypothesis.
         [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(hyp_i, points, corr, cons2d, corr_dist);
         pcount = size(model_points, 2);
@@ -107,7 +98,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
         ret_corr_dist = model_corr_dist(retained);
 
         % Run graph matching.
-        [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, false);
+        [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'IsLocal', false, 'Method', 'sm');
         
         % Set solution and adjucency matrix of compatible correspondences.
         sol = logical(sol);
@@ -127,54 +118,100 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
         sel_adj_mat{i} = adj_mat;
 
         % Plot matched correspondences.
-%         color = colors{mod(hyp_i,length(colors))+1};
-%         q_poses = q_frames(1:2, ret_corr(1,:));
-%         matched_q_poses = q_frames(1:2, ret_corr(1, sol));
-%         figure;
-% %         subplot(1,2,1);
-%         imshow(image); hold on;
-%         gplot(W > 0.9, q_poses', ['-o' color]);
-%         scatter(matched_q_poses(1,:), matched_q_poses(2,:), ['o' color], 'filled');
-%         title(['pairwise geometric compatibility: ' obj_names{hyp_i}], 'Interpreter', 'none');
+        if interactive
+            color = colors{mod(hyp_i,length(colors))+1};
+            q_poses = q_frames(1:2, ret_corr(1,:));
+            matched_q_poses = q_frames(1:2, ret_corr(1, sol));
+            figure; imshow(image); hold on;
+            gplot(W > 0.9, q_poses', ['-o' color]);
+            scatter(matched_q_poses(1,:), matched_q_poses(2,:), ['o' color], 'filled');
+            title(['pairwise geometric compatibility: ' obj_names{hyp_i}], 'Interpreter', 'none');
+        end
     end
     
 end
 
 
-function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, model, is_local, interactive)
-    if nargin == 6
-        interactive = false;
+function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, model, varargin)
+    is_local = true;
+    interactive = false;
+    method = 'rrwm';
+    if nargin > 5
+        i = 1;
+        while i <= length(varargin)
+            if strcmp(varargin{i}, 'IsLocal')
+                is_local = varargin{i+1};
+            elseif strcmp(varargin{i}, 'Method')
+                method = varargin{i+1};
+            elseif strcmp(varargin{i}, 'Interactive')
+                interactive = varargin{i+1};
+            end
+            i = i + 2;
+        end
     end
     
     [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, is_local);
     
     if interactive
-        spy(W);
+        figure; spy(W); 
     end
 
-    if size(model_corr, 2) < 2
+    ccount = size(model_corr, 2);
+    pcount = size(model_points, 2);
+    qcount = size(q_frames, 2);
+
+    W(logical(eye(ccount))) = 0;
+    
+    if size(model_corr, 2) < 2 || nnz(W) < 3
         sol = sol0;
         score = sol0' * W * sol0;
         return;
     end
 
     % Create initial solution.
-    ccount = size(model_corr, 2);
-%     sol0 = ones(ccount,1);
-%     sol0 = sol0/norm(sol0);
-%     sol0 = zeros(ccount,1);
-    
-    % graph matching
-%     fprintf('running spectral matching ... ');
-%     [sol, stats_ipfp]  = spectral_matching_ipfp(W, model_corr(1,:), model_corr(2,:));
-%     score = stats_ipfp.best_score;
+%     if strcmp(method, 'ipfp') || strcmp(method, 'ipfp_gm')
+%         sol0 = ones(ccount,1);
+%         sol0 = sol0/norm(sol0);
+%         sol0 = zeros(ccount,1);
+%     end
 
-%     D = -ones(ccount,1);
-%     D = zeros(ccount,1);
-%     [sol, x_opt, scores, score]  = ipfp(W, D, sol0, model_corr(1,:), model_corr(2,:), 50);
+%     fprintf('running spectral matching ... ');
     
-    [sol, stats_ipfp]  = ipfp_gm(W, sol0, model_corr(1,:), model_corr(2,:), 20);
-    score = stats_ipfp.best_score;
+    switch method
+        case 'sm' % Spectral matching
+            [sol, stats_ipfp]  = spectral_matching_ipfp(W, model_corr(1,:), model_corr(2,:));
+            score = stats_ipfp.best_score;
+            
+        case 'ipfp' % Integer fixed point maximizing x'Wx+Dx
+%             D = -ones(ccount,1);
+            D = zeros(ccount,1);
+            [sol, x_opt, scores, score]  = ipfp(W, D, sol0, model_corr(1,:), model_corr(2,:), 50);
+            
+        case 'ipfp_gm' % Integer fixed point maximizing x'Wx
+            [sol, stats_ipfp]  = ipfp_gm(W, sol0, model_corr(1,:), model_corr(2,:), 20);
+            score = stats_ipfp.best_score;
+            
+        case 'rrwm' % Reweighted random walk matching
+            [uniq_qindexes, ~, corr_qindexes] = unique(model_corr(1,:), 'stable');
+            model_qcount = length(uniq_qindexes);
+            group1 = logical(sparse(1:ccount, corr_qindexes, ones(ccount,1), ccount, model_qcount));
+            group2 = logical(sparse(1:ccount, model_corr(2,:), ones(ccount,1), ccount, pcount));
+
+            raw_sol = RRWM( W, group1, group2);
+
+            sol = zeros(model_qcount, pcount);
+            for i = 1 : ccount
+                sol(model_corr(1,i) == uniq_qindexes, model_corr(2,i)) = raw_sol(i);
+            end
+            sol = discretisationMatching_hungarian(sol, ones(model_qcount, pcount));
+            new_sol = zeros(size(raw_sol));
+            for i = 1 : ccount
+                new_sol(i) = sol(model_corr(1,i) == uniq_qindexes, model_corr(2,i));
+            end
+            sol = new_sol;
+            score = sol' * W * sol;
+    end
+    
 %     fprintf('done\n');
 
 end
@@ -183,34 +220,27 @@ end
 function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, is_local)
     ccount = size(model_corr,2);
     
-    %%%%%% Compute different consistency measures.
-    
-    if is_local
-%         fprintf('computing 2d local consistency ... ');
-        [adj2d, nei_score2d] = consistency2d(model_corr, q_frames, model_points, 8);
-%         fprintf('done\n');
-%         fprintf('computing 3d covisibility ... ');
-        cons_covis = cons_covis3d(model_points, model.points, model_corr, ones(ccount));
-%         fprintf('done\n');
-%         fprintf('computing 3d local consistency ... ');
-        [adj3d, nei_score3d] = consistency3d(model_corr, model_points, model.points, cons_covis, 0.05);
-%         fprintf('done\n');
-    else
-%         fprintf('computing pairwise geometric consistency ... ');
-        [adj_geo, geo_score] = cons_pairwise_geo(model_corr, model_points, q_frames, model, ones(ccount), 0.8, 1.25);
-%         fprintf('done\n');
-    end
-
     %%%%%% Create affinity matrix W.
 %     fprintf('computing correspondences consistency matrix ... ');
     % Set non-diagonal elements of affinity matrix (affinity between two correspondences).
     if is_local
+        [adj2d, nei_score2d] = consistency2d(model_corr, q_frames, model_points, 8);
+        cons_covis = cons_covis3d(model_points, model.points, model_corr, ones(ccount));
+        [adj3d, nei_score3d] = consistency3d(model_corr, model_points, model.points, cons_covis, 0.05);
         W = sqrt(nei_score2d .* nei_score3d);
         sol0 = double(any(adj2d & adj3d, 2));
     else
+        [adj_geo, geo_score] = cons_pairwise_geo(model_corr, model_points, q_frames, model, ones(ccount), 0.8, 1.25);
         W = geo_score;
         sol0 = double(any(adj_geo, 2));
+        for i = 1 : ccount
+            same_q_pos = model_corr(1,:) == model_corr(1,i);
+            same_p_pos = model_corr(2,:) == model_corr(2,i);
+            W(i, same_q_pos | same_p_pos) = 0;
+        end
+        W = min(W, W');
     end
+    
     % Normalize to [0,1].
     if max(W(:)) - min(W(:)) ~= 0
         W = (W - min(W(:))) / (max(W(:)) - min(W(:)));
@@ -220,7 +250,8 @@ function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, mode
 
     % Set diagonal elements of affinity matrix.
     d = 1 ./ (model_corr_dist + 1);
-    % Normalize to [0,1].
+    
+    % Normalize main diagonal to [0,1].
     if max(d) - min(d) ~= 0
         W(logical(eye(ccount))) = (d - min(d)) / (max(d) - min(d));
     else
