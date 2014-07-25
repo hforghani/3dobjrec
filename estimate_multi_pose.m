@@ -1,8 +1,25 @@
-function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, model_indexes, correspondences, adj_matrices, models, obj_names, query_im_name, param, value)
+function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, model_indexes, correspondences, adj_matrices, models, obj_names, query_im_name, varargin)
 
 SAMPLE_COUNT = 3;
 ERROR_THRESH = 10;
-MIN_INL_RATIO = 0.2;
+
+min_inl_ratio = NaN;
+min_inl_count = NaN;
+sampling_mode = 'regular';
+
+if nargin > 8
+    i = 1;
+    while i <= length(varargin)
+        if strcmp(varargin{i}, 'MinInlierRatio')
+            min_inl_ratio = varargin{i+1};
+        elseif strcmp(varargin{i}, 'MinInlierCount')
+            min_inl_count = varargin{i+1};
+        elseif strcmp(varargin{i}, 'SamplingMode')
+            sampling_mode = varargin{i+1};
+        end
+        i = i + 2;
+    end
+end
 
 image = imread(query_im_name);
 global feat_fig proj_fig colors;
@@ -53,19 +70,16 @@ for i = 1 : length(correspondences)
     model = model.model;
 
     try
-        if ~exist('param', 'var')
-            param = '';
-            value = '';
-        end
-        [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH, param, value);
+        [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH, 'SamplingMode', sampling_mode);
         inlier_ratio = length(inliers) / size(poses2d, 2);
-        if inlier_ratio >= MIN_INL_RATIO
+        if (~isnan(min_inl_ratio) && inlier_ratio < min_inl_ratio) ...
+                || (~isnan(min_inl_count) && length(inliers) < min_inl_count)
+            fprintf('not enough inliers\n');
+        else
             show_results(poses2d, rotation_mat, translation_mat, inliers, model, i)
             transforms = [transforms; [rotation_mat, translation_mat]];
             rec_indexes = [rec_indexes; model_i];
             fprintf('successfuly done. Final error = %f\n', final_err);
-        else
-            fprintf('not enough inliers\n');
         end
     catch e
         if strcmp(e.message, 'ransac was unable to find a useful solution')
@@ -74,7 +88,7 @@ for i = 1 : length(correspondences)
             disp(getReport(e,'extended'));
         end
     end
-    clear model;
+    
 end
 
 

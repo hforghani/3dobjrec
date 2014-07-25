@@ -45,10 +45,8 @@ function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, point
 %         adj_mat = local_cons;
 %         retained_corr{i} = matched_corr_i;
 
-        %%%% Compute confidence by graph matching.
-        
-        % by spectral matching
-        [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, 'IsLocal', true, 'Method', 'rrwm');
+        % Compute confidence by graph matching.
+        [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, 'IsLocal', true, 'Method', 'gradient');
         sol = logical(sol);
 %         confidences(i) = sum(matched_corr_i);
         confidences(i) = score;
@@ -210,6 +208,9 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
             end
             sol = new_sol;
             score = sol' * W * sol;
+            
+        case 'gradient'
+            [sol, score] = grad_ascent_gm(W, sol0);
     end
     
 %     fprintf('done\n');
@@ -260,5 +261,9 @@ function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, mode
 %     W(logical(eye(ccount))) = 0;
     
     W = sparse(W);
+    
+    if numel(W) == 0
+        W = 0;
+    end
 %     fprintf('done\n');
 end

@@ -35,13 +35,15 @@ end
 
 % Run the algorithm for all test images.
 
+method = 'filter'; % choices: gm, filter
+
 MIN_INDEX = 1;
 MAX_INDEX = 50;
 for i = MIN_INDEX : MAX_INDEX
     q_im_name = [test_path str_arr{i}];
     fprintf('========== testing %s ==========\n', q_im_name);
     start = tic;
-    match_and_estimate(case_name, q_im_name, models, 'LoadMatches', true, 'LoadFiltered', false, 'Method', 'gm', 'Interactive', true);
+    match_and_estimate(case_name, q_im_name, models, 'LoadMatches', true, 'LoadFiltered', false, 'Method', method, 'Interactive', false);
     time = toc(start);
     fprintf('========== done (elapsed time is %f minutes) ==========\n', time/60); 
 end

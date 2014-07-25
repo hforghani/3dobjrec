@@ -77,14 +77,17 @@ end
 % Estimate pose.
 tic;
 query_poses = query_frames(1:2,:);
-mode = 'regular';
 switch method
     case 'filter'
         mode = 'graph';
+        min_inl_ratio = NaN;
+        min_inl_count = 5;
     case 'gm'
         mode = 'graph';
+        min_inl_ratio = 0.2;
+        min_inl_count = 5;
 end    
-[transforms, rec_indexes] = estimate_multi_pose(query_poses, points, sel_model_i, sel_corr, sel_adj_mat, models, desc_model.obj_names, query_im_name, 'SamplingMode', mode);
+[transforms, rec_indexes] = estimate_multi_pose(query_poses, points, sel_model_i, sel_corr, sel_adj_mat, models, desc_model.obj_names, query_im_name, 'SamplingMode', mode, 'MinInlierRatio', min_inl_ratio, 'MinInlierCount', min_inl_count);
 toc;
 
 % Save results as ply and txt.
