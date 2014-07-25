@@ -1,4 +1,4 @@
-function [sel_model_i, sel_corr, sel_adj_mat] = match_corr_graph(q_frames, points, corr, corr_dist, models, obj_names, q_im_name, interactive)
+function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, points, corr, corr_dist, models, obj_names, q_im_name, interactive)
 
     if nargin < 7
         interactive = false;

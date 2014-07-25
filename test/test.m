@@ -1,6 +1,6 @@
 clearvars; clc;
 
-addpath model daisy utils EPnP;
+addpath model daisy utils filtering estimation EPnP;
 addpath PairwiseMatching;
 addpath(genpath('RRWM'));
 
