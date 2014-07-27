@@ -21,12 +21,13 @@ for i = 1:points_count
     end
 end
 
+
 % Construct points covisibility graph.
 pnt_adj_mat = false(points_count);
 for i = 1 : points_count - 1
     for j = i+1 : points_count
         if ~check_cons || any(any(corr_cons(corr(2,:) == i, corr(2,:) == j)))
-            pnt_adj_mat(i, j) = ~isempty(intersect(cam_indexes{i}, cam_indexes{j}));
+            pnt_adj_mat(i, j) = ~has_intersect(cam_indexes{i}, cam_indexes{j});
         end
     end
 end

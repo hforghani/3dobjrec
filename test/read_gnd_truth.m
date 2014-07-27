@@ -1,4 +1,7 @@
-function test_data = read_test_data(data_fname)
+function test_data = read_gnd_truth(data_fname)
+% test_data:    cell array in which each element is ground truth of a test 
+%               image. Each element is a struct with the properties: 
+%               objcount, objnames
 
 fid = fopen(data_fname);
 test_data = {};

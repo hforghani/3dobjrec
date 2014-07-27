@@ -9,7 +9,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     
     SCALE_FACTOR = 8;
     NEI3D_RATIO = 0.05;
-    N = 7;
+    N = 5;
     
 %     figure; imshow(image); hold on; scatter(q_frames(1,:),q_frames(2,:), 20, 'r', 'filled');
     
@@ -25,26 +25,12 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     retained_corr = cell(model_count, 1);
 
     for i = 1 : model_count
-        fprintf('validating hyp "%s" graph ... \n', obj_names{i});
+        fprintf('validating hyp "%s" graph ... ', obj_names{i});
         
         % Separate data related to the hypothesis.
         [model_points, model_corr, model_cons2d, model_corr_dist] = separate_hyp_data(i, points, corr, cons2d, corr_dist);
         pcount = size(model_points, 2);
         
-        %%%% Compute confidence by Q.Hao paper method.
-
-%         % 3d local consistency
-%         pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
-%         cons3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, NEI3D_RATIO);
-%         
-%         % Calculate hypothesis confidence.
-%         local_cons = model_cons2d & cons3d;
-%         conf = sum(sum(local_cons));
-%         confidences(i) = conf;
-%         matched_corr_i = any(local_cons, 1);
-%         adj_mat = local_cons;
-%         retained_corr{i} = matched_corr_i;
-
         % Compute confidence by graph matching.
         [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, 'IsLocal', true, 'Method', 'gradient');
         sol = logical(sol);
@@ -96,13 +82,15 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
         ret_corr_dist = model_corr_dist(retained);
 
         % Run graph matching.
-        [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'IsLocal', false, 'Method', 'sm');
+%         [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'IsLocal', false, 'Method', 'gradient');
+        W = cons_global(ret_corr, q_frames, model_points, models{hyp_i}, ones(size(ret_corr)));
+        sol = any(W);
         
         % Set solution and adjucency matrix of compatible correspondences.
         sol = logical(sol);
         adj_mat = W(sol, sol) > 0.9;
         adj_mat(logical(eye(size(adj_mat)))) = 0;
-        fprintf('number of final matches: %d\n', nnz(sol));
+%         fprintf('number of final matches: %d\n', nnz(sol));
 
 %         title(obj_names{hyp_i}, 'Interpreter', 'none');
 
@@ -158,8 +146,6 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
     pcount = size(model_points, 2);
     qcount = size(q_frames, 2);
 
-    W(logical(eye(ccount))) = 0;
-    
     if size(model_corr, 2) < 2 || nnz(W) < 3
         sol = sol0;
         score = sol0' * W * sol0;
@@ -173,7 +159,7 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
 %         sol0 = zeros(ccount,1);
 %     end
 
-%     fprintf('running spectral matching ... ');
+%     fprintf('running graph matching ... ');
     
     switch method
         case 'sm' % Spectral matching
@@ -233,12 +219,13 @@ function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, mode
     else
         [adj_geo, geo_score] = cons_pairwise_geo(model_corr, model_points, q_frames, model, ones(ccount), 0.8, 1.25);
         W = geo_score;
-        sol0 = double(any(adj_geo, 2));
         for i = 1 : ccount
             same_q_pos = model_corr(1,:) == model_corr(1,i);
             same_p_pos = model_corr(2,:) == model_corr(2,i);
             W(i, same_q_pos | same_p_pos) = 0;
+            adj_geo(i, same_q_pos | same_p_pos) = 0;
         end
+        sol0 = double(any(adj_geo, 2));
         W = min(W, W');
     end
     
@@ -250,15 +237,13 @@ function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, mode
 %     sol0 = double(any(W > 0.7, 2));
 
     % Set diagonal elements of affinity matrix.
-    d = 1 ./ (model_corr_dist + 1);
-    
-    % Normalize main diagonal to [0,1].
-    if max(d) - min(d) ~= 0
-        W(logical(eye(ccount))) = (d - min(d)) / (max(d) - min(d));
-    else
-        W = d;
-    end
-%     W(logical(eye(ccount))) = 0;
+%     d = 1 ./ (model_corr_dist + 1);
+%     if max(d) - min(d) ~= 0
+%         W(logical(eye(ccount))) = (d - min(d)) / (max(d) - min(d)); % Normalize main diagonal to [0,1].
+%     else
+%         W = d;
+%     end
+    W(logical(eye(ccount))) = 0;
     
     W = sparse(W);
     

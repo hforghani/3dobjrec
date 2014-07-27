@@ -1,4 +1,8 @@
-function [sol, score] = grad_ascent_gm(M, sol0)
+function [sol, score] = grad_ascent_gm(M, sol0, stop_cri, max_iter, interactive)
+
+if nargin < 5; interactive = false; end
+if nargin < 4; max_iter = 50; end
+if nargin < 3; stop_cri = 0.01; end
 
 score = sol0' * M * sol0;
 if sol0 ~= 0
@@ -6,9 +10,12 @@ if sol0 ~= 0
 end
 sol = sol0;
 pre_score = 0;
-stop_cri = 0.01;
 
-while abs(score - pre_score) > stop_cri
+if interactive; fprintf('\ngradient ascent scores: %f', score); end
+
+i = 0;
+
+while abs(score - pre_score) > stop_cri && i < max_iter
     delta = 2 * sum(M,2) .* sol - diag(M);
     
     [~, max_i] = max(delta(sol == 0));
@@ -37,10 +44,16 @@ while abs(score - pre_score) > stop_cri
     if max_score > min_score && max_score > score
         score = max_score;
         sol = sol_max;
+        if interactive; fprintf(' -> %f', score); end
     elseif min_score > max_score && min_score > score
         score = min_score;
         sol = sol_min;
+        if interactive; fprintf(' -> %f', score); end
     end
+    
+    i = i + 1;
 end
+
+if interactive; fprintf('\n'); end
 
 end

@@ -6,6 +6,7 @@ ERROR_THRESH = 10;
 min_inl_ratio = NaN;
 min_inl_count = NaN;
 sampling_mode = 'regular';
+interactive = false;
 
 if nargin > 8
     i = 1;
@@ -16,16 +17,20 @@ if nargin > 8
             min_inl_count = varargin{i+1};
         elseif strcmp(varargin{i}, 'SamplingMode')
             sampling_mode = varargin{i+1};
+        elseif strcmp(varargin{i}, 'Interactive')
+            interactive = varargin{i+1};
         end
         i = i + 2;
     end
 end
 
-image = imread(query_im_name);
-global feat_fig proj_fig colors;
-feat_fig = figure; imshow(image);
-proj_fig = figure; imshow(image);
-colors = {'r','g','b','c','m','y','k','w'};
+if interactive
+    image = imread(query_im_name);
+    global feat_fig proj_fig colors;
+    feat_fig = figure; imshow(image);
+    proj_fig = figure; imshow(image);
+    colors = {'r','g','b','c','m','y','k','w'};
+end
 
 transforms = {};
 rec_indexes = [];
@@ -45,7 +50,7 @@ for i = 1 : length(correspondences)
     end
     
     % Check if not enough consistent correspondences when sampling guided by graph.
-    if exist('param', 'var') && strcmp(param, 'SamplingMode') && strcmp(value, 'graph') ...
+    if strcmp(sampling_mode, 'graph') ...
             && (nnz(adj_mat) < SAMPLE_COUNT * 2 || (SAMPLE_COUNT == 3 && nnz(adj_mat^2 & adj_mat) == 0))
         fprintf('not enough consistent correspondences\n');
         continue;        
@@ -62,8 +67,10 @@ for i = 1 : length(correspondences)
     end
     
 %     Show all hypothesis 2d poses.
-    figure(feat_fig); hold on;
-    scatter(poses2d(1,:), poses2d(2,:), 'MarkerEdgeColor', colors{mod(i,length(colors))+1});
+    if interactive
+        figure(feat_fig); hold on;
+        scatter(poses2d(1,:), poses2d(2,:), 'MarkerEdgeColor', colors{mod(i,length(colors))+1});
+    end
 
     model_f_name = ['data/model/' obj_names{model_i}];
     model = load(model_f_name);
@@ -76,7 +83,9 @@ for i = 1 : length(correspondences)
                 || (~isnan(min_inl_count) && length(inliers) < min_inl_count)
             fprintf('not enough inliers\n');
         else
-            show_results(poses2d, rotation_mat, translation_mat, inliers, model, i)
+            if interactive
+                show_results(poses2d, rotation_mat, translation_mat, inliers, model, i);
+            end
             transforms = [transforms; [rotation_mat, translation_mat]];
             rec_indexes = [rec_indexes; model_i];
             fprintf('successfuly done. Final error = %f\n', final_err);

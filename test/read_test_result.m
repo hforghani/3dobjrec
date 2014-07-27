@@ -1,25 +1,18 @@
-function res = read_test_result(result_path, method, test_data)
+function res = read_test_result(res_fname)
+% res:  cell array in which each element is result of a test image. Each
+%       element is a struct with the properties: objcount, objnames,
+%       transforms
 
-res = cell(length(test_data), 1);
+load(res_fname, 'results');
+res = cell(length(results), 1);
 
-for i = 1 : length(test_data)
-    switch method
-        case 'gm'
-            suffix = '_gr';
-        case 'filter'
-            suffix = '';
-    end
-    fname = [result_path 'res_' test_data{i}.fname(1:end-4) suffix '.txt'];
-    if ~exist(fname, 'file')
-        continue;
-    end
-    fid = fopen(fname);
-    fgetl(fid);
-    item.objcount = fscanf(fid, '%d');
+for i = 1 : length(res)
+    item.objcount = length(results{i});
     item.objnames = cell(item.objcount, 1);
+    item.transforms = cell(item.objcount, 1);
     for j = 1 : item.objcount
-        item.objnames{j} = fscanf(fid, '%s', 1);
-    end
+        item.objnames{j} = results{i}{j}.obj_name;
+        item.transforms{j} = results{i}{j}.transform;
+    end    
     res{i} = item;
-    fclose(fid);
 end
