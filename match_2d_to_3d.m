@@ -8,7 +8,7 @@ addpath model;
 % Extract keypoints using SIFT.
 fprintf('extracting feature from query image ... ');
 query_im = single(rgb2gray(color_im));    
-[query_frames, ~] = vl_sift(query_im, 'Levels', 3, 'EdgeThresh' , 10);
+[query_frames, ~] = vl_sift(query_im, 'Levels', 3, 'EdgeThresh' , 20);
 
 %     figure; imshow(color_im); hold on;
 %     h2 = vl_plotframe(query_frames) ;

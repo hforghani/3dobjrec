@@ -70,7 +70,7 @@ function test_cameras_OpeningFcn(hObject, eventdata, handles, varargin)
     POINTS_MODE = '3dmodel';
 %     POINTS_MODE = 'measurements';
     
-    model_path = [get_dataset_path() '0-24(1)\0-24\' OBJ_NAME '\'];
+    model_path = [get_dataset_path() OBJ_NAME '\'];
     model_fname = ['data\model\' OBJ_NAME];
     container = load(model_fname);
     model = container.model;

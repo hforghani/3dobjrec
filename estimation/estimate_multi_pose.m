@@ -3,8 +3,8 @@ function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, mo
 SAMPLE_COUNT = 3;
 ERROR_THRESH = 10;
 
-min_inl_ratio = NaN;
-min_inl_count = NaN;
+min_inl_ratio = 0;
+min_inl_count = 0;
 sampling_mode = 'regular';
 interactive = false;
 
@@ -79,8 +79,7 @@ for i = 1 : length(correspondences)
     try
         [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH, 'SamplingMode', sampling_mode);
         inlier_ratio = length(inliers) / size(poses2d, 2);
-        if (~isnan(min_inl_ratio) && inlier_ratio < min_inl_ratio) ...
-                || (~isnan(min_inl_count) && length(inliers) < min_inl_count)
+        if inlier_ratio < min_inl_ratio && length(inliers) < min_inl_count
             fprintf('not enough inliers\n');
         else
             if interactive

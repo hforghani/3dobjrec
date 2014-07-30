@@ -2,8 +2,8 @@ close all;
 addpath model;
 addpath utils;
 
-test_im_name = [get_dataset_path() '0-24(1)/0-24/anchiceratops/db_img/1090.jpg'];
-% test_im_name = [get_dataset_path() '0-24(1)/0-24/axe_knight/db_img/1090.jpg'];
+test_im_name = [get_dataset_path() 'anchiceratops/db_img/1090.jpg'];
+% test_im_name = [get_dataset_path() 'axe_knight/db_img/1090.jpg'];
 % test_im_name = 'test/test3.jpg';
 
 obj_name = 'anchiceratops';
@@ -16,7 +16,7 @@ matches_f_name = ['data/matches/' obj_name '_' exact_name];
 
 model_f_name = ['data/model/' obj_name];
 
-model_data_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
+model_data_path = [get_dataset_path() obj_name '\'];
 
 matches = load(matches_f_name);
 matches2d = matches.matches2d;

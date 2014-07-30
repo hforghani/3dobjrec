@@ -1,6 +1,6 @@
 function test_show_point(obj_name, point_index)
 
-    model_data_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
+    model_data_path = [get_dataset_path() obj_name '\'];
 
     model_data_f_name = ['data/model/' obj_name];
 

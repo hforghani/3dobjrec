@@ -61,17 +61,24 @@ guidata(hObject, handles);
 % UIWAIT makes gen_test_man wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
+global BKG_PATH IMAGE_HEIGHT IMAGE_WIDTH TEST_PATH BASE_PATH;
+BKG_PATH = 'test_img/background/';
+IMAGE_HEIGHT = 720;
+IMAGE_WIDTH = 1280;
+TEST_PATH = 'test_img/auto50/';
+BASE_PATH = get_dataset_path();
+
 % initializations:
-load('data/model_desc/all25', 'obj_names');
+folders = dir(BASE_PATH);
+folders = folders(3:end);
+obj_names = cell(size(folders));
+for i = 1 : length(folders)
+    obj_names{i} = folders(i).name;
+end
 set(handles.popupmenu1, 'String', obj_names);
 set(handles.popupmenu2, 'String', obj_names);
 set(handles.popupmenu3, 'String', obj_names);
 
-global BKG_PATH IMAGE_HEIGHT IMAGE_WIDTH TEST_PATH;
-BKG_PATH = 'test_img/background/';
-IMAGE_HEIGHT = 720;
-IMAGE_WIDTH = 1280;
-TEST_PATH = 'test_img/auto/';
 
 backg_files = dir(BKG_PATH);
 backg_files = backg_files(3:end);
@@ -637,9 +644,11 @@ function add_object(index, popupmenu, editcam, editd, editx, edity, editz, axes)
 
 fprintf('rendering object %d ... ', index);
 
+global BASE_PATH;
+
 str = get(popupmenu, 'String');
 val = get(popupmenu, 'Value');
-model_path = [get_dataset_path() '0-24(1)\0-24\' str{val} '\'];
+model_path = [BASE_PATH str{val} '\'];
 load (['data/model/' str{val}]);
 
 cam_f_index = round(get(editcam, 'Value'));
@@ -671,9 +680,9 @@ function set_cameras(index, popupmenu, editcam)
 
 str = get(popupmenu, 'String');
 val = get(popupmenu, 'Value');
-model_path = [get_dataset_path() '0-24(1)\0-24\' str{val} '\'];
 
-cam_files = dir([model_path 'db_img\']);
+global BASE_PATH;
+cam_files = dir([BASE_PATH str{val} '\db_img\']);
 cam_files = cam_files(3:end);
 str_arr = cell(numel(cam_files), 1);
 for i = 1:numel(cam_files)

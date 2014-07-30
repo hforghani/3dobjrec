@@ -79,12 +79,12 @@ query_poses = query_frames(1:2,:);
 switch method
     case 'filter'
         mode = 'graph';
-        min_inl_ratio = NaN;
-        min_inl_count = 6;
+        min_inl_ratio = 0;
+        min_inl_count = 8;
     case 'gm'
         mode = 'graph';
-        min_inl_ratio = NaN;
-        min_inl_count = 6;
+        min_inl_ratio = 0;
+        min_inl_count = 8;
 end
 
 start = tic;

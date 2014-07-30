@@ -37,7 +37,7 @@ obj_name = 'anchiceratops';
 desc_name = 'surf';
 
 addpath('model');
-model_path = [get_dataset_path() '0-24(1)\0-24\' obj_name '\'];
+model_path = [get_dataset_path() obj_name '\'];
 
 load(['data/model/' obj_name]);
 cam = model.cameras{1};
