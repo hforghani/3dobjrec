@@ -79,7 +79,9 @@ for i = 1 : length(correspondences)
     try
         [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH, 'SamplingMode', sampling_mode);
         inlier_ratio = length(inliers) / size(poses2d, 2);
-        if inlier_ratio < min_inl_ratio && length(inliers) < min_inl_count
+%         fprintf('inliers/total : %d / %d = %f\n', length(inliers), size(poses2d, 2), inlier_ratio)
+        
+        if inlier_ratio < min_inl_ratio || length(inliers) < min_inl_count
             fprintf('not enough inliers\n');
         else
             if interactive
@@ -87,7 +89,7 @@ for i = 1 : length(correspondences)
             end
             transforms = [transforms; [rotation_mat, translation_mat]];
             rec_indexes = [rec_indexes; model_i];
-            fprintf('successfuly done. Final error = %f\n', final_err);
+            fprintf('successfuly done, final error = %f\n', final_err);
         end
     catch e
         if strcmp(e.message, 'ransac was unable to find a useful solution')

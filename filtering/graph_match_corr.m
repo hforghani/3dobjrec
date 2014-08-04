@@ -10,11 +10,12 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     SCALE_FACTOR = 8;
     NEI3D_RATIO = 0.05;
     N = 5;
+    GLOBAL_METHOD = 'geom'; % choices: hao, geom, gradient
     
 %     figure; imshow(image); hold on; scatter(q_frames(1,:),q_frames(2,:), 20, 'r', 'filled');
     
     % 2d local consistency
-    cons2d = consistency2d(corr, q_frames, points, SCALE_FACTOR);
+%     cons2d = consistency2d(corr, q_frames, points, SCALE_FACTOR);
 %     q_poses = q_frames(1:2, :);
 %     figure; imshow(image); hold on;
 %     gplot(cons2d, q_poses(:,corr(1,:))', '-.');
@@ -28,7 +29,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
         fprintf('validating hyp "%s" graph ... ', obj_names{i});
         
         % Separate data related to the hypothesis.
-        [model_points, model_corr, model_cons2d, model_corr_dist] = separate_hyp_data(i, points, corr, cons2d, corr_dist);
+        [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(i, points, corr, [], corr_dist);
         pcount = size(model_points, 2);
         
         % Compute confidence by graph matching.
@@ -75,25 +76,45 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
         fprintf('=== matching graph of %s ===\n', obj_names{hyp_i});
         
         % Separate data related to the hypothesis.
-        [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(hyp_i, points, corr, cons2d, corr_dist);
+        [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(hyp_i, points, corr, [], corr_dist);
         pcount = size(model_points, 2);
         retained = retained_corr{hyp_i};
         ret_corr = model_corr(:,retained);
+        ret_ccount = size(ret_corr,2);
         ret_corr_dist = model_corr_dist(retained);
-
-        % Run graph matching.
-%         [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'IsLocal', false, 'Method', 'gradient');
-        W = cons_global(ret_corr, q_frames, model_points, models{hyp_i}, ones(size(ret_corr)));
-        sol = any(W);
         
-        % Set solution and adjucency matrix of compatible correspondences.
+        adj_mat = [];
+
+        % Global filter
+        switch GLOBAL_METHOD
+            case 'hao'
+                adj_mat = cons_global(ret_corr, q_frames, model_points, models{hyp_i}, ones(ret_ccount));
+                sol = any(adj_mat);
+                
+            case 'geom'
+                [adj_mat, score] = cons_pairwise_geo(ret_corr, model_points, q_frames, models{hyp_i}, ones(ret_ccount), 0.8, 1.25);
+                W = score;
+                for j = 1 : ret_ccount
+                    same_q_pos = ret_corr(1,:) == ret_corr(1,j);
+                    same_p_pos = ret_corr(2,:) == ret_corr(2,j);
+                    W(j, same_q_pos | same_p_pos) = 0;
+                    adj_mat(j, same_q_pos | same_p_pos) = 0;
+                end
+                adj_mat = adj_mat & adj_mat';
+                sol = double(any(adj_mat, 2));
+                
+            case 'gradient'
+                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'IsLocal', false, 'Method', 'gradient');
+                adj_mat = W > 0.8;
+                adj_mat(logical(eye(size(adj_mat)))) = 0;
+                
+        end
+        
         sol = logical(sol);
-        adj_mat = W(sol, sol) > 0.9;
-        adj_mat(logical(eye(size(adj_mat)))) = 0;
-%         fprintf('number of final matches: %d\n', nnz(sol));
 
 %         title(obj_names{hyp_i}, 'Interpreter', 'none');
 
+        % Set global filter result for hypothesis i.
         sel_model_i(i) = hyp_i;
         points_model_indexes = points(1,:);
         model_indexes = find(points_model_indexes == hyp_i);
@@ -101,7 +122,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
         sel_corr{i} = corr(:, model_corr_indexes);
         ret_indexes = find(retained);
         sel_corr{i} = sel_corr{i}(:, ret_indexes(sol));
-        sel_adj_mat{i} = adj_mat;
+        sel_adj_mat{i} = adj_mat(sol, sol);
 
         % Plot matched correspondences.
         if interactive
@@ -109,7 +130,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
             q_poses = q_frames(1:2, ret_corr(1,:));
             matched_q_poses = q_frames(1:2, ret_corr(1, sol));
             figure; imshow(image); hold on;
-            gplot(W > 0.9, q_poses', ['-o' color]);
+            gplot(adj_mat, q_poses', ['-o' color]);
             scatter(matched_q_poses(1,:), matched_q_poses(2,:), ['o' color], 'filled');
             title(['pairwise geometric compatibility: ' obj_names{hyp_i}], 'Interpreter', 'none');
         end
@@ -136,17 +157,24 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
         end
     end
     
+    ccount = size(model_corr, 2);
+    pcount = size(model_points, 2);
+    qcount = size(q_frames, 2);
+
+    if ccount < 2
+        sol = zeros(ccount,1);
+        score = 0;
+        W = zeros(ccount);
+        return;
+    end
+    
     [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, is_local);
     
     if interactive
         figure; spy(W); 
     end
 
-    ccount = size(model_corr, 2);
-    pcount = size(model_points, 2);
-    qcount = size(q_frames, 2);
-
-    if size(model_corr, 2) < 2 || nnz(W) < 3
+    if nnz(W) < 3
         sol = sol0;
         score = sol0' * W * sol0;
         return;

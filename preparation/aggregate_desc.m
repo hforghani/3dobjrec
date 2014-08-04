@@ -1,7 +1,6 @@
 clearvars;
 
-base_path = [get_dataset_path() '0-49\'];
-folders = dir(base_path);
+folders = dir(get_dataset_path());
 folders = folders(3:end);
 
 result_name = 'all50';

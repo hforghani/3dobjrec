@@ -18,9 +18,9 @@ corr_data = [matches2d; matches3d];
 % Run P3P with RANSAC.
 switch sampling_mode
     case 'graph'
-        [M, inliers] = ransac_graph_samp(corr_data, adj_mat, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 100, 50);
+        [M, inliers] = ransac_graph_samp(corr_data, adj_mat, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 100, 100);
     case 'regular'
-        [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 100, 50);
+        [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 100, 100);
 end
 
 rotation_mat = M(:,1:3);

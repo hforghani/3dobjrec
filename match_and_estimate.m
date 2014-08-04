@@ -33,16 +33,18 @@ exact_name = parts{1}{1};
 matches_f_name = ['data/matches/' case_name '_' exact_name];
 fil_match_f_name = ['data/matches/' case_name '_' exact_name '_fil'];
 desc_model_f_name = ['data/model_desc/' case_name];
-desc_model = load(desc_model_f_name);
+load(desc_model_f_name, 'obj_names');
 
 timing = struct('matching', 0, 'filtering', 0, 'ransac', 0);
 
 % Match 2d to 3d
 if ~load_match
     image = imread(query_im_name);
+    desc_model = load(desc_model_f_name);
     start = tic;
     [query_frames, correspondences, points, corr_dist] = match_2d_to_3d(image, desc_model, models);
     timing.matching = toc(start);
+    clear desc_model; % to save memory.
     save(matches_f_name, 'query_frames', 'points', 'correspondences', 'corr_dist');
 else
     load(matches_f_name);
@@ -56,12 +58,12 @@ if ~load_fil_match
     switch method
         case 'filter'
             [sel_model_i, sel_corr, sel_adj_mat] = ...
-                filter_corr(query_frames, points, correspondences, models, desc_model.obj_names, query_im_name, interactive > 1);
+                filter_corr(query_frames, points, correspondences, models, obj_names, query_im_name, interactive > 1);
             save(fil_match_f_name, 'sel_model_i', 'sel_corr', 'sel_adj_mat');
         case 'gm'
             [sel_model_i, sel_corr, sel_adj_mat] = ...
-                graph_match_corr(query_frames, points, correspondences, corr_dist, models, desc_model.obj_names, query_im_name, interactive > 1);
-            save([fil_match_f_name '_gr'], 'sel_model_i', 'sel_corr', 'sel_adj_mat');
+                graph_match_corr(query_frames, points, correspondences, corr_dist, models, obj_names, query_im_name, interactive > 1);
+            save([fil_match_f_name '_gm'], 'sel_model_i', 'sel_corr', 'sel_adj_mat');
     end
     timing.filtering = toc(start);
 else
@@ -69,7 +71,7 @@ else
         case 'filter'
             load(fil_match_f_name);
         case 'gm'
-            load([fil_match_f_name '_gr']);
+            load([fil_match_f_name '_gm']);
     end    
     fprintf('filtered matches loaded\n');
 end
@@ -80,16 +82,16 @@ switch method
     case 'filter'
         mode = 'graph';
         min_inl_ratio = 0;
-        min_inl_count = 8;
+        min_inl_count = 15;
     case 'gm'
         mode = 'graph';
         min_inl_ratio = 0;
-        min_inl_count = 8;
+        min_inl_count = 12;
 end
 
 start = tic;
 [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, sel_model_i, ...
-    sel_corr, sel_adj_mat, models, desc_model.obj_names, query_im_name, ...
+    sel_corr, sel_adj_mat, models, obj_names, query_im_name, ...
     'SamplingMode', mode, 'MinInlierRatio', min_inl_ratio, 'MinInlierCount', min_inl_count, ...
     'Interactive', interactive > 0);
 timing.ransac = toc(start);
@@ -99,7 +101,7 @@ timing.total = timing.matching + timing.filtering + timing.ransac;
 % Create results.
 count = length(rec_indexes);
 results = cell(count, 1);
-obj_names = desc_model.obj_names(rec_indexes);
+obj_names = obj_names(rec_indexes);
 for i = 1 : count
     results{i} = struct('obj_index', rec_indexes(i), 'obj_name', obj_names{i}, ...
         'transform', transforms{i});
