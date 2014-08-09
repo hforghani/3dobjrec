@@ -5,7 +5,7 @@ ERROR_THRESH = 10;
 
 min_inl_ratio = 0;
 min_inl_count = 0;
-sampling_mode = 'regular';
+sampling_mode = 'guidedRansac';
 interactive = false;
 
 if nargin > 8
@@ -50,10 +50,15 @@ for i = 1 : length(correspondences)
     end
     
     % Check if not enough consistent correspondences when sampling guided by graph.
-    if strcmp(sampling_mode, 'graph') ...
-            && (nnz(adj_mat) < SAMPLE_COUNT * 2 || (SAMPLE_COUNT == 3 && nnz(adj_mat^2 & adj_mat) == 0))
+    if strcmp(sampling_mode, 'guidedRansac') && (...
+            ( ...
+                length(size(adj_mat)) == 2 && ...
+                (nnz(adj_mat) < SAMPLE_COUNT * 2 || (SAMPLE_COUNT == 3 && nnz(adj_mat^2 & adj_mat) == 0))) ...
+            || ...
+                (length(size(adj_mat)) == 3 && nnz(adj_mat) < SAMPLE_COUNT * 6) ...
+            )
         fprintf('not enough consistent correspondences\n');
-        continue;        
+        continue;
     end
 
     % Gather poses of all correspondences.

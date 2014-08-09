@@ -7,10 +7,9 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
     
-    SCALE_FACTOR = 8;
-    NEI3D_RATIO = 0.05;
     N = 5;
-    GLOBAL_METHOD = 'geom'; % choices: hao, geom, gradient
+    LOCAL_METHOD = 'gradient'; % choices: hao, gradient
+    GLOBAL_METHOD = 'pnp'; % choices: hao, geom, gradient
     
 %     figure; imshow(image); hold on; scatter(q_frames(1,:),q_frames(2,:), 20, 'r', 'filled');
     
@@ -26,23 +25,29 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     retained_corr = cell(model_count, 1);
 
     for i = 1 : model_count
-        fprintf('validating hyp "%s" graph ... ', obj_names{i});
+        fprintf('local filter of "%s" ... ', obj_names{i});
         
         % Separate data related to the hypothesis.
         [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(i, points, corr, [], corr_dist);
         pcount = size(model_points, 2);
         
         % Compute confidence by graph matching.
-        [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, 'IsLocal', true, 'Method', 'gradient');
-        sol = logical(sol);
-%         confidences(i) = sum(matched_corr_i);
-        confidences(i) = score;
+        switch LOCAL_METHOD
+            case 'gradient'
+                [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, 'Affinity', 'local', 'Method', 'gradient');
+                sol = logical(sol);
+                confidences(i) = score;
+                
+            case 'hao'
+                [model_cons2d, ~] = consistency2d(model_corr, q_frames, model_points, 8);
+                pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
+                adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, 0.05);
+                local_cons = model_cons2d & adj_mat_3d;
+                confidences(i) = sum(sum(local_cons));
+        end
+        
         retained_corr{i} = sol;
 
-        % Plot histogram of W values.
-%         nondiag = W(~logical(eye(size(W))));
-%         figure; hist(nondiag(nondiag > 10^-4), 20); title(obj_names{i}, 'Interpreter', 'none');
-        
         % Plot matched correspondences.
         if interactive
             color = colors{mod(i,length(colors))+1};
@@ -73,7 +78,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     
     for i = 1 : length(top_indexes)
         hyp_i = top_indexes(i);
-        fprintf('=== matching graph of %s ===\n', obj_names{hyp_i});
+        fprintf('global filter of "%s"\n', obj_names{hyp_i});
         
         % Separate data related to the hypothesis.
         [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(hyp_i, points, corr, [], corr_dist);
@@ -104,10 +109,17 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
                 sol = double(any(adj_mat, 2));
                 
             case 'gradient'
-                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'IsLocal', false, 'Method', 'gradient');
+                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'Affinity', 'geom', 'Method', 'gradient');
                 adj_mat = W > 0.8;
                 adj_mat(logical(eye(size(adj_mat)))) = 0;
                 
+            case 'angle'
+                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'Affinity', 'angle', 'Method', 'gradient');
+                adj_mat = W;
+                
+            case 'pnp'
+                [sol, error] = pnp_grad_descent(ret_corr, q_frames, model_points, models{hyp_i});
+                adj_mat = [];
         end
         
         sol = logical(sol);
@@ -122,7 +134,13 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
         sel_corr{i} = corr(:, model_corr_indexes);
         ret_indexes = find(retained);
         sel_corr{i} = sel_corr{i}(:, ret_indexes(sol));
-        sel_adj_mat{i} = adj_mat(sol, sol);
+        if ~isempty(adj_mat)
+            if length(size(adj_mat)) == 2
+                sel_adj_mat{i} = adj_mat(sol, sol);
+            else
+                sel_adj_mat{i} = adj_mat(sol, sol, sol);
+            end
+        end
 
         % Plot matched correspondences.
         if interactive
@@ -140,14 +158,14 @@ end
 
 
 function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, model, varargin)
-    is_local = true;
+    affinity = 'local';
     interactive = false;
-    method = 'rrwm';
+    method = 'gradient';
     if nargin > 5
         i = 1;
         while i <= length(varargin)
-            if strcmp(varargin{i}, 'IsLocal')
-                is_local = varargin{i+1};
+            if strcmp(varargin{i}, 'Affinity')
+                affinity = varargin{i+1};
             elseif strcmp(varargin{i}, 'Method')
                 method = varargin{i+1};
             elseif strcmp(varargin{i}, 'Interactive')
@@ -156,6 +174,8 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
             i = i + 2;
         end
     end
+    
+    if strcmp(affinity, 'angle'); method = 'gradient'; end
     
     ccount = size(model_corr, 2);
     pcount = size(model_points, 2);
@@ -168,7 +188,7 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
         return;
     end
     
-    [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, is_local);
+    [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, 'Criteria', affinity);
     
     if interactive
         figure; spy(W); 
@@ -176,16 +196,9 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
 
     if nnz(W) < 3
         sol = sol0;
-        score = sol0' * W * sol0;
+        score = graph_match_score(sol, W);
         return;
     end
-
-    % Create initial solution.
-%     if strcmp(method, 'ipfp') || strcmp(method, 'ipfp_gm')
-%         sol0 = ones(ccount,1);
-%         sol0 = sol0/norm(sol0);
-%         sol0 = zeros(ccount,1);
-%     end
 
 %     fprintf('running graph matching ... ');
     
@@ -221,10 +234,16 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
                 new_sol(i) = sol(model_corr(1,i) == uniq_qindexes, model_corr(2,i));
             end
             sol = new_sol;
-            score = sol' * W * sol;
+            score = graph_match_score(sol, W);
             
         case 'gradient'
-            [sol, score] = grad_ascent_gm(W, sol0);
+            if length(size(W)) == 2
+                [sol, score] = grad_ascent_gm(W, sol0);
+            elseif length(size(W)) == 3
+                [sol, score] = grad_ascent_gm_tri(W, sol0);
+            else
+                error('invalid size of W for graph matching');
+            end
     end
     
 %     fprintf('done\n');
@@ -232,33 +251,49 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
 end
 
 
-function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, is_local)
+function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, varargin)
+    criteria = 'local';
+    if nargin > 5
+        i = 1;
+        while i <= length(varargin)
+            if strcmp(varargin{i}, 'Criteria')
+                criteria = varargin{i+1};
+            end
+            i = i + 2;
+        end
+    end
+    
     ccount = size(model_corr,2);
     
     %%%%%% Create affinity matrix W.
 %     fprintf('computing correspondences consistency matrix ... ');
     % Set non-diagonal elements of affinity matrix (affinity between two correspondences).
-    if is_local
-        [adj2d, nei_score2d] = consistency2d(model_corr, q_frames, model_points, 8);
-        cons_covis = cons_covis3d(model_points, model.points, model_corr, ones(ccount));
-        [adj3d, nei_score3d] = consistency3d(model_corr, model_points, model.points, cons_covis, 0.05);
-        W = sqrt(nei_score2d .* nei_score3d);
-        sol0 = double(any(adj2d & adj3d, 2));
-    else
-        [adj_geo, geo_score] = cons_pairwise_geo(model_corr, model_points, q_frames, model, ones(ccount), 0.8, 1.25);
-        W = geo_score;
-        for i = 1 : ccount
-            same_q_pos = model_corr(1,:) == model_corr(1,i);
-            same_p_pos = model_corr(2,:) == model_corr(2,i);
-            W(i, same_q_pos | same_p_pos) = 0;
-            adj_geo(i, same_q_pos | same_p_pos) = 0;
-        end
-        sol0 = double(any(adj_geo, 2));
-        W = min(W, W');
+    switch criteria
+        case 'local'
+            [adj2d, nei_score2d] = consistency2d(model_corr, q_frames, model_points, 8);
+            cons_covis = cons_covis3d(model_points, model.points, model_corr, ones(ccount));
+            [adj3d, nei_score3d] = consistency3d(model_corr, model_points, model.points, cons_covis, 0.05);
+            W = sqrt(nei_score2d .* nei_score3d);
+            sol0 = double(any(adj2d & adj3d, 2));
+        case 'geom'
+            [adj_geo, geo_score] = cons_pairwise_geo(model_corr, model_points, q_frames, model, ones(ccount), 0.8, 1.25);
+            W = geo_score;
+            for i = 1 : ccount
+                same_q_pos = model_corr(1,:) == model_corr(1,i);
+                same_p_pos = model_corr(2,:) == model_corr(2,i);
+                W(i, same_q_pos | same_p_pos) = 0;
+                adj_geo(i, same_q_pos | same_p_pos) = 0;
+            end
+            sol0 = double(any(adj_geo, 2));
+            W = min(W, W');
+        case 'angle'
+            W = cons_tri_angle(model_corr, model_points, q_frames, model, 0.9, 1.15);
+            w_sum = sum(sum(W,3),2);
+            sol0 = double(w_sum > mean(w_sum));
     end
     
     % Normalize to [0,1].
-    if max(W(:)) - min(W(:)) ~= 0
+    if ~islogical(W) && max(W(:)) - min(W(:)) ~= 0
         W = (W - min(W(:))) / (max(W(:)) - min(W(:)));
     end
 
@@ -271,9 +306,11 @@ function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, mode
 %     else
 %         W = d;
 %     end
-    W(logical(eye(ccount))) = 0;
-    
-    W = sparse(W);
+
+    if length(size(W)) == 2
+        W(logical(eye(size(W)))) = 0;
+        W = sparse(W);
+    end
     
     if numel(W) == 0
         W = 0;

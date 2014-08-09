@@ -5,6 +5,10 @@ load_fil_match = false;
 method = 'gm';
 interactive = 0;
 
+estimation_mode = 'noSample';
+min_inl_ratio = 0;
+min_inl_count = 5;
+
 % Check parameter arguments.
 if nargin > 3
     i = 1;
@@ -78,21 +82,10 @@ end
 
 % Estimate pose.
 query_poses = query_frames(1:2,:);
-switch method
-    case 'filter'
-        mode = 'graph';
-        min_inl_ratio = 0;
-        min_inl_count = 15;
-    case 'gm'
-        mode = 'graph';
-        min_inl_ratio = 0;
-        min_inl_count = 12;
-end
-
 start = tic;
 [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, sel_model_i, ...
     sel_corr, sel_adj_mat, models, obj_names, query_im_name, ...
-    'SamplingMode', mode, 'MinInlierRatio', min_inl_ratio, 'MinInlierCount', min_inl_count, ...
+    'SamplingMode', estimation_mode, 'MinInlierRatio', min_inl_ratio, 'MinInlierCount', min_inl_count, ...
     'Interactive', interactive > 0);
 timing.ransac = toc(start);
 

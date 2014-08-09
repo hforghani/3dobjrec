@@ -120,18 +120,45 @@
 % June     2009 - Argument 'MaxTrials' corrected to 'maxTrials'!
 % January  2013 - Separate code path for Octave no longer needed
 
-function [M, inliers] = ransac_graph_samp(x, adj_mat, fittingfn, distfn, degenfn, s, t, feedback, ...
-                               maxDataTrials, maxTrials)
+function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varargin)
 
-    % Test number of parameters
-    error ( nargchk ( 7, 10, nargin ) );
+    maxTrials = 1000;
+    maxDataTrials = 100;
+    feedback = 0;
+    affinity = [];
     
-    if nargin < 10; maxTrials = 100;    end;
-    if nargin < 9; maxDataTrials = 100; end;
-    if nargin < 8; feedback = 0;        end;
+    if nargin > 6
+        i = 1;
+        while i <= length(varargin)
+            switch varargin{i}
+                case 'MaxTrials'
+                    maxTrials = varargin{i+1};
+                case 'MaxDataTrials'
+                    maxDataTrials = varargin{i+1};
+                case 'Feedback'
+                    maxDataTrials = varargin{i+1};
+                case 'SamplesAffinity'
+                    affinity = varargin{i+1};
+            end
+            i = i + 2;
+        end
+    end
     
     [rows, npts] = size(x);
     
+    % Set valid samples in the case of when samples affinity matrix is of
+    % size npts*npts*npts (triple consistency).
+    if length(size(affinity)) == 3
+        validSamples = zeros(nnz(affinity) ,3);
+        j = 1;
+        for i = 1 : npts
+            [r, c] = find(affinity(:,:,i));
+            len = length(r);
+            validSamples(j : j+len-1, :) = [ones(len,1) * i, r, c];
+            j = j + len;
+        end
+    end
+                    
     p = 0.99;         % Desired probability of choosing at least one sample
                       % free from outliers (probably should be a parameter)
 
@@ -148,16 +175,35 @@ function [M, inliers] = ransac_graph_samp(x, adj_mat, fittingfn, distfn, degenfn
         % a degenerate configuration.
         degenerate = 1;
         count = 1;
+        
         while degenerate
+            
             % Generate 3 random indicies in the range 1..npts
-            edge_on_3complete = (adj_mat ^ 2) & adj_mat;
-            [rows, cols] = find(edge_on_3complete);
-            edge_i = randi(length(rows));
-            node1 = rows(edge_i);
-            node2 = cols(edge_i);
-            common_neigh = find(adj_mat(node1, :) & adj_mat(node2, :));
-            node3 = common_neigh(randi(length(common_neigh)));
-            ind = [node1 node2 node3]';
+            if ~isempty(affinity)
+                if length(size(affinity)) == 2
+                    edge_on_3complete = (affinity ^ 2) & affinity;
+                    [rows, cols] = find(edge_on_3complete);
+                    edge_i = randi(length(rows));
+                    node1 = rows(edge_i);
+                    node2 = cols(edge_i);
+                    common_neigh = find(affinity(node1, :) & affinity(node2, :));
+                    node3 = common_neigh(randi(length(common_neigh)));
+                    ind = [node1 node2 node3]';
+                    
+                elseif length(size(affinity)) == 3
+                    ind = validSamples(randi(size(validSamples,1)), :)';
+                    
+                else
+                    error('invalid size of samples affinity matrix');
+                end
+                
+            else
+                if ~exist('randsample', 'file')
+                    ind = randomsample(npts, s);
+                else
+                    ind = randsample(npts, s);
+                end
+            end
 
             % Test that these points are not a degenerate configuration.
             degenerate = feval(degenfn, x(:,ind));

@@ -1,13 +1,12 @@
-function [sol, score] = grad_ascent_gm(M, sol0, stop_cri, max_iter, interactive)
+function [sol, score] = grad_ascent_gm_tri(M, sol0, stop_cri, max_iter, interactive)
+% graph matching by the gradient ascent method with affinity matrix of size
+% C*C*C (triple consistency)
 
 if nargin < 5; interactive = false; end
 if nargin < 4; max_iter = 50; end
 if nargin < 3; stop_cri = 0.01; end
 
-score = sol0' * M * sol0;
-if sol0 ~= 0
-    score = score / (norm(sol0) ^ 2);
-end
+score = graph_match_score(sol0, M);
 sol = sol0;
 pre_score = 0;
 
@@ -16,7 +15,10 @@ if interactive; fprintf('\ngradient ascent scores: %f', score); end
 i = 0;
 
 while abs(score - pre_score) > stop_cri && i < max_iter
-    delta = 2 * sum(M,2) .* sol - diag(M);
+    delta = zeros(size(sol));
+    for j = 1 : length(sol)
+        delta(j) = 3 * sol' * M(:,:,j) * sol - 3 * sol' * M(:,j,j) + M(j,j,j);
+    end
     
     [~, max_i] = max(delta(sol == 0));
     nnz_i = find(~sol);
@@ -31,14 +33,9 @@ while abs(score - pre_score) > stop_cri && i < max_iter
     sol_max(max_i) = 1;
     sol_min(min_i) = 0;
     
-    max_score = sol_max' * M * sol_max;
-    if sol_max ~= 0
-        max_score = max_score / (norm(sol_max) ^ 2);
-    end
-    min_score = sol_min' * M * sol_min;
-    if sol_min ~= 0
-        min_score = min_score / (norm(sol_min) ^ 2);
-    end
+    max_score = graph_match_score(sol_max, M);
+    min_score = graph_match_score(sol_min, M);
+    
     pre_score = score;
     
     if min_score >= max_score && min_score > score

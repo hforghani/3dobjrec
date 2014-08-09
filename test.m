@@ -1,16 +1,16 @@
 close all; clearvars; clc;
 
 addpath test model utils filtering estimation;
-addpath lib/daisy lib/EPnP lib/PairwiseMatching;
-addpath(genpath('lib/RRWM'));
+addpath lib/daisy/ lib/EPnP/ lib/PairwiseMatching/ lib/medoidshift/;
+addpath(genpath('lib/RRWM/'));
 
 % You may run just once.
 % run('lib/VLFEAT/toolbox/vl_setup');
 
 
 % Set parameters.
-CASE_NAME = 'all50';
-TEST_PATH = 'test_img/auto50/';
+CASE_NAME = 'all30';
+TEST_PATH = 'test_img/auto30/';
 METHOD = 'gm'; % choices: gm, filter
 LOAD_MATCHES = true;
 LOAD_FILTERED = false;

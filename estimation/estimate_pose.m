@@ -1,6 +1,6 @@
 function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, adj_mat, calibration, sample_count, threshold, varargin)
 
-sampling_mode = 'regular';
+sampling_mode = 'guidedRansac';
 
 if nargin > 6
     k = 1;
@@ -17,10 +17,13 @@ corr_data = [matches2d; matches3d];
 
 % Run P3P with RANSAC.
 switch sampling_mode
-    case 'graph'
-        [M, inliers] = ransac_graph_samp(corr_data, adj_mat, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 100, 100);
-    case 'regular'
+    case 'guidedRansac'
+        [M, inliers] = ransac_guided(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 'MaxTrials', 100, 'MaxDataTrials', 100, 'SamplesAffinity', adj_mat);
+    case 'ransac'
         [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 100, 100);
+    case 'noSample'
+        M = epnp_fittingfn(corr_data);
+        inliers = 1 : size(corr_data,2);
 end
 
 rotation_mat = M(:,1:3);
