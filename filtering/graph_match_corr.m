@@ -1,15 +1,26 @@
-function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, points, corr, corr_dist, models, obj_names, q_im_name, interactive)
+function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, points, corr, corr_dist, models, obj_names, q_im_name, varargin)
 
-    if nargin < 7
-        interactive = false;
+    interactive = 0;
+    local_method = 'gradient'; % choices: hao, gradient
+    global_method = 'gradient'; % choices: hao, geom, gradient
+    if nargin > 5
+        i = 1;
+        while i <= length(varargin)
+            if strcmp(varargin{i}, 'Interactive')
+                interactive = varargin{i+1};
+            elseif strcmp(varargin{i}, 'Local')
+                local_method = varargin{i+1};
+            elseif strcmp(varargin{i}, 'Global')
+                global_method = varargin{i+1};
+            end
+            i = i + 2;
+        end
     end
     
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
     
     N = 5;
-    LOCAL_METHOD = 'gradient'; % choices: hao, gradient
-    GLOBAL_METHOD = 'pnp'; % choices: hao, geom, gradient
     
 %     figure; imshow(image); hold on; scatter(q_frames(1,:),q_frames(2,:), 20, 'r', 'filled');
     
@@ -25,14 +36,14 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     retained_corr = cell(model_count, 1);
 
     for i = 1 : model_count
-        fprintf('local filter of "%s" ... ', obj_names{i});
+        if interactive; fprintf('local filter of "%s" ... ', obj_names{i}); end
         
         % Separate data related to the hypothesis.
         [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(i, points, corr, [], corr_dist);
         pcount = size(model_points, 2);
         
         % Compute confidence by graph matching.
-        switch LOCAL_METHOD
+        switch local_method
             case 'gradient'
                 [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, 'Affinity', 'local', 'Method', 'gradient');
                 sol = logical(sol);
@@ -43,13 +54,14 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
                 pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
                 adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, 0.05);
                 local_cons = model_cons2d & adj_mat_3d;
+                sol = any(local_cons);
                 confidences(i) = sum(sum(local_cons));
         end
         
         retained_corr{i} = sol;
 
         % Plot matched correspondences.
-        if interactive
+        if interactive > 1
             color = colors{mod(i,length(colors))+1};
             q_poses = q_frames(1:2, model_corr(1,:));
             matched_q_poses = q_frames(1:2, model_corr(1, sol));
@@ -63,14 +75,14 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
             title(obj_names{i}, 'Interpreter', 'none');
         end
 
-        fprintf('confidence = %f\n', confidences(i));
+        if interactive; fprintf('confidence = %f\n', confidences(i)); end
     end
     
     % Choose top hypotheses.
     [~, sort_indexes] = sort(confidences, 'descend');
     N = min(N, length(confidences));
     top_indexes = sort_indexes(1:N);
-    fprintf('===== %d top hypotheses chose\n', N);
+    if interactive; fprintf('===== %d top hypotheses chose\n', N); end
 
     sel_model_i = zeros(N, 1);
     sel_corr = cell(N, 1);
@@ -78,7 +90,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     
     for i = 1 : length(top_indexes)
         hyp_i = top_indexes(i);
-        fprintf('global filter of "%s"\n', obj_names{hyp_i});
+        if interactive; fprintf('global filter of "%s"\n', obj_names{hyp_i}); end
         
         % Separate data related to the hypothesis.
         [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(hyp_i, points, corr, [], corr_dist);
@@ -91,7 +103,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
         adj_mat = [];
 
         % Global filter
-        switch GLOBAL_METHOD
+        switch global_method
             case 'hao'
                 adj_mat = cons_global(ret_corr, q_frames, model_points, models{hyp_i}, ones(ret_ccount));
                 sol = any(adj_mat);
@@ -143,7 +155,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
         end
 
         % Plot matched correspondences.
-        if interactive
+        if interactive > 1
             color = colors{mod(hyp_i,length(colors))+1};
             q_poses = q_frames(1:2, ret_corr(1,:));
             matched_q_poses = q_frames(1:2, ret_corr(1, sol));
@@ -200,8 +212,6 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
         return;
     end
 
-%     fprintf('running graph matching ... ');
-    
     switch method
         case 'sm' % Spectral matching
             [sol, stats_ipfp]  = spectral_matching_ipfp(W, model_corr(1,:), model_corr(2,:));
@@ -246,8 +256,6 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
             end
     end
     
-%     fprintf('done\n');
-
 end
 
 

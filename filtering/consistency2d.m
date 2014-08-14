@@ -11,7 +11,7 @@ corr_count = size(corr, 2);
 adj_mat = false(corr_count);
 nei_score = zeros(corr_count);
 
-if corr_count == 1
+if corr_count <= 1
     return;
 end
 

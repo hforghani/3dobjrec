@@ -1,7 +1,7 @@
 function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, corr, models, obj_names, q_im_name, interactive)
 
     if nargin < 7
-        interactive = false;
+        interactive = 0;
     end
     
     global colors image;
@@ -14,7 +14,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
     
     % 2d local consistency
     cons2d = consistency2d(corr, q_frames, points, SCALE_FACTOR);
-    if interactive
+    if interactive > 1
         q_poses = q_frames(1:2, :);
         figure; imshow(image); hold on;
         gplot(cons2d, q_poses(:,corr(1,:))', '-.');
@@ -26,7 +26,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
     local_cons_arr = cell(model_count, 1);
     
     for i = 1 : model_count
-        fprintf('validating hyp "%s" ... ', obj_names{i});
+        if interactive; fprintf('validating hyp "%s" ... ', obj_names{i}); end
         
         % Separate points and correspondences related to this model.
         [model_points, model_corr, model_cons2d, ~] = separate_hyp_data(i, points, corr, cons2d);
@@ -42,7 +42,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
         confidences(i) = conf;
         local_cons_arr{i} = local_cons;
 
-        if interactive
+        if interactive > 1
             % Show 3d local consistency graph of model points.
 %             all_poses3d = models{i}.get_poses();
 %             point_indexes = model_points(2, model_corr(2,:));
@@ -64,14 +64,14 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
             title(obj_names{i}, 'Interpreter', 'none');
         end
         
-        fprintf('done, confidence = %d\n', conf);
+        if interactive; fprintf('done, confidence = %d\n', conf); end
     end
     
     % Write confidences to output file.
     [~, si] = sort(confidences, 'descend');
     fid = fopen('result/conf/conf.txt', 'w');
     for i = 1:model_count
-        fprintf(fid, '%s\t%d\n', obj_names{si(i)}, confidences(si(i)));
+        if interactive; fprintf(fid, '%s\t%d\n', obj_names{si(i)}, confidences(si(i))); end
     end
     fclose(fid);
     
@@ -96,7 +96,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, l
     
     [~, sort_indexes] = sort(confidences, 'descend');
     N = min(N, length(confidences));
-    fprintf('===== %d top hypotheses chose\n', N);
+    if interactive; fprintf('===== %d top hypotheses chose\n', N); end
     
     sel_model_i = zeros(N,1);
     sel_corr = cell(N,1);
@@ -132,6 +132,6 @@ function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, l
             title(obj_names{hyp_i}, 'Interpreter', 'none');
         end
         
-        fprintf('hyp ''%s'' chose\n', obj_names{hyp_i});
+        if interactive; fprintf('hyp ''%s'' chose\n', obj_names{hyp_i}); end
     end
 end
