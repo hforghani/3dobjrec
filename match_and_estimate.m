@@ -2,7 +2,8 @@ function [results, timing] = match_and_estimate(case_name, query_im_name, models
 
 load_match = false;
 load_fil_match = false;
-method = 'gm';
+local_method = 'gradient';
+global_method = 'gradient';
 interactive = 0;
 
 estimation_mode = 'guidedRansac'; % choices: guidedRansac, ransac, noSample
@@ -21,6 +22,8 @@ if nargin > 3
             local_method = varargin{i+1};
         elseif strcmp(varargin{i}, 'Global')
             global_method = varargin{i+1};
+        elseif strcmp(varargin{i}, 'MinInlierCount')
+            min_inl_count = varargin{i+1};
         elseif strcmp(varargin{i}, 'Interactive')
             interactive = varargin{i+1};
         end
@@ -71,12 +74,7 @@ if ~load_fil_match
     timing.filtering = toc(start);
     save(fil_match_f_name, 'sel_model_i', 'sel_corr', 'sel_adj_mat');
 else
-    switch method
-        case 'filter'
-            load(fil_match_f_name);
-        case 'gm'
-            load([fil_match_f_name '_gm']);
-    end    
+    load(fil_match_f_name);
     if interactive; fprintf('filtered matches loaded\n'); end
 end
 

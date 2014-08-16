@@ -1,5 +1,5 @@
 function [results, times] = test(case_name, test_path, local_method, global_method, ...
-    load_matches, load_filtered, min_index, max_index, interactive)
+    min_inl_count, load_matches, load_filtered, min_index, max_index, interactive)
 
 % interactive:      0 for no ouput; 1 for just precision, recal, and
 %                   timing; 2 logs details in addition; 3 shows images too.
@@ -47,10 +47,10 @@ times = cell(max_index, 1);
 
 for i = min_index : max_index
     q_im_name = [test_path str_arr{i}];
-    if interactive > 1; fprintf('======= testing %s, local: %s, global: %s =======\n', q_im_name, local_method, global_method); end
+    if interactive > 1; fprintf('======= testing %s =======\n', q_im_name); end
     [res, timing] = match_and_estimate(case_name, q_im_name, models, 'LoadMatches', ...
         load_matches, 'LoadFiltered', load_filtered, 'Local', local_method, 'Global', ...
-        global_method, 'Interactive', interactive - 1);
+        global_method, 'Interactive', interactive - 1, 'MinInlierCount', min_inl_count);
     times{i} = timing;
     results{i} = res;
     if interactive > 1; fprintf('======= done (elapsed time is %f sec.) =======\n', timing.total); end

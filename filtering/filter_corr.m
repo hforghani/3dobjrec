@@ -13,7 +13,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
     N = 5;
     
     % 2d local consistency
-    cons2d = consistency2d(corr, q_frames, points, SCALE_FACTOR);
+    cons2d = consistency2d(corr, q_frames, points, 'ScaleFactor', SCALE_FACTOR);
     if interactive > 1
         q_poses = q_frames(1:2, :);
         figure; imshow(image); hold on;
@@ -33,7 +33,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
         
         % 3d local consistency
         pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
-        adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, NEI3D_RATIO);
+        adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, 'NeighborRatio', NEI3D_RATIO);
 
         % Calculate adjacency matrix of consistency graph then compute
         % confidence of each model hypothesis.

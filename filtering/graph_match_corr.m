@@ -3,7 +3,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     interactive = 0;
     local_method = 'gradient'; % choices: hao, gradient
     global_method = 'gradient'; % choices: hao, geom, gradient
-    if nargin > 5
+    if nargin > 7
         i = 1;
         while i <= length(varargin)
             if strcmp(varargin{i}, 'Interactive')
@@ -50,9 +50,9 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
                 confidences(i) = score;
                 
             case 'hao'
-                [model_cons2d, ~] = consistency2d(model_corr, q_frames, model_points, 8);
+                model_cons2d = consistency2d(model_corr, q_frames, model_points);
                 pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
-                adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, 0.05);
+                adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis);
                 local_cons = model_cons2d & adj_mat_3d;
                 sol = any(local_cons);
                 confidences(i) = sum(sum(local_cons));
@@ -278,10 +278,16 @@ function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, mode
     % Set non-diagonal elements of affinity matrix (affinity between two correspondences).
     switch criteria
         case 'local'
-            [adj2d, nei_score2d] = consistency2d(model_corr, q_frames, model_points, 8);
+            [adj2d, nei_score2d] = consistency2d(model_corr, q_frames, model_points, 'CalcScores');
             cons_covis = cons_covis3d(model_points, model.points, model_corr, ones(ccount));
-            [adj3d, nei_score3d] = consistency3d(model_corr, model_points, model.points, cons_covis, 0.05);
+            [adj3d, nei_score3d] = consistency3d(model_corr, model_points, model.points, cons_covis, 'CalcScores');
             W = sqrt(nei_score2d .* nei_score3d);
+            for i = 1 : ccount
+                same_q_pos = model_corr(1,:) == model_corr(1,i);
+                same_p_pos = model_corr(2,:) == model_corr(2,i);
+                W(i, same_q_pos | same_p_pos) = 0;
+            end
+            W = min(W, W');
             sol0 = double(any(adj2d & adj3d, 2));
         case 'geom'
             [adj_geo, geo_score] = cons_pairwise_geo(model_corr, model_points, q_frames, model, ones(ccount), 0.8, 1.25);
