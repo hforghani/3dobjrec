@@ -1,19 +1,15 @@
-function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, corr, models, obj_names, q_im_name, interactive)
+function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, corr, models, obj_names, q_im_name, options, interactive)
 
-    if nargin < 7
+    if nargin < 8
         interactive = 0;
     end
     
     global colors image;
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
-    
-    SCALE_FACTOR = 8;
-    NEI3D_RATIO = 0.05;
-    N = 5;
-    
+        
     % 2d local consistency
-    cons2d = consistency2d(corr, q_frames, points, 'ScaleFactor', SCALE_FACTOR);
+    cons2d = consistency2d(corr, q_frames, points, options);
     if interactive > 1
         q_poses = q_frames(1:2, :);
         figure; imshow(image); hold on;
@@ -33,7 +29,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
         
         % 3d local consistency
         pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
-        adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, 'NeighborRatio', NEI3D_RATIO);
+        adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, options);
 
         % Calculate adjacency matrix of consistency graph then compute
         % confidence of each model hypothesis.
@@ -76,7 +72,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
     fclose(fid);
     
     % Choose top hypotheses.
-    [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, local_cons_arr, points, q_frames, corr, models, obj_names);
+    [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, options.top_hyp_num, local_cons_arr, points, q_frames, corr, models, obj_names);
     
 end
 

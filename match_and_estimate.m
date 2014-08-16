@@ -1,14 +1,8 @@
-function [results, timing] = match_and_estimate(case_name, query_im_name, models, varargin)
+function [results, timing] = match_and_estimate(case_name, query_im_name, models, options, varargin)
 
 load_match = false;
 load_fil_match = false;
-local_method = 'gradient';
-global_method = 'gradient';
 interactive = 0;
-
-estimation_mode = 'guidedRansac'; % choices: guidedRansac, ransac, noSample
-min_inl_ratio = 0;
-min_inl_count = 12;
 
 % Check parameter arguments.
 if nargin > 3
@@ -18,12 +12,6 @@ if nargin > 3
             load_match = varargin{i+1};
         elseif strcmp(varargin{i}, 'LoadFiltered')
             load_fil_match = varargin{i+1};
-        elseif strcmp(varargin{i}, 'Local')
-            local_method = varargin{i+1};
-        elseif strcmp(varargin{i}, 'Global')
-            global_method = varargin{i+1};
-        elseif strcmp(varargin{i}, 'MinInlierCount')
-            min_inl_count = varargin{i+1};
         elseif strcmp(varargin{i}, 'Interactive')
             interactive = varargin{i+1};
         end
@@ -31,13 +19,12 @@ if nargin > 3
     end
 end
 
-
 % Initialize.
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
 parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
 exact_name = parts{1}{1};
 matches_f_name = ['data/matches/' case_name '_' exact_name];
-fil_match_f_name = ['data/matches/' case_name '_' exact_name '_' local_method '_' global_method];
+fil_match_f_name = ['data/matches/' case_name '_' exact_name '_' options.local '_' options.global];
 desc_model_f_name = ['data/model_desc/' case_name];
 load(desc_model_f_name, 'obj_names');
 
@@ -61,15 +48,14 @@ end
 if ~load_fil_match
     if interactive; fprintf('filtering correspondences ...\n'); end
     start = tic;
-    if strcmp(local_method, 'hao') && strcmp(global_method, 'hao')
+    if strcmp(options.local, 'hao') && strcmp(options.global, 'hao')
         [sel_model_i, sel_corr, sel_adj_mat] = ...
             filter_corr(query_frames, points, correspondences, models, obj_names, ...
-            query_im_name, interactive);
+            query_im_name, options, interactive);
     else
         [sel_model_i, sel_corr, sel_adj_mat] = ...
             graph_match_corr(query_frames, points, correspondences, corr_dist, ...
-            models, obj_names, query_im_name, 'Interactive', interactive, ...
-            'Local', local_method, 'Global', global_method);
+            models, obj_names, query_im_name, options, interactive);
     end
     timing.filtering = toc(start);
     save(fil_match_f_name, 'sel_model_i', 'sel_corr', 'sel_adj_mat');
@@ -82,9 +68,7 @@ end
 query_poses = query_frames(1:2,:);
 start = tic;
 [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, sel_model_i, ...
-    sel_corr, sel_adj_mat, models, obj_names, query_im_name, ...
-    'SamplingMode', estimation_mode, 'MinInlierRatio', min_inl_ratio, 'MinInlierCount', ...
-    min_inl_count, 'Interactive', interactive);
+    sel_corr, sel_adj_mat, models, obj_names, query_im_name, options, interactive);
 timing.ransac = toc(start);
 
 timing.total = timing.matching + timing.filtering + timing.ransac;

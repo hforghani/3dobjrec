@@ -1,19 +1,15 @@
-function [adj_mat, nei_score] = consistency2d(corr, q_frames, points, varargin)
+function [adj_mat, nei_score] = consistency2d(corr, q_frames, points, options, varargin)
 % Calculate adjucency matrix of 2d consistency graph.
 
-scale_factor = 8;
 calc_scores = false;
-if nargin > 3
-    i = 1;
-    while i <= length(varargin)
-        if strcmp(varargin{i}, 'ScaleFactor')
-            scale_factor = varargin{i+1};
-        elseif strcmp(varargin{i}, 'CalcScores')
-            calc_scores = true;
-            i = i - 1;
-        end
-        i = i + 2;
+
+i = 1;
+while i <= length(varargin)
+    if strcmp(varargin{i}, 'CalcScores')
+        calc_scores = true;
+        i = i - 1;
     end
+    i = i + 2;
 end
 
 query_poses = q_frames(1:2, :);
@@ -37,11 +33,13 @@ kdtree = vl_kdtreebuild(double(corr_poses));
 [nei_indexes, distances] = vl_kdtreequery(kdtree, corr_poses, corr_poses, 'NUMNEIGHBORS', nei_num);
 distances = sqrt(distances);
 
+sigmas = zeros(1, corr_count);
+
 % Construct graph of 2d local consistency.
 for i = 1:corr_count
     nn_i = nei_indexes(:, i);
     dist_i = distances(:, i);
-    dist_thr = scale_factor * q_frames(3, corr(1,i));
+    dist_thr = options.scale_factor * q_frames(3, corr(1,i));
     
     % Check neighborhood distance of correspondences of the same model.
     fil_nn_i = nn_i(dist_i < dist_thr);
@@ -49,11 +47,20 @@ for i = 1:corr_count
     adj_mat(i, fil_nn_i(same_model)) = 1;
     
     % Set neighborhood score.
+%     if calc_scores
+%         s = 5 * dist_thr;
+%         nei_score(i, nn_i) = exp(-.5 * (dist_i/s) .^ 2);
+%     end
     if calc_scores
-        s = 2 * dist_thr;
-        nei_score(i, nn_i) = exp(-.5 * (dist_i/s) .^ 2);
+        sigmas(i) = options.sigma_mult_2d * dist_thr;
     end
 end
+
+rows = repmat(1:corr_count, nei_num, 1);
+sigmas = repmat(sigmas, nei_num, 1);
+values = exp(-.5 * (distances(:) ./ sigmas(:)) .^ 2);
+nei_score = sparse(rows(:), double(nei_indexes(:)), values, corr_count, corr_count);
+nei_score = full(nei_score);
 
 % Make the matrix symmetric and with zero diagonal.
 adj_mat = adj_mat | adj_mat';

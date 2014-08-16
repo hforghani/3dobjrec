@@ -1,34 +1,12 @@
-function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, points, corr, corr_dist, models, obj_names, q_im_name, varargin)
+function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
+    points, corr, corr_dist, models, obj_names, q_im_name, options, interactive)
 
-    interactive = 0;
-    local_method = 'gradient'; % choices: hao, gradient
-    global_method = 'gradient'; % choices: hao, geom, gradient
-    if nargin > 7
-        i = 1;
-        while i <= length(varargin)
-            if strcmp(varargin{i}, 'Interactive')
-                interactive = varargin{i+1};
-            elseif strcmp(varargin{i}, 'Local')
-                local_method = varargin{i+1};
-            elseif strcmp(varargin{i}, 'Global')
-                global_method = varargin{i+1};
-            end
-            i = i + 2;
-        end
+    if nargin < 9
+        interactive = 0;
     end
     
     image = imread(q_im_name);
     colors = {'r','g','b','c','m','y','k','w'};
-    
-    N = 5;
-    
-%     figure; imshow(image); hold on; scatter(q_frames(1,:),q_frames(2,:), 20, 'r', 'filled');
-    
-    % 2d local consistency
-%     cons2d = consistency2d(corr, q_frames, points, SCALE_FACTOR);
-%     q_poses = q_frames(1:2, :);
-%     figure; imshow(image); hold on;
-%     gplot(cons2d, q_poses(:,corr(1,:))', '-.');
     
     model_count = length(models);
     qcount = size(q_frames,2);    
@@ -43,16 +21,16 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
         pcount = size(model_points, 2);
         
         % Compute confidence by graph matching.
-        switch local_method
+        switch options.local
             case 'gradient'
-                [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, 'Affinity', 'local', 'Method', 'gradient');
+                [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'gradient');
                 sol = logical(sol);
                 confidences(i) = score;
                 
             case 'hao'
-                model_cons2d = consistency2d(model_corr, q_frames, model_points);
+                model_cons2d = consistency2d(model_corr, q_frames, model_points, options);
                 pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
-                adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis);
+                adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, options);
                 local_cons = model_cons2d & adj_mat_3d;
                 sol = any(local_cons);
                 confidences(i) = sum(sum(local_cons));
@@ -80,13 +58,13 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
     
     % Choose top hypotheses.
     [~, sort_indexes] = sort(confidences, 'descend');
-    N = min(N, length(confidences));
-    top_indexes = sort_indexes(1:N);
-    if interactive; fprintf('===== %d top hypotheses chose\n', N); end
+    options.top_hyp_num = min(options.top_hyp_num, length(confidences));
+    top_indexes = sort_indexes(1:options.top_hyp_num);
+    if interactive; fprintf('===== %d top hypotheses chose\n', options.top_hyp_num); end
 
-    sel_model_i = zeros(N, 1);
-    sel_corr = cell(N, 1);
-    sel_adj_mat = cell(N, 1);
+    sel_model_i = zeros(options.top_hyp_num, 1);
+    sel_corr = cell(options.top_hyp_num, 1);
+    sel_adj_mat = cell(options.top_hyp_num, 1);
     
     for i = 1 : length(top_indexes)
         hyp_i = top_indexes(i);
@@ -103,7 +81,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
         adj_mat = [];
 
         % Global filter
-        switch global_method
+        switch options.global
             case 'hao'
                 adj_mat = cons_global(ret_corr, q_frames, model_points, models{hyp_i}, ones(ret_ccount));
                 sol = any(adj_mat);
@@ -121,12 +99,12 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
                 sol = double(any(adj_mat, 2));
                 
             case 'gradient'
-                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'Affinity', 'geom', 'Method', 'gradient');
+                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, options, 'Affinity', 'geom', 'Method', 'gradient');
                 adj_mat = W > 0.8;
                 adj_mat(logical(eye(size(adj_mat)))) = 0;
                 
             case 'angle'
-                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, 'Affinity', 'angle', 'Method', 'gradient');
+                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, options, 'Affinity', 'angle', 'Method', 'gradient');
                 adj_mat = W;
                 
             case 'pnp'
@@ -169,7 +147,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, point
 end
 
 
-function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, model, varargin)
+function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, model, options, varargin)
     affinity = 'local';
     interactive = false;
     method = 'gradient';
@@ -200,7 +178,7 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
         return;
     end
     
-    [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, 'Criteria', affinity);
+    [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, options, 'Criteria', affinity);
     
     if interactive
         figure; spy(W); 
@@ -259,16 +237,15 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
 end
 
 
-function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, varargin)
+function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, options, varargin)
     criteria = 'local';
-    if nargin > 5
-        i = 1;
-        while i <= length(varargin)
-            if strcmp(varargin{i}, 'Criteria')
-                criteria = varargin{i+1};
-            end
-            i = i + 2;
+    
+    i = 1;
+    while i <= length(varargin)
+        if strcmp(varargin{i}, 'Criteria')
+            criteria = varargin{i+1};
         end
+        i = i + 2;
     end
     
     ccount = size(model_corr,2);
@@ -278,9 +255,9 @@ function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, mode
     % Set non-diagonal elements of affinity matrix (affinity between two correspondences).
     switch criteria
         case 'local'
-            [adj2d, nei_score2d] = consistency2d(model_corr, q_frames, model_points, 'CalcScores');
+            [adj2d, nei_score2d] = consistency2d(model_corr, q_frames, model_points, options, 'CalcScores');
             cons_covis = cons_covis3d(model_points, model.points, model_corr, ones(ccount));
-            [adj3d, nei_score3d] = consistency3d(model_corr, model_points, model.points, cons_covis, 'CalcScores');
+            [adj3d, nei_score3d] = consistency3d(model_corr, model_points, model.points, cons_covis, options, 'CalcScores');
             W = sqrt(nei_score2d .* nei_score3d);
             for i = 1 : ccount
                 same_q_pos = model_corr(1,:) == model_corr(1,i);

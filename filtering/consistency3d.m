@@ -1,18 +1,15 @@
-function [adj_mat, nei_score] = consistency3d( corr, points, points_arr, covis_mat, varargin )
+function [adj_mat, nei_score] = consistency3d( corr, points, points_arr, covis_mat, options, varargin )
 % Get adjucency matrix of 3d local consistency matrix of correspondences.
 % correspondences: correspondences related to points of an object
 % points: 2*P matrix of points of an abject; each column contains model
 % index and point index
 % points_arr: cell array of object points of type Point
 
-nei3d_ratio = 0.05;
 calc_scores = false;
 if nargin > 4
     i = 1;
     while i <= length(varargin)
-        if strcmp(varargin{i}, 'NeighborRatio')
-            nei3d_ratio = varargin{i+1};
-        elseif strcmp(varargin{i}, 'CalcScores')
+        if strcmp(varargin{i}, 'CalcScores')
             calc_scores = true;
             i = i - 1;
         end
@@ -22,7 +19,7 @@ end
 
 points_count = size(points,2);
 corr_count = size(corr, 2);
-nei_num = floor(length(points_arr) * nei3d_ratio);
+nei_num = floor(length(points_arr) * options.nei_ratio_3d);
 
 % Create output matrices.
 adj_mat = false(corr_count);
@@ -53,7 +50,7 @@ dist(1,:) = [];
 % Construct graph of 3d local consistency.
 
 if calc_scores
-    s = 0.5 * min(dist(end, :));
+    s = options.sigma_mult_3d * min(dist(end, :));
 end
 
 for i = 1 : points_count

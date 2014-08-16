@@ -1,28 +1,11 @@
 function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, ...
-    model_indexes, correspondences, adj_matrices, models, obj_names, query_im_name, varargin)
+    model_indexes, correspondences, adj_matrices, models, obj_names, query_im_name, options, interactive)
 
 SAMPLE_COUNT = 3;
 ERROR_THRESH = 10;
 
-min_inl_ratio = 0;
-min_inl_count = 0;
-sampling_mode = 'guidedRansac';
-interactive = 0;
-
-if nargin > 8
-    i = 1;
-    while i <= length(varargin)
-        if strcmp(varargin{i}, 'MinInlierRatio')
-            min_inl_ratio = varargin{i+1};
-        elseif strcmp(varargin{i}, 'MinInlierCount')
-            min_inl_count = varargin{i+1};
-        elseif strcmp(varargin{i}, 'SamplingMode')
-            sampling_mode = varargin{i+1};
-        elseif strcmp(varargin{i}, 'Interactive')
-            interactive = varargin{i+1};
-        end
-        i = i + 2;
-    end
+if ~exist('interactive', 'var')
+    interactive = 0;
 end
 
 global feat_fig proj_fig colors;
@@ -52,7 +35,7 @@ for i = 1 : length(correspondences)
     end
     
     % Check if not enough consistent correspondences when sampling guided by graph.
-    if strcmp(sampling_mode, 'guidedRansac') && (...
+    if strcmp(options.sampling_mode, 'guidedRansac') && (...
             ( ...
                 length(size(adj_mat)) == 2 && ...
                 (nnz(adj_mat) < SAMPLE_COUNT * 2 || (SAMPLE_COUNT == 3 && nnz(adj_mat^2 & adj_mat) == 0))) ...
@@ -84,11 +67,11 @@ for i = 1 : length(correspondences)
     model = model.model;
 
     try
-        [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH, 'SamplingMode', sampling_mode);
+        [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH, options);
         inlier_ratio = length(inliers) / size(poses2d, 2);
 %         if interactive; fprintf('inliers/total : %d / %d = %f\n', length(inliers), size(poses2d, 2), inlier_ratio) end
         
-        if inlier_ratio < min_inl_ratio || length(inliers) < min_inl_count
+        if inlier_ratio < options.min_inl_ratio || length(inliers) < options.min_inl_count
             if interactive; fprintf('not enough inliers\n'); end
         else
             if interactive > 1

@@ -1,22 +1,10 @@
-function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, adj_mat, calibration, sample_count, threshold, varargin)
-
-sampling_mode = 'guidedRansac';
-
-if nargin > 6
-    k = 1;
-    while k <= length(varargin)
-        if strcmp(varargin{k}, 'SamplingMode')
-            sampling_mode = varargin{k+1};
-        end
-        k = k + 2;
-    end
-end
+function [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(matches2d, matches3d, adj_mat, calibration, sample_count, threshold, options, varargin)
 
 K = calibration.get_calib_matrix(); % calibration matrix
 corr_data = [matches2d; matches3d];
 
 % Run P3P with RANSAC.
-switch sampling_mode
+switch options.sampling_mode
     case 'guidedRansac'
         [M, inliers] = ransac_guided(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 'MaxDataTrials', 100, 'MaxTrials', 100, 'SamplesAffinity', adj_mat);
     case 'ransac'
