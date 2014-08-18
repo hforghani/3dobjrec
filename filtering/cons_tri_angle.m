@@ -10,22 +10,31 @@ matched_poses = poses(:, model_points(2,:));
 covis = cons_covis3d(model_points, model.points, model_corr, true(ccount));
 
 cons = zeros(ccount, ccount, ccount);
-sigma = 0.2;
-max_dist = 0.1;
 
 if isempty(covis)
     return;
 end
 
-for x = 1 : ccount-2
-    for y = x+1 : ccount-1
-        for z = y+1 : ccount
+corr_covis = covis(model_corr(2,:), model_corr(2,:));
+sigma = 0.2;
+max_dist = 0.1;
+
+for x = find(any(corr_covis))
+    x_covis = corr_covis(x,:);
+    y_indices = find(x_covis);
+    y_indices = y_indices(y_indices > x);
+    
+    for y = y_indices
+        y_covis = corr_covis(y,:);
+        z_indices = find(y_covis & x_covis);
+        z_indices = z_indices(z_indices > y);
+        
+        for z = z_indices
             
             corr = model_corr(:, [x y z]);
             p_indexes = corr(2,:);
             
-            if covis(p_indexes(1), p_indexes(2)) && covis(p_indexes(2), p_indexes(3)) && covis(p_indexes(1), p_indexes(3)) ...
-                    && length(unique(p_indexes)) == 3 && length(unique(corr(1,:))) == 3
+            if length(unique(corr(1,:))) == 3
                 
                 poses3d = matched_poses(:, p_indexes);
                 poses2d = q_frames(1:2, corr(1,:));

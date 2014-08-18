@@ -158,7 +158,7 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
             j = j + len;
         end
     end
-                    
+    
     p = 0.99;         % Desired probability of choosing at least one sample
                       % free from outliers (probably should be a parameter)
 

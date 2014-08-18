@@ -104,7 +104,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
                 
             case 'angle'
                 [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, options, 'Affinity', 'angle', 'Method', 'gradient');
-                adj_mat = W;
+                adj_mat = W ~= 0;
                 
             case 'pnp'
                 [sol, error] = pnp_grad_descent(ret_corr, q_frames, model_points, models{hyp_i});
