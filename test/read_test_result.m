@@ -1,9 +1,8 @@
-function res = read_test_result(res_fname)
+function res = read_test_result(results)
 % res:  cell array in which each element is result of a test image. Each
 %       element is a struct with the properties: objcount, objnames,
 %       transforms
 
-load(res_fname, 'results');
 res = cell(length(results), 1);
 
 for i = 1 : length(res)

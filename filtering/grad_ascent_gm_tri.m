@@ -2,6 +2,8 @@ function [sol, score] = grad_ascent_gm_tri(M, sol0, stop_cri, max_iter, interact
 % graph matching by the gradient ascent method with affinity matrix of size
 % C*C*C (triple consistency)
 
+start = tic;
+
 if nargin < 5; interactive = false; end
 if nargin < 4; max_iter = 50; end
 if nargin < 3; stop_cri = 0.01; end
@@ -52,5 +54,7 @@ while abs(score - pre_score) > stop_cri && i < max_iter
 end
 
 if interactive; fprintf('\n'); end
+
+fprintf('grad_ascent_gm_tri : %f\n', toc(start));
 
 end

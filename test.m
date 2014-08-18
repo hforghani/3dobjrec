@@ -11,7 +11,7 @@ if ~isfield(options, 'global'); options.global = 'gradient'; end
 if ~isfield(options, 'min_inl_count'); options.min_inl_count = 0; end
 if ~isfield(options, 'min_inl_ratio'); options.min_inl_ratio = 0; end
 if ~isfield(options, 'scale_factor'); options.scale_factor = 8; end
-if ~isfield(options, 'sigma_mult_2d'); options.sigma_mult_2d = 10; end
+if ~isfield(options, 'sigma_mult_2d'); options.sigma_mult_2d = 1; end
 if ~isfield(options, 'nei_ratio_3d'); options.nei_ratio_3d = 0.05; end
 if ~isfield(options, 'sigma_mult_3d'); options.sigma_mult_3d = 0.5; end
 if ~isfield(options, 'top_hyp_num'); options.top_hyp_num = 5; end
@@ -78,28 +78,10 @@ save(res_fname, 'results', 'times');
 
 
 if interactive
-    
-    % Compute mean time.
-    matching_time = zeros(max_index-min_index+1,1);
-    filtering_time= zeros(max_index-min_index+1,1);
-    ransac_time = zeros(max_index-min_index+1,1);
-    for i = min_index:max_index
-        matching_time(i) = times{i}.matching;
-        filtering_time(i) = times{i}.filtering;
-        ransac_time(i) = times{i}.ransac;
-    end
-    total = matching_time + filtering_time + ransac_time;
-    fprintf('======= MEAN TIME : %f + %f + %f = %f =======\n', ...
-        mean(matching_time), mean(filtering_time), mean(ransac_time), mean(total));
+    analyse_results(results, times, min_index, max_index, test_path);
+end
 
-    % Compute precision and recall.
-    gnd_truth = read_gnd_truth([test_path 'data.txt'], min_index, max_index);
-    test_result = read_test_result(res_fname);
-    [precision, recall] = compute_p_r(gnd_truth, test_result, false);
-    fprintf('======= RECALL = %f, PRECISION = %f =======\n', recall, precision);
-
-    % Show results.
-    if interactive > 2
-        show_test_result(test_path, models, obj_names, gnd_truth, test_result);
-    end
+% Show results.
+if interactive > 2
+    show_test_result(test_path, models, obj_names, gnd_truth, test_result);
 end

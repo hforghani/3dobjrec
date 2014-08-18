@@ -12,14 +12,13 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
     qcount = size(q_frames,2);    
     confidences = zeros(model_count, 1);
     retained_corr = cell(model_count, 1);
-
+    
     for i = 1 : model_count
         if interactive; fprintf('local filter of "%s" ... ', obj_names{i}); end
         
         % Separate data related to the hypothesis.
         [model_points, model_corr, ~, model_corr_dist] = separate_hyp_data(i, points, corr, [], corr_dist);
-        pcount = size(model_points, 2);
-        
+       
         % Compute confidence by graph matching.
         switch options.local
             case 'gradient'
@@ -48,7 +47,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
             gplot(W > 0.6, q_poses', ['-o' color]);
             scatter(matched_q_poses(1,:), matched_q_poses(2,:), ['o' color], 'filled');
             for j = 1:size(q_poses,2)
-                text(q_poses(1,j), q_poses(2,j), num2str(j), 'Color', 'r');
+                text(q_poses(1,j), q_poses(2,j), num2str(model_corr(1,j)), 'Color', 'r');
             end
             title(obj_names{i}, 'Interpreter', 'none');
         end
@@ -138,7 +137,12 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
             q_poses = q_frames(1:2, ret_corr(1,:));
             matched_q_poses = q_frames(1:2, ret_corr(1, sol));
             figure; imshow(image); hold on;
-            gplot(adj_mat, q_poses', ['-o' color]);
+            if length(size(adj_mat)) == 2
+                gplot(adj_mat, q_poses', ['-o' color]);
+            elseif length(size(adj_mat)) == 3
+                adj_mat = any(adj_mat,3);
+                gplot(adj_mat, q_poses', ['-o' color]);
+            end
             scatter(matched_q_poses(1,:), matched_q_poses(2,:), ['o' color], 'filled');
             title(['pairwise geometric compatibility: ' obj_names{hyp_i}], 'Interpreter', 'none');
         end
@@ -149,7 +153,6 @@ end
 
 function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, model, options, varargin)
     affinity = 'local';
-    interactive = false;
     method = 'gradient';
     if nargin > 5
         i = 1;
@@ -158,8 +161,6 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
                 affinity = varargin{i+1};
             elseif strcmp(varargin{i}, 'Method')
                 method = varargin{i+1};
-            elseif strcmp(varargin{i}, 'Interactive')
-                interactive = varargin{i+1};
             end
             i = i + 2;
         end
@@ -180,10 +181,6 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
     
     [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, model_points, model, options, 'Criteria', affinity);
     
-    if interactive
-        figure; spy(W); 
-    end
-
     if nnz(W) < 3
         sol = sol0;
         score = graph_match_score(sol, W);
@@ -278,7 +275,7 @@ function [W, sol0] = affinity_matrix(model_corr, model_corr_dist, q_frames, mode
             sol0 = double(any(adj_geo, 2));
             W = min(W, W');
         case 'angle'
-            W = cons_tri_angle(model_corr, model_points, q_frames, model, 0.9, 1.15);
+            W = cons_tri_angle(model_corr, model_points, q_frames, model);
             w_sum = sum(sum(W,3),2);
             sol0 = double(w_sum > mean(w_sum));
     end
