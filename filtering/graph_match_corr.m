@@ -105,6 +105,10 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
             case 'angle'
                 [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, options, 'Affinity', 'angle', 'Method', 'gradient');
                 adj_mat = W ~= 0;
+%                 W = cons_tri_angle(ret_corr, model_points, q_frames, models{hyp_i});
+%                 sol = ones(ret_ccount,1);
+%                 score = 0;
+%                 adj_mat = W ~= 0;
                 
             case 'pnp'
                 [sol, error] = pnp_grad_descent(ret_corr, q_frames, model_points, models{hyp_i});
@@ -225,6 +229,7 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
             if length(size(W)) == 2
                 [sol, score] = grad_ascent_gm(W, sol0);
             elseif length(size(W)) == 3
+%                 guide_graph = any(W, 3);
                 [sol, score] = grad_ascent_gm_tri(W, sol0);
             else
                 error('invalid size of W for graph matching');

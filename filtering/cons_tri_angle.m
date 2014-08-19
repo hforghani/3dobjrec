@@ -16,8 +16,8 @@ if isempty(covis)
 end
 
 corr_covis = covis(model_corr(2,:), model_corr(2,:));
-sigma = 0.2;
 max_dist = 0.1;
+sigma = max_dist / 2;
 
 for x = find(any(corr_covis))
     x_covis = corr_covis(x,:);
@@ -32,11 +32,9 @@ for x = find(any(corr_covis))
         for z = z_indices
             
             corr = model_corr(:, [x y z]);
-            p_indexes = corr(2,:);
             
             if length(unique(corr(1,:))) == 3
-                
-                poses3d = matched_poses(:, p_indexes);
+                poses3d = matched_poses(:, corr(2,:));
                 poses2d = q_frames(1:2, corr(1,:));
 
                 theta3d = middle_angle(poses3d);
@@ -45,12 +43,14 @@ for x = find(any(corr_covis))
                 dist = theta2d - theta3d;
 
                 if abs(dist) < max_dist
-                    cons(x,y,z) = exp(-.5 * (dist/sigma) .^ 2);
+                    cons(x,y,z) = dist;
                 end
             end
         end
     end
 end
+
+cons(cons~=0) = exp(-.5 * (cons(cons~=0) / sigma) .^ 2);
 
 permu = perms([1 2 3]);
 for i = 2 : length(permu)
