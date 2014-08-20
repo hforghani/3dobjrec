@@ -1,6 +1,6 @@
 function cons = cons_tri_angle(model_corr, model_points, q_frames, model)
 
-start = tic;
+% start = tic;
 
 ccount = size(model_corr, 2);
 pcount = size(model_points, 2);
@@ -39,9 +39,8 @@ for x = find(any(corr_covis))
 
                 theta3d = middle_angle(poses3d);
                 theta2d = middle_angle(poses2d);
-        %         ratio = theta2d / theta3d;
-                dist = theta2d - theta3d;
 
+                dist = theta2d - theta3d;
                 if abs(dist) < max_dist
                     cons(x,y,z) = dist;
                 end
@@ -57,7 +56,7 @@ for i = 2 : length(permu)
     cons = max(cons, permute(cons, permu(i,:)));
 end
 
-fprintf('cons_tri_angle : %f\n', toc(start));
+% fprintf('cons_tri_angle : %f\n', toc(start));
 
 end
 

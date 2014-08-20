@@ -33,6 +33,21 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
                 local_cons = model_cons2d & adj_mat_3d;
                 sol = any(local_cons);
                 confidences(i) = sum(sum(local_cons));
+                
+            case 'sm'
+                [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'sm');
+                sol = logical(sol);
+                confidences(i) = score;
+
+            case 'ipfp'
+                [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'ipfp_gm');
+                sol = logical(sol);
+                confidences(i) = score;
+
+            case 'rrwm'
+                [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'rrwm');
+                sol = logical(sol);
+                confidences(i) = score;
         end
         
         retained_corr{i} = sol;
@@ -97,22 +112,30 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
                 adj_mat = adj_mat & adj_mat';
                 sol = double(any(adj_mat, 2));
                 
-            case 'gradient'
+            case 'geomGradient'
                 [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, options, 'Affinity', 'geom', 'Method', 'gradient');
                 adj_mat = W > 0.8;
                 adj_mat(logical(eye(size(adj_mat)))) = 0;
                 
+            case 'geomSM'
+                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, options, 'Affinity', 'geom', 'Method', 'sm');
+                adj_mat = W > 0.8;
+                adj_mat(logical(eye(size(adj_mat)))) = 0;
+                
+            case 'geomIPFP'
+                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, options, 'Affinity', 'geom', 'Method', 'ipfp');
+                adj_mat = W > 0.8;
+                adj_mat(logical(eye(size(adj_mat)))) = 0;
+
+            case 'geomRRWM'
+                [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, options, 'Affinity', 'geom', 'Method', 'rrwm');
+                adj_mat = W > 0.8;
+                adj_mat(logical(eye(size(adj_mat)))) = 0;
+
             case 'angle'
                 [sol, score, W] = graph_matching(ret_corr, ret_corr_dist, q_frames, model_points, models{hyp_i}, options, 'Affinity', 'angle', 'Method', 'gradient');
                 adj_mat = W ~= 0;
-%                 W = cons_tri_angle(ret_corr, model_points, q_frames, models{hyp_i});
-%                 sol = ones(ret_ccount,1);
-%                 score = 0;
-%                 adj_mat = W ~= 0;
-                
-            case 'pnp'
-                [sol, error] = pnp_grad_descent(ret_corr, q_frames, model_points, models{hyp_i});
-                adj_mat = [];
+            
         end
         
         sol = logical(sol);
@@ -202,7 +225,7 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
             [sol, x_opt, scores, score]  = ipfp(W, D, sol0, model_corr(1,:), model_corr(2,:), 50);
             
         case 'ipfp_gm' % Integer fixed point maximizing x'Wx
-            [sol, stats_ipfp]  = ipfp_gm(W, sol0, model_corr(1,:), model_corr(2,:), 20);
+            [sol, stats_ipfp]  = ipfp_gm(W, sol0, model_corr(1,:), model_corr(2,:));
             score = stats_ipfp.best_score;
             
         case 'rrwm' % Reweighted random walk matching

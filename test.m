@@ -2,6 +2,9 @@ function [results, times] = test(case_name, test_path, load_matches, load_filter
 
 % interactive:      0 for no ouput; 1 for just precision, recal, and
 %                   timing; 2 logs details in addition; 3 shows images too.
+% options.local:    local filter method. choices: hao, gradient, sm, ipfp, rrwm
+% options.global:   global filter method. choices: hao, geom, geomGradient,
+%                   geomSM, geomIPFP, geomRRWM, angle
 
 if nargin < 8
     options = [];
