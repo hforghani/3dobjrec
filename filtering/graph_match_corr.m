@@ -96,6 +96,10 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
 
         % Global filter
         switch options.global
+            case 'exhaust'
+                adj_mat = true(ret_ccount);
+                sol = true(ret_ccount,1);
+                
             case 'hao'
                 adj_mat = cons_global(ret_corr, q_frames, model_points, models{hyp_i}, ones(ret_ccount));
                 sol = any(adj_mat);

@@ -21,11 +21,11 @@ end
 
 % Initialize.
 parts = textscan(query_im_name, '%s', 'delimiter', '/');
-parts = textscan(parts{1}{end}, '%s', 'delimiter', '.');
+parts = textscan([parts{1}{end-1} '_' parts{1}{end}], '%s', 'delimiter', '.');
 exact_name = parts{1}{1};
-matches_f_name = ['data/matches/' case_name '_' exact_name];
-fil_match_f_name = ['data/matches/' case_name '_' exact_name '_' options.local '_' options.global];
-desc_model_f_name = ['data/model_desc/' case_name];
+matches_f_name = sprintf('data/matches/%s_%s', case_name, exact_name);
+fil_match_f_name = sprintf('data/matches/%s_%s_%s_%s', case_name, exact_name, options.local, options.global);
+desc_model_f_name = sprintf('data/model_desc/%s', case_name);
 load(desc_model_f_name, 'obj_names');
 
 timing = struct('matching', 0, 'filtering', 0, 'ransac', 0);
@@ -75,9 +75,11 @@ timing.total = timing.matching + timing.filtering + timing.ransac;
 
 % Create results.
 count = length(rec_indexes);
-results = cell(count, 1);
+results.objcount = count;
+results.objnames = cell(count, 1);
+results.transforms = cell(count, 1);
 obj_names = obj_names(rec_indexes);
 for i = 1 : count
-    results{i} = struct('obj_index', rec_indexes(i), 'obj_name', obj_names{i}, ...
-        'transform', transforms{i});
+    results.objnames{i} = obj_names{i};
+    results.transforms{i} = transforms{i};
 end

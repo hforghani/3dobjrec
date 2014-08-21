@@ -3,14 +3,14 @@ function [results, times] = test(case_name, test_path, load_matches, load_filter
 % interactive:      0 for no ouput; 1 for just precision, recal, and
 %                   timing; 2 logs details in addition; 3 shows images too.
 % options.local:    local filter method. choices: hao, gradient, sm, ipfp, rrwm
-% options.global:   global filter method. choices: hao, geom, geomGradient,
+% options.global:   global filter method. choices: exhaust, hao, geom, geomGradient,
 %                   geomSM, geomIPFP, geomRRWM, angle
 
 if nargin < 8
     options = [];
 end
-if ~isfield(options, 'local'); options.local = 'gradient'; end
-if ~isfield(options, 'global'); options.global = 'gradient'; end
+if ~isfield(options, 'local'); options.local = 'hao'; end
+if ~isfield(options, 'global'); options.global = 'hao'; end
 if ~isfield(options, 'min_inl_count'); options.min_inl_count = 0; end
 if ~isfield(options, 'min_inl_ratio'); options.min_inl_ratio = 0; end
 if ~isfield(options, 'scale_factor'); options.scale_factor = 8; end
@@ -81,10 +81,10 @@ save(res_fname, 'results', 'times');
 
 
 if interactive
-    analyse_results(results, times, min_index, max_index, test_path);
+    gnd_truth = analyse_results(results, times, case_name, test_path, min_index, max_index);
 end
 
 % Show results.
 if interactive > 2
-    show_test_result(test_path, models, obj_names, gnd_truth, test_result);
+    show_test_result(test_path, models, obj_names, gnd_truth, results);
 end

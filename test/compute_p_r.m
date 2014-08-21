@@ -1,42 +1,35 @@
-function [precision, recall] = compute_p_r(gnd_truth, test_result, interactive)
+function [precision, recall] = compute_p_r(gnd_truth, test_result, obj_names, interactive)
 
 if nargin == 2
     interactive = 0;
 end
 
-test_count = 0;
-true_count = 0;
-false_count = 0;
+T = 0; % true
+TP = 0; % true positive
+FP = 0; % false positive
+
 for i = 1 : length(gnd_truth)
     if ~isempty(test_result{i})
-        test_count = test_count + gnd_truth{i}.objcount;
+        true_count = sum(ismember(gnd_truth{i}.objnames, obj_names));
+        T = T + true_count;
+        
         for j = 1 : test_result{i}.objcount
             name = test_result{i}.objnames{j};
-            istrue = false;
-            for k = 1 : gnd_truth{i}.objcount
-                if strcmp(name, gnd_truth{i}.objnames{k})
-                    istrue = true;
-                end
-            end
-            if istrue
-                true_count = true_count + 1;
+            if ismember(name, gnd_truth{i}.objnames)
+                TP = TP + 1;
             else
-                false_count = false_count + 1;
+                FP = FP + 1;
                 if interactive
                     fprintf('false positive: %s in %s\n', name, gnd_truth{i}.fname);
                 end
             end
         end
+        
         if interactive
             for j = 1 : gnd_truth{i}.objcount
-                found = false;
-                for k = 1 : test_result{i}.objcount
-                    if strcmp(gnd_truth{i}.objnames{j}, test_result{i}.objnames{k})
-                        found = true;
-                        break;
-                    end
-                end
-                if ~found
+                name = gnd_truth{i}.objnames{j};
+                if ~ismember(name, obj_names) && ...
+                        isempty(find(ismember(test_result{i}.objnames, name), 1))
                     fprintf('false negative: %s in %s\n', gnd_truth{i}.objnames{j}, gnd_truth{i}.fname);
                 end
             end
@@ -44,5 +37,5 @@ for i = 1 : length(gnd_truth)
     end
 end
 
-recall = true_count / test_count;
-precision = true_count / (true_count + false_count);
+recall = TP / T;
+precision = TP / (TP + FP);

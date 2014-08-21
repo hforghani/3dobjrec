@@ -3,14 +3,20 @@ clearvars;
 folders = dir(get_dataset_path());
 folders = folders(3:end);
 
-result_name = 'all50';
-start_i = 1;
-end_i = 50;
-% end_i = length(folders);
+result_name = 'all10_2';
+count = 10;
+% indexes = 1 : count;
+indexes = zeros(1, count);
+all_indexes = 1 : 50;
+for i = 1 : count
+    ri = randi(50 - i + 1);
+    indexes(i) = all_indexes(ri);
+    all_indexes(ri) = [];
+end
 
-obj_names = cell(end_i - start_i + 1, 1);
-for i = start_i:end_i
-    obj_name = folders(i).name;
+obj_names = cell(length(indexes), 1);
+for i = 1 : length(indexes)
+    obj_name = folders(indexes(i)).name;
     obj_names{i} = obj_name;
 end
 
@@ -18,7 +24,7 @@ descriptors = [];
 desc_point_indexes = [];
 desc_model_indexes = [];
 
-for i = 1:length(obj_names)
+for i = 1 : length(obj_names)
     fprintf('adding object %d ... ', i);
     obj_name = obj_names{i};
     desc_model_fname = ['data/model_desc/' obj_name];

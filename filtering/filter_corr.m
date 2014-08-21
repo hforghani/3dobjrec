@@ -63,13 +63,13 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
         if interactive; fprintf('done, confidence = %d\n', conf); end
     end
     
-    % Write confidences to output file.
-    [~, si] = sort(confidences, 'descend');
-    fid = fopen('result/conf/conf.txt', 'w');
-    for i = 1:model_count
-        if interactive; fprintf(fid, '%s\t%d\n', obj_names{si(i)}, confidences(si(i))); end
-    end
-    fclose(fid);
+%     % Write confidences to output file.
+%     [~, si] = sort(confidences, 'descend');
+%     fid = fopen('result/conf/conf.txt', 'w');
+%     for i = 1:model_count
+%         if interactive; fprintf(fid, '%s\t%d\n', obj_names{si(i)}, confidences(si(i))); end
+%     end
+%     fclose(fid);
     
     % Choose top hypotheses.
     [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, options.top_hyp_num, local_cons_arr, points, q_frames, corr, models, obj_names);

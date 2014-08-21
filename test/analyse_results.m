@@ -1,7 +1,10 @@
-function analyse_results( results, times, min_index, max_index, test_path )
+function gnd_truth = analyse_results( test_res, times, case_name, test_path, min_index, max_index )
 %CALC_RESULTS Summary of this function goes here
 %   Detailed explanation goes here
 
+    desc_model_f_name = ['data/model_desc/' case_name];
+    load(desc_model_f_name, 'obj_names');
+    
     % Compute mean time.
     matching_time = zeros(max_index-min_index+1,1);
     filtering_time= zeros(max_index-min_index+1,1);
@@ -17,8 +20,8 @@ function analyse_results( results, times, min_index, max_index, test_path )
 
     % Compute precision and recall.
     gnd_truth = read_gnd_truth([test_path 'data.txt'], min_index, max_index);
-    test_result = read_test_result(results);
-    [precision, recall] = compute_p_r(gnd_truth, test_result, false);
+%     test_result = read_test_result(test_res);
+    [precision, recall] = compute_p_r(gnd_truth, test_res, obj_names, false);
     fprintf('======= RECALL = %f, PRECISION = %f =======\n', recall, precision);
 
 end
