@@ -136,7 +136,7 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
                 case 'MaxDataTrials'
                     maxDataTrials = varargin{i+1};
                 case 'Feedback'
-                    maxDataTrials = varargin{i+1};
+                    feedback = varargin{i+1};
                 case 'SamplesAffinity'
                     affinity = varargin{i+1};
             end

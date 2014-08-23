@@ -37,7 +37,7 @@ if read_nvm
     fprintf('done\n');
 else
     load(nvm_data_fname);
-    disp('nvm data loaded\n');
+    disp('nvm data loaded');
 end
 
 
@@ -65,7 +65,7 @@ elseif calc_point_sizes
     
     % Load models if saved.
     load(desc_data_fname);
-    disp('descriptors data loaded\n');
+    disp('descriptors data loaded');
 end
 
 

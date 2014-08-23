@@ -65,7 +65,7 @@ global BKG_PATH IMAGE_HEIGHT IMAGE_WIDTH TEST_PATH BASE_PATH;
 BKG_PATH = 'test_img/background/';
 IMAGE_HEIGHT = 720;
 IMAGE_WIDTH = 1280;
-TEST_PATH = 'test_img/auto50/';
+TEST_PATH = 'test_img/auto10_2/';
 BASE_PATH = get_dataset_path();
 
 % initializations:

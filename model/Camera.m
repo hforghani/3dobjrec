@@ -43,27 +43,32 @@ classdef Camera
             % Caluclate scales. Extract SIFT and get scale of nearest
             % neighbor feature to each pose as its estimated scale. Crop
             % the portion of image in which poses exist to extract SIFT.
-            max_feature_dist = 2;
+%             max_feature_dist = 2;
             
             im_gray = single(rgb2gray(self.get_image(model_path)));
             [meas_poses, ~] = self.get_points_poses(points, calibration);
+            
+            frames = vl_covdet(im_gray, 'Method', 'DoG', 'Frames', meas_poses);
+%             scales = pi * frames(3,:) .* frames(6,:);
+            scales = mean([frames(3,:); frames(6,:)]);
 
-            hull = convhull(meas_poses(1,:), meas_poses(2,:));
-            hull_poses = meas_poses(:, hull);
-            [h,w] = size(im_gray);
-            top_left = floor(max(min(hull_poses, [], 2) - [50; 50], [1;1]));
-            bottom_right = ceil(min(max(hull_poses, [], 2) + [50; 50], [w;h]));
-            crop_im = uint8(im_gray(top_left(2):bottom_right(2), top_left(1):bottom_right(1)));
-            [frame, ~] = vl_sift(single(crop_im), 'Octaves', 7, 'Levels', 15, 'EdgeThresh', 50);
-%             surf_points = detectSURFFeatures(crop_im, 'NumOctaves', 10, 'NumScaleLevels', 20, 'MetricThreshold', 0);
-            extracted_poses = frame(1:2,:);
-%             extracted_poses = double(surf_points.Location');
-            extracted_poses = extracted_poses + repmat(top_left, 1, size(extracted_poses,2)) - 1;
-            kdtree = vl_kdtreebuild(extracted_poses);
-            [indexes, dist] = vl_kdtreequery(kdtree, extracted_poses, meas_poses);
-            scales = frame(3, indexes);
-%             scales = surf_points.Scale(indexes)';
-            scales(dist > max_feature_dist ^ 2) = 0;
+
+%             hull = convhull(meas_poses(1,:), meas_poses(2,:));
+%             hull_poses = meas_poses(:, hull);
+%             [h,w] = size(im_gray);
+%             top_left = floor(max(min(hull_poses, [], 2) - [50; 50], [1;1]));
+%             bottom_right = ceil(min(max(hull_poses, [], 2) + [50; 50], [w;h]));
+%             crop_im = uint8(im_gray(top_left(2):bottom_right(2), top_left(1):bottom_right(1)));
+%             [frame, ~] = vl_sift(single(crop_im), 'Octaves', 7, 'Levels', 15, 'EdgeThresh', 50);
+% %             surf_points = detectSURFFeatures(crop_im, 'NumOctaves', 10, 'NumScaleLevels', 20, 'MetricThreshold', 0);
+%             extracted_poses = frame(1:2,:);
+% %             extracted_poses = double(surf_points.Location');
+%             extracted_poses = extracted_poses + repmat(top_left, 1, size(extracted_poses,2)) - 1;
+%             kdtree = vl_kdtreebuild(extracted_poses);
+%             [indexes, dist] = vl_kdtreequery(kdtree, extracted_poses, meas_poses);
+%             scales = frame(3, indexes);
+% %             scales = surf_points.Scale(indexes)';
+%             scales(dist > max_feature_dist ^ 2) = 0;
         end
         
         function measurements = get_measurements(self, points)

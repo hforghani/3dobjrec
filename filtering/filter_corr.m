@@ -72,7 +72,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = filter_corr(q_frames, points, co
 %     fclose(fid);
     
     % Choose top hypotheses.
-    [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, options.top_hyp_num, local_cons_arr, points, q_frames, corr, models, obj_names);
+    [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, options.top_hyp_num, local_cons_arr, points, q_frames, corr, models, obj_names, interactive);
     
 end
 
@@ -98,7 +98,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, l
     sel_corr = cell(N,1);
     sel_adj_mat = cell(N,1);
     
-%     fig_h = figure;
+    if interactive > 1; fig_h = figure; end
 
     for i = 1 : N
         hyp_i = sort_indexes(i);
@@ -119,7 +119,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = choose_top_hyp(confidences, N, l
         sel_adj_mat{i} = adj_mat;
 
         % Show compatibility graphs and nodes in 3-complete subgraphs.
-        if interactive
+        if interactive > 1
             model_query_poses = q_frames(1:2, sel_corr{i}(1,:));
             color = colors{mod(i,length(colors))+1};
             figure(fig_h); subplot(ceil(sqrt(N)), ceil(sqrt(N)), i);

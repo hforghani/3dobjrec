@@ -1,19 +1,36 @@
-function [query_frames, correspondences, points, corr_dist] = match_2d_to_3d(color_im, desc_model, models)
+function [query_frames, correspondences, points, corr_dist] = match_2d_to_3d(color_im, desc_model, models, interactive)
 % query_frames : 4*N; data of keypoints extracted from 
 % correspondences : 2*M matrix; each column is an array of [query_pos_index; point_index_in_points_array]
 % points: 2*P; points of 3d model; each column is in the format [model_index, point_index]
 % corr_dist: 1*M matrix of correspondences descriptor distances
+
+if nargin < 4
+    interactive = false;
+end
+
 addpath model;
 
-% Extract keypoints using SIFT.
-fprintf('extracting feature from query image ... ');
+
+% Set parameters.
+desc_error_thr = 0.5;
+col_thr = 50;
+kpt_score_thr = 3;
+
+
+% Extract keypoints using feature detector.
+if interactive; fprintf('extracting feature from query image ... '); end
 query_im = single(rgb2gray(color_im));    
-[query_frames, ~] = vl_sift(query_im, 'Levels', 3, 'EdgeThresh' , 20);
+% [query_frames, ~] = vl_sift(query_im, 'Levels', 3, 'EdgeThresh' , 20);
+[query_frames, ~, info] = vl_covdet(query_im, 'Method', 'DoG');
+query_frames = query_frames(:, info.edgeScores > kpt_score_thr);
+scales = mean([query_frames(3,:); query_frames(6,:)]);
+query_frames = [query_frames(1:2,:); scales];
 
 %     figure; imshow(color_im); hold on;
 %     h2 = vl_plotframe(query_frames) ;
 %     set(h2,'color','y','linewidth',1) ;
 
+% Remove repeated columns.
 query_poses = query_frames(1:2, :);
 [query_poses, u_indexes, ~] = unique(query_poses', 'rows'); % Remove repeated points.
 query_poses = query_poses';
@@ -24,31 +41,30 @@ query_descriptors = devide_and_compute_daisy(query_im, query_poses);
 zero_indexes = find(~any(query_descriptors));
 query_descriptors(:, zero_indexes) = [];
 query_frames(:, zero_indexes) = [];
-fprintf('done\n');
+if interactive; fprintf('done\n'); end
 
 query_points_num = size(query_descriptors, 2);
-fprintf('%d descriptors extracted.\n', query_points_num);
+if interactive; fprintf('%d features described.\n', query_points_num); end
 
 % Register 2d to 3d. Find some nearest neighbors for each query pose.
-fprintf('registering 2d to 3d ... ');
-max_error = 0.8;
-col_thr = 50;
-models_count = length(unique(desc_model.desc_model_indexes));
-nei_num = ceil(models_count/10);
+if interactive; fprintf('registering 2d to 3d ... '); end
+% models_count = length(unique(desc_model.desc_model_indexes));
+% nei_num = ceil(models_count/10);
+nei_num = 3;
 [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors, 'NUMNEIGHBORS', nei_num);
 distances = sqrt(distances);
-fprintf('done\n');
+if interactive; fprintf('done\n'); end
 
 % Filter high errors and determine points.
-fprintf('applying error and color threshold ...');
-is_less_than_error = distances < max_error;
+if interactive; fprintf('applying error and color threshold ...'); end
+is_less_than_error = distances < desc_error_thr;
 has_same_color = match_color(query_frames(1:2,:), indexes, color_im, desc_model, models, col_thr);
 retained = is_less_than_error & has_same_color;
 point_general_indexes = unique(indexes(retained));
 points_count = length(point_general_indexes);
 points = [desc_model.desc_model_indexes(point_general_indexes);
           desc_model.desc_point_indexes(point_general_indexes)];
-fprintf('done\n');
+if interactive; fprintf('done\n'); end
 
 % Determine correspondences and their distances.
 corr_count = sum(sum(retained));

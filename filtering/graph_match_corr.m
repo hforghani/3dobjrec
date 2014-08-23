@@ -25,29 +25,33 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
                 [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'gradient');
                 sol = logical(sol);
                 confidences(i) = score;
+                adj_mat = W > 0.6;
                 
             case 'hao'
                 model_cons2d = consistency2d(model_corr, q_frames, model_points, options);
                 pnt_adj_covis = cons_covis3d(model_points, models{i}.points, model_corr, model_cons2d);
                 adj_mat_3d = consistency3d(model_corr, model_points, models{i}.points, pnt_adj_covis, options);
-                local_cons = model_cons2d & adj_mat_3d;
-                sol = any(local_cons);
-                confidences(i) = sum(sum(local_cons));
+                adj_mat = model_cons2d & adj_mat_3d;
+                sol = any(adj_mat);
+                confidences(i) = sum(sum(adj_mat));
                 
             case 'sm'
                 [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'sm');
                 sol = logical(sol);
                 confidences(i) = score;
+                adj_mat = W > 0.6;
 
             case 'ipfp'
                 [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'ipfp_gm');
                 sol = logical(sol);
                 confidences(i) = score;
+                adj_mat = W > 0.6;
 
             case 'rrwm'
                 [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'rrwm');
                 sol = logical(sol);
                 confidences(i) = score;
+                adj_mat = W > 0.6;
         end
         
         retained_corr{i} = sol;
@@ -59,7 +63,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
             matched_q_poses = q_frames(1:2, model_corr(1, sol));
             figure; imshow(image); hold on;
             scatter(q_poses(1,:), q_poses(2,:), ['o' color]);
-            gplot(W > 0.6, q_poses', ['-o' color]);
+            gplot(adj_mat, q_poses', ['-o' color]);
             scatter(matched_q_poses(1,:), matched_q_poses(2,:), ['o' color], 'filled');
             for j = 1:size(q_poses,2)
                 text(q_poses(1,j), q_poses(2,j), num2str(model_corr(1,j)), 'Color', 'r');

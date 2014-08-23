@@ -1,10 +1,10 @@
-function test_data = read_gnd_truth(data_fname, min_index, max_index)
+function gnd_truth = read_gnd_truth(data_fname, min_index, max_index)
 % test_data:    cell array in which each element is ground truth of a test 
 %               image. Each element is a struct with the properties: 
 %               objcount, objnames
 
 fid = fopen(data_fname);
-test_data = cell(max_index - min_index + 1, 1);
+gnd_truth = cell(max_index - min_index + 1, 1);
 i = 1;
 
 while i <= max_index
@@ -19,7 +19,7 @@ while i <= max_index
     end
     
     if i >= min_index
-        test_data{i - min_index + 1} = item;
+        gnd_truth{i - min_index + 1} = item;
     end
     
     i = i + 1;

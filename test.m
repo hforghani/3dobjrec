@@ -17,7 +17,7 @@ if ~isfield(options, 'scale_factor'); options.scale_factor = 8; end
 if ~isfield(options, 'sigma_mult_2d'); options.sigma_mult_2d = 1; end
 if ~isfield(options, 'nei_ratio_3d'); options.nei_ratio_3d = 0.05; end
 if ~isfield(options, 'sigma_mult_3d'); options.sigma_mult_3d = 0.5; end
-if ~isfield(options, 'top_hyp_num'); options.top_hyp_num = 5; end
+if ~isfield(options, 'top_hyp_num'); options.top_hyp_num = 7; end
 if ~isfield(options, 'sampling_mode'); options.sampling_mode = 'guidedRansac'; end
 
 if interactive; fprintf('======= testing %s, local: %s, global: %s =======\n', case_name, options.local, options.global); end
@@ -58,18 +58,21 @@ end
 
 % Run the algorithm for all test images.
 
-results = cell(length(str_arr), 1);
-times = cell(max_index, 1);
+results = cell(max_index-min_index+1, 1);
+times = cell(max_index-min_index+1, 1);
 
 for i = min_index : max_index
     q_im_name = [test_path str_arr{i}];
     if interactive > 1; fprintf('======= testing %s =======\n', q_im_name); end
+    fprintf('%d, ', i);
     [res, timing] = match_and_estimate(case_name, q_im_name, models, options, 'LoadMatches', ...
         load_matches, 'LoadFiltered', load_filtered, 'Interactive', interactive - 1);
-    times{i} = timing;
-    results{i} = res;
+    times{i - min_index + 1} = timing;
+    results{i - min_index + 1} = res;
     if interactive > 1; fprintf('======= done (elapsed time is %f sec.) =======\n', timing.total); end
 end
+
+fprintf('\n');
 
 % Save results.
 parts = textscan(test_path, '%[^/]/%[^/]/');
@@ -85,6 +88,6 @@ if interactive
 end
 
 % Show results.
-if interactive > 2
+if interactive > 1
     show_test_result(test_path, models, obj_names, gnd_truth, results);
 end

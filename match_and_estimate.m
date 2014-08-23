@@ -35,7 +35,7 @@ if ~load_match
     image = imread(query_im_name);
     desc_model = load(desc_model_f_name);
     start = tic;
-    [query_frames, correspondences, points, corr_dist] = match_2d_to_3d(image, desc_model, models);
+    [query_frames, correspondences, points, corr_dist] = match_2d_to_3d(image, desc_model, models, interactive);
     timing.matching = toc(start);
     clear desc_model; % to save memory.
     save(matches_f_name, 'query_frames', 'points', 'correspondences', 'corr_dist');

@@ -6,9 +6,9 @@ corr_data = [matches2d; matches3d];
 % Run P3P with RANSAC.
 switch options.sampling_mode
     case 'guidedRansac'
-        [M, inliers] = ransac_guided(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 'MaxDataTrials', 100, 'MaxTrials', 100, 'SamplesAffinity', adj_mat);
+        [M, inliers] = ransac_guided(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 'MaxDataTrials', 25, 'MaxTrials', 100, 'SamplesAffinity', adj_mat, 'Feedback', true);
     case 'ransac'
-        [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 100, 100);
+        [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 25, 100);
     case 'noSample'
         M = epnp_fittingfn(corr_data);
         inliers = 1 : size(corr_data,2);
