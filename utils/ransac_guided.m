@@ -127,6 +127,11 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
     feedback = 0;
     affinity = [];
     
+%     sampling_time = 0;
+%     s1 = 0; s2 = 0; s3 = 0;
+%     fitting_time = 0;
+%     dist_time = 0;
+    
     if nargin > 6
         i = 1;
         while i <= length(varargin)
@@ -146,9 +151,10 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
     
     [rows, npts] = size(x);
     
-    % Set valid samples in the case of when samples affinity matrix is of
-    % size npts*npts*npts (triple consistency).
+%     start = tic;
     if length(size(affinity)) == 3
+        % Set valid samples in the case of when samples affinity matrix is of
+        % size npts*npts*npts (triple consistency).
         validSamples = zeros(nnz(affinity) ,3);
         j = 1;
         for i = 1 : npts
@@ -157,7 +163,10 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
             validSamples(j : j+len-1, :) = [ones(len,1) * i, r, c];
             j = j + len;
         end
+    elseif length(size(affinity)) == 2
+        edge_on_3complete = (affinity ^ 2) & affinity;
     end
+%     sampling_time = sampling_time + toc(start);
     
     p = 0.99;         % Desired probability of choosing at least one sample
                       % free from outliers (probably should be a parameter)
@@ -166,6 +175,8 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
     trialcount = 0;
     bestscore =  0;
     N = 1;            % Dummy initialisation for number of trials.
+    
+
     
     while N > trialcount
 %         disp(['N = ' num2str(N) ', trialcount = ' num2str(trialcount)]);
@@ -181,7 +192,7 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
             % Generate 3 random indicies in the range 1..npts
             if ~isempty(affinity)
                 if length(size(affinity)) == 2
-                    edge_on_3complete = (affinity ^ 2) & affinity;
+%                     start = tic;
                     [rows, cols] = find(edge_on_3complete);
                     edge_i = randi(length(rows));
                     node1 = rows(edge_i);
@@ -189,7 +200,8 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
                     common_neigh = find(affinity(node1, :) & affinity(node2, :));
                     node3 = common_neigh(randi(length(common_neigh)));
                     ind = [node1 node2 node3]';
-                    
+%                     sampling_time = sampling_time + toc(start);
+
                 elseif length(size(affinity)) == 3
                     ind = validSamples(randi(size(validSamples,1)), :)';
                     
@@ -212,7 +224,9 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
                 % Fit model to this random selection of data points.
                 % Note that M may represent a set of models that fit the data in
                 % this case M will be a cell array of models
+%                 start = tic;
                 M = feval(fittingfn, x(:,ind));
+%                 fitting_time = fitting_time + toc(start);
                 
                 % Depending on your problem it might be that the only way you
                 % can determine whether a data set is degenerate or not is to
@@ -237,7 +251,11 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
         % array of possible models 'distfn' will return the model that has
         % the most inliers.  After this call M will be a non-cell object
         % representing only one model.
+        
+%         start = tic;
         [inliers, M] = feval(distfn, M, x, t);
+%         dist_time = dist_time + toc(start);
+        
         
         % Find the number of inliers to this model.
         ninliers = length(inliers);
@@ -280,4 +298,9 @@ function [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varar
         inliers = [];
         error('ransac was unable to find a useful solution');
     end
+    
+%     fprintf('sampling: %f, %f, %f\n', s1, s2, s3);
+%     fprintf('sampling: %f\n', sampling_time);
+%     fprintf('fittingfn: %f\n', fitting_time);
+%     fprintf('distfn: %f\n', dist_time);
     

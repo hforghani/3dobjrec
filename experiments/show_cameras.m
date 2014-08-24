@@ -8,7 +8,7 @@ test_poses = zeros(3, length(model.cameras));
 for i = 1:length(model.cameras)
     cam = model.cameras{i};
     cam_poses(:, i) = cam.center;
-    test_poses(:, i) = inv(cam.rotation_matrix()) * [0 0 2]' + cam.center;
+    test_poses(:, i) = cam.rotation_matrix() \ [0 0 2]' + cam.center;
 end
 
 scatter3(cam_poses(1,:), cam_poses(2,:), cam_poses(3,:), 10, 'filled', 'MarkerFaceColor', 'b');

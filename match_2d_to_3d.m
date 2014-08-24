@@ -8,13 +8,12 @@ if nargin < 4
     interactive = false;
 end
 
-addpath model;
-
 
 % Set parameters.
-desc_error_thr = 0.5;
+kpt_score_thr = 1;
+max_num_comp = 1500;
+desc_error_thr = 0.3;
 col_thr = 50;
-kpt_score_thr = 3;
 
 
 % Extract keypoints using feature detector.
@@ -37,21 +36,18 @@ query_poses = query_poses';
 query_frames = query_frames(:, u_indexes);
 
 % Calcualate Daisy descriptor of keypoints.
-query_descriptors = devide_and_compute_daisy(query_im, query_poses);
-zero_indexes = find(~any(query_descriptors));
-query_descriptors(:, zero_indexes) = [];
+query_desc = devide_and_compute_daisy(query_im, query_poses);
+zero_indexes = find(~any(query_desc));
+query_desc(:, zero_indexes) = [];
 query_frames(:, zero_indexes) = [];
-if interactive; fprintf('done\n'); end
-
-query_points_num = size(query_descriptors, 2);
-if interactive; fprintf('%d features described.\n', query_points_num); end
+if interactive; fprintf('done. count : %d\n', size(query_desc, 2)); end
 
 % Register 2d to 3d. Find some nearest neighbors for each query pose.
 if interactive; fprintf('registering 2d to 3d ... '); end
 % models_count = length(unique(desc_model.desc_model_indexes));
 % nei_num = ceil(models_count/10);
 nei_num = 3;
-[indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_descriptors, 'NUMNEIGHBORS', nei_num);
+[indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_desc, 'NUMNEIGHBORS', nei_num, 'MAXNUMCOMPARISONS', max_num_comp);
 distances = sqrt(distances);
 if interactive; fprintf('done\n'); end
 
@@ -64,7 +60,7 @@ point_general_indexes = unique(indexes(retained));
 points_count = length(point_general_indexes);
 points = [desc_model.desc_model_indexes(point_general_indexes);
           desc_model.desc_point_indexes(point_general_indexes)];
-if interactive; fprintf('done\n'); end
+if interactive; fprintf('done. count : %d\n', nnz(retained)); end
 
 % Determine correspondences and their distances.
 corr_count = sum(sum(retained));

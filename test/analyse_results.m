@@ -1,4 +1,4 @@
-function gnd_truth = analyse_results( test_res, times, case_name, test_path, min_index, max_index )
+function [precision, recall, timing] = analyse_results( test_res, gnd_truth, times, case_name, test_path, min_index, max_index )
 %CALC_RESULTS Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -14,15 +14,14 @@ function gnd_truth = analyse_results( test_res, times, case_name, test_path, min
         filtering_time(i) = times{i}.filtering;
         ransac_time(i) = times{i}.ransac;
     end
-    total = matching_time + filtering_time + ransac_time;
-    fprintf('======= MEAN TIME : %f + %f + %f = %f =======\n', ...
-        mean(matching_time), mean(filtering_time), mean(ransac_time), mean(total));
+	timing.matching = mean(matching_time);
+	timing.filtering = mean(filtering_time);
+	timing.ransac = mean(ransac_time);
+	timing.total = timing.matching + timing.filtering + timing.ransac;
 
     % Compute precision and recall.
-    gnd_truth = read_gnd_truth([test_path 'data.txt'], min_index, max_index);
 %     test_result = read_test_result(test_res);
     [precision, recall] = compute_p_r(gnd_truth, test_res, obj_names, false);
-    fprintf('======= RECALL = %f, PRECISION = %f =======\n', recall, precision);
-
+ 
 end
 

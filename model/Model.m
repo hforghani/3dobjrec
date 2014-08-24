@@ -48,18 +48,6 @@ classdef Model
             % Project points to image plane of given camera.
             % R : world to camera rotation
             % T : world to camera translation
-%             points_count = length(self.points);
-%             points2d = zeros(2, points_count);
-%             points3d = zeros(3, points_count);
-%             for i = 1:points_count
-%                 pos3d = self.points{i}.pos;
-%                 transformed = R * pos3d + T;
-%                 points3d(:,i) = pos3d;
-%                 
-%                 K = self.calibration.get_calib_matrix();
-%                 pos2d = K * transformed;
-%                 points2d(:,i) = pos2d(1:2) / pos2d(3);
-%             end
             pos3d = self.transform_points(R, T);
             K = self.calibration.get_calib_matrix();
             pos2d = K * pos3d;

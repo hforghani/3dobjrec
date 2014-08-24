@@ -6,7 +6,7 @@ corr_data = [matches2d; matches3d];
 % Run P3P with RANSAC.
 switch options.sampling_mode
     case 'guidedRansac'
-        [M, inliers] = ransac_guided(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 'MaxDataTrials', 25, 'MaxTrials', 100, 'SamplesAffinity', adj_mat, 'Feedback', true);
+        [M, inliers] = ransac_guided(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 'MaxDataTrials', 25, 'MaxTrials', 100, 'SamplesAffinity', adj_mat);
     case 'ransac'
         [M, inliers] = ransac(corr_data, @epnp_fittingfn, @epnp_distfn, @degenfn , sample_count, threshold, 0, 25, 100);
     case 'noSample'
@@ -41,16 +41,12 @@ function [inliers, M] = epnp_distfn(M, data, t)
         cur_M = M{i};
         R = cur_M(:,1:3);
         T = cur_M(:,4);
-        data_count = size(data,2);
-        errors = zeros(data_count,1);
-        
-        for j = 1:data_count
-            x = data(:,j);
-            point3d = x(3:5);
-            point2d = x(1:2);
-            error = reprojection_error_usingRT(point3d', point2d', R, T, K);
-            errors(j) = error;
-        end
+
+        point3d = data(3:5, :);
+        point2d = data(1:2, :);
+        [~, rep2d] = reprojection_error_usingRT(point3d', point2d', R, T, K);
+        rep2d = rep2d';
+        errors = sqrt((point2d(1,:)-rep2d(1,:)) .^ 2 + (point2d(2,:)-rep2d(2,:)) .^ 2);
 
         cur_inliers = find(errors < t);
         if length(cur_inliers) > max_inliers

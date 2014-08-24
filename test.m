@@ -1,4 +1,4 @@
-function [results, times] = test(case_name, test_path, load_matches, load_filtered, min_index, max_index, interactive, options)
+function [test_res, times] = test(case_name, test_path, load_matches, load_filtered, min_index, max_index, interactive, options)
 
 % interactive:      0 for no ouput; 1 for just precision, recal, and
 %                   timing; 2 logs details in addition; 3 shows images too.
@@ -58,21 +58,31 @@ end
 
 % Run the algorithm for all test images.
 
-results = cell(max_index-min_index+1, 1);
+test_res = cell(max_index-min_index+1, 1);
 times = cell(max_index-min_index+1, 1);
 
 for i = min_index : max_index
     q_im_name = [test_path str_arr{i}];
+    if interactive; fprintf('%d . ', i); end
     if interactive > 1; fprintf('======= testing %s =======\n', q_im_name); end
-    fprintf('%d, ', i);
     [res, timing] = match_and_estimate(case_name, q_im_name, models, options, 'LoadMatches', ...
         load_matches, 'LoadFiltered', load_filtered, 'Interactive', interactive - 1);
     times{i - min_index + 1} = timing;
-    results{i - min_index + 1} = res;
+    test_res{i - min_index + 1} = res;
     if interactive > 1; fprintf('======= done (elapsed time is %f sec.) =======\n', timing.total); end
 end
 
-fprintf('\n');
+if interactive; fprintf('\n'); end
+
+% Calculate results.
+gnd_truth = read_gnd_truth([test_path 'data.txt'], min_index, max_index);
+[precision, recall, timing] = analyse_results(test_res, gnd_truth, times, case_name, test_path, min_index, max_index);
+
+if interactive
+    fprintf('======= MEAN TIME : %f + %f + %f = %f =======\n', ...
+        timing.matching, timing.filtering, timing.ransac, timing.total);
+    fprintf('======= RECALL = %f, PRECISION = %f =======\n', recall, precision);
+end
 
 % Save results.
 parts = textscan(test_path, '%[^/]/%[^/]/');
@@ -80,14 +90,13 @@ folder_name = parts{end}{1};
 cl = clock;
 time_specifier = sprintf('%d-%d-%d-%d-%d', cl(1),cl(2),cl(3),cl(4),cl(5));
 res_fname = sprintf('result/%s_%s_%s_%s', time_specifier, folder_name, options.local, options.global);
-save(res_fname, 'results', 'times');
-
-
-if interactive
-    gnd_truth = analyse_results(results, times, case_name, test_path, min_index, max_index);
-end
+results.options = options;
+results.precision = precision;
+results.recall = recall;
+results.timing = timing;
+save(res_fname, 'results');
 
 % Show results.
 if interactive > 1
-    show_test_result(test_path, models, obj_names, gnd_truth, results);
+    show_test_result(test_path, models, obj_names, gnd_truth, test_res);
 end
