@@ -1,4 +1,4 @@
-function [test_res, times] = test(case_name, test_path, load_matches, load_filtered, min_index, max_index, interactive, options)
+function results = test(case_name, test_path, load_matches, load_filtered, min_index, max_index, interactive, options)
 
 % interactive:      0 for no ouput; 1 for just precision, recal, and
 %                   timing; 2 logs details in addition; 3 shows images too.
@@ -79,9 +79,15 @@ gnd_truth = read_gnd_truth([test_path 'data.txt'], min_index, max_index);
 [precision, recall, timing] = analyse_results(test_res, gnd_truth, times, case_name, test_path, min_index, max_index);
 
 if interactive
-    fprintf('======= MEAN TIME : %f + %f + %f = %f =======\n', ...
+    if interactive > 1; fprintf('======= '); end
+    fprintf('MEAN TIME : %f + %f + %f = %f', ...
         timing.matching, timing.filtering, timing.ransac, timing.total);
-    fprintf('======= RECALL = %f, PRECISION = %f =======\n', recall, precision);
+    if interactive > 1; fprintf(' ======='); end
+    fprintf('\n');
+    if interactive > 1; fprintf('======= '); end
+    fprintf('RECALL = %f, PRECISION = %f', recall, precision);
+    if interactive > 1; fprintf(' ======='); end
+    fprintf('\n');
 end
 
 % Save results.

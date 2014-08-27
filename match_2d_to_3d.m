@@ -10,8 +10,8 @@ end
 
 
 % Set parameters.
-kpt_score_thr = 1;
-max_num_comp = 1500;
+kpt_score_thr = 2;
+max_num_comp = 1000;
 desc_error_thr = 0.3;
 col_thr = 50;
 

@@ -1,12 +1,12 @@
 addpath utils;
 
-% close all;
-% figure;
-% xlabel('x'); ylabel('y'); zlabel('z');
-% hold on;
+close all;
+figure;
+xlabel('x'); ylabel('y'); zlabel('z');
+hold on;
 
-N = 10000;
-radius = 10;
+N = 1000;
+radius = 5;
 
 
 % Sample 3 points on the plane.
@@ -42,8 +42,10 @@ for i = 1 : N
     dist(i) = abs(middle_angle(proj_points) - main_angle);
 end
 
-% scatter3(centers(1,:), centers(2,:), centers(3,:), 20, 'b', 'filled');
-% scatter3(points(1,:), points(2,:), points(3,:), 50, 'r', 'filled');
+scatter3(centers(1,:), centers(2,:), radius - centers(3,:), 3, 'b', 'filled');
+scatter3(points(1,:), points(2,:), radius - points(3,:), 70, 'r', 'filled');
+t = 0 : 0.01 : 2*pi;
+plot3(cos(t)*radius, sin(t)*radius, zeros(size(t)), 'k-', 'LineWidth', 5);
 
 figure;
 hist(dist, 20);

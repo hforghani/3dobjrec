@@ -2,8 +2,7 @@
 %
 % Usage:
 %
-% [M, inliers] = ransac_graph_samp(x, adj_mat, fittingfn, distfn, degenfn ,s, t, feedback, ...
-%                       maxDataTrials, maxTrials)
+% [M, inliers] = ransac_guided(x, fittingfn, distfn, degenfn, s, t, varargin)
 %
 % Arguments:
 %     x         - Data sets to which we are seeking to fit a model M
