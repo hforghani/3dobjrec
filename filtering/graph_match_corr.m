@@ -224,8 +224,10 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
 
     switch method
         case 'sm' % Spectral matching
-            [sol, stats_ipfp]  = spectral_matching_ipfp(W, model_corr(1,:), model_corr(2,:));
-            score = stats_ipfp.best_score;
+            % [sol, stats_ipfp]  = spectral_matching_ipfp(W, model_corr(1,:), model_corr(2,:));
+            % score = stats_ipfp.best_score;
+			sol = SM(W);
+			score = graph_match_score(sol, W);
             
         case 'ipfp' % Integer fixed point maximizing x'Wx+Dx
 %             D = -ones(ccount,1);

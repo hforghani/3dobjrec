@@ -3,6 +3,8 @@ function prepare_model(obj_name, base_path, varargin)
 read_nvm = true;
 calc_descriptors = true;
 calc_point_sizes = true;
+calc_3d_relations = true;
+
 if nargin > 1
     i = 1;
     while i <= length(varargin)
@@ -12,6 +14,8 @@ if nargin > 1
             calc_descriptors = varargin{i+1};
         elseif strcmp(varargin{i}, 'CalcPointSizes')
             calc_point_sizes = varargin{i+1};
+        elseif strcmp(varargin{i}, 'Calc3dRelations')
+            calc_3d_relations = varargin{i+1};
         end
         i = i + 2;
     end
@@ -23,7 +27,6 @@ model_data_path = [base_path obj_name '\'];
 
 nvm_data_fname = ['data/model/' obj_name];
 desc_data_fname = ['data/model_desc/' obj_name];
-
 
 %%%%% Read nvm data.
 if read_nvm
@@ -111,9 +114,30 @@ if calc_point_sizes
             point_sizes(i) = mean(p_scales(nonzero) .* p_depths(nonzero) ./ p_focal_len(nonzero));
         end
     end
+    
     model.point_sizes = point_sizes;
 
     save (nvm_data_fname, 'model');
+    
+    fprintf('done\n');
+else
+    
+%     load(nvm_data_fname, 'point_sizes');
+    point_sizes = model.point_sizes;
+    model.point_sizes = [];
+    
+    disp('point sizes loaded');
+end
+
+if calc_3d_relations
+    fprintf('calculating 3d relations ... ');
+    
+    neighbors = neighbor3d(model, 0.05);
+    distances = dist3d(model, 0.08);
+    covis = covis3d(model);
+    angles = angles3d(model, covis);
+    
+    save (nvm_data_fname, 'model', 'point_sizes', 'neighbors', 'distances', 'covis', 'angles');
     
     fprintf('done\n');
 end

@@ -11,10 +11,10 @@ folders = dir(base_path);
 folders = folders(3:end);
 
 start_i = 1;
-% end_i = length(folders);
-end_i = 10;
+end_i = length(folders);
+% end_i = 10;
 for i = start_i:end_i
     obj_name = folders(i).name;
     fprintf('preparing model "%s"\n', obj_name);
-    prepare_model(obj_name, base_path, 'ReadNVM', false, 'CalcDescriptors', false, 'CalcPointSizes', true);
+    prepare_model(obj_name, base_path, 'ReadNVM', false, 'CalcDescriptors', false, 'CalcPointSizes', false, 'Calc3dRelations', false);
 end
