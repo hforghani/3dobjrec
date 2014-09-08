@@ -11,7 +11,7 @@ end
 
 % Set parameters.
 kpt_score_thr = 2;
-max_num_comp = 1000;
+max_num_comp = 500;
 desc_error_thr = 0.3;
 col_thr = 50;
 

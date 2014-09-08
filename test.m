@@ -92,10 +92,9 @@ end
 
 % Save results.
 parts = textscan(test_path, '%[^/]/%[^/]/');
-folder_name = parts{end}{1};
 cl = clock;
 time_specifier = sprintf('%d-%d-%d-%d-%d', cl(1),cl(2),cl(3),cl(4),cl(5));
-res_fname = sprintf('result/%s_%s_%s_%s', time_specifier, folder_name, options.local, options.global);
+res_fname = sprintf('result/%s_%s_%s_%s', time_specifier, case_name, options.local, options.global);
 results.options = options;
 results.precision = precision;
 results.recall = recall;

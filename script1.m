@@ -24,9 +24,9 @@ methods = {
     {'hao', 'hao', 35} ...
     ,{'gradient', 'hao', 32} ...
     ,{'hao', 'geomGradient', 32} ...
-    ,{'gradient', 'geomGradient', 35} ...
-    ,{'gradient', 'angle', 27} ...
-    ,{'hao', 'angle', 22}
+    ,{'gradient', 'geomGradient', 30} ...
+    ,{'hao', 'angle', 22} ...
+    ,{'gradient', 'angle', 23} ...
     };
 
 % methods = {{'hao', 'exhaust', 7}, ...
@@ -37,15 +37,16 @@ methods = {
 
 warning('OFF', 'all');
 
-for i = [1 4 5 6]
+
+for i = 6
     m = methods{i};
     options.local = m{1};
     options.global = m{2};
     options.min_inl_count = m{3};
     for j = 1 : 5
-        test(case_names{j}, test_paths{j}, false, false, 1, 112, 1, options);
-        test(case_names{j}, test_paths{j}, true, true, 1, 112, 1, options);
-%         test(case_names{j}, test_paths{j}, true, true, 1, 112, 1, options);
+        test(case_names{j}, test_paths{j}, true, false, 1, 106, 1, options);
+        test(case_names{j}, test_paths{j}, true, true, 1, 106, 1, options);
+%         test(case_names{j}, test_paths{j}, true, true, 1, 106, 1, options);
     end
     fprintf('\n\n');
 end
