@@ -12,7 +12,7 @@ dist3d = squareform(dist3d);
 
 covis = cons_covis3d(model_points, model.points, model_corr, true(ccount));
 
-cons = Inf(ccount, ccount, ccount);
+cons = zeros(ccount, ccount, ccount);
 
 if isempty(covis)
     return;
@@ -35,9 +35,9 @@ for x = find(any(corr_covis))
     same3d = model_corr(2, x) == model_corr(2, y_indices);
     y_indices(same2d | same3d) = [];
     
-    index_dist = pdist(model_corr(:, y_indices)');
-    index_dist = squareform(index_dist);
-    same_pose = index_dist == 0;
+    same_2d_pose = dist(model_corr(1, y_indices)) == 0;
+    same_3d_pose = dist(model_corr(2, y_indices)) == 0;
+    same_pose = same_2d_pose | same_3d_pose;
     
     if length(y_indices) < 2; continue; end
     
@@ -67,7 +67,7 @@ for x = find(any(corr_covis))
     % Calculate pairwise 3d angles.
     norms = sqrt(dif3d(1,:) .^ 2 + dif3d(2,:) .^ 2 + dif3d(3,:) .^ 2);
     a = norms(combs(:,1));
-    b = norms(combs(:,2));
+    b = norms(combs(:,2 ));
     c = corr_dist3d(sub2ind(size(corr_dist3d), y_indices(combs(:,1)), y_indices(combs(:,2))));
     dif_ang3d = acos((a .^ 2 + b .^ 2 - c .^ 2) ./ (2 * a .* b))';
     
@@ -79,7 +79,7 @@ for x = find(any(corr_covis))
 
 end
 
-cons = exp(-.5 * (cons / sigma) .^ 2);
+cons(cons~=0) = exp(-.5 * (cons(cons~=0) / sigma) .^ 2);
 
 permu = perms([1 2 3]);
 for j = 1 : length(permu)

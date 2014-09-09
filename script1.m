@@ -21,7 +21,7 @@ test_paths = {'test_img/auto50_112/', ...
 %     };
 
 methods = {
-    {'hao', 'hao', 35} ...
+    {'hao', 'hao', 38} ...
     ,{'gradient', 'hao', 32} ...
     ,{'hao', 'geomGradient', 32} ...
     ,{'gradient', 'geomGradient', 30} ...
@@ -38,13 +38,13 @@ methods = {
 warning('OFF', 'all');
 
 
-for i = 6
+for i = 1
     m = methods{i};
     options.local = m{1};
     options.global = m{2};
     options.min_inl_count = m{3};
     for j = 1 : 5
-        test(case_names{j}, test_paths{j}, true, false, 1, 106, 1, options);
+%         test(case_names{j}, test_paths{j}, true, false, 1, 106, 1, options);
         test(case_names{j}, test_paths{j}, true, true, 1, 106, 1, options);
 %         test(case_names{j}, test_paths{j}, true, true, 1, 106, 1, options);
     end
