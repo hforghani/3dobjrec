@@ -42,7 +42,7 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
                 adj_mat = W > 0.6;
 
             case 'ipfp'
-                [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'ipfp_gm');
+                [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames, model_points, models{i}, options, 'Affinity', 'local', 'Method', 'ipfp');
                 sol = logical(sol);
                 confidences(i) = score;
                 adj_mat = W > 0.6;
@@ -72,12 +72,19 @@ function [sel_model_i, sel_corr, sel_adj_mat] = graph_match_corr(q_frames, ...
         end
 
         if interactive; fprintf('confidence = %f\n', confidences(i)); end
+%         if interactive
+%             if confidences(i)
+%                 fprintf('retained = %d / %d, confidence = %f\n', nnz(sol), size(model_corr,2), confidences(i));
+%             else
+%                 fprintf('\n');
+%             end
+%         end
     end
     
     % Choose top hypotheses.
     [~, sort_indexes] = sort(confidences, 'descend');
     options.top_hyp_num = min(options.top_hyp_num, length(confidences));
-    top_indexes = sort_indexes(1:options.top_hyp_num);
+    top_indexes = sort_indexes(1 : options.top_hyp_num);
     if interactive; fprintf('===== %d top hypotheses chose\n', options.top_hyp_num); end
 
     sel_model_i = zeros(options.top_hyp_num, 1);
@@ -233,10 +240,11 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
 %             D = -ones(ccount,1);
             D = zeros(ccount,1);
             [sol, x_opt, scores, score]  = ipfp(W, D, sol0, model_corr(1,:), model_corr(2,:), 50);
+            score = graph_match_score(sol, W);
             
         case 'ipfp_gm' % Integer fixed point maximizing x'Wx
             [sol, stats_ipfp]  = ipfp_gm(W, sol0, model_corr(1,:), model_corr(2,:));
-            score = stats_ipfp.best_score;
+            score = graph_match_score(sol, W);
             
         case 'rrwm' % Reweighted random walk matching
             [uniq_qindexes, ~, corr_qindexes] = unique(model_corr(1,:), 'stable');
@@ -262,11 +270,11 @@ function [sol, score, W] = graph_matching(model_corr, model_corr_dist, q_frames,
             if length(size(W)) == 2
                 [sol, score] = grad_ascent_gm(W, sol0);
             elseif length(size(W)) == 3
-%                 guide_graph = any(W, 3);
                 [sol, score] = grad_ascent_gm_tri(W, sol0);
             else
                 error('invalid size of W for graph matching');
             end
+%             fprintf('\tgradient solution: %d / %d\t', nnz(sol), length(sol));
     end
     
 end

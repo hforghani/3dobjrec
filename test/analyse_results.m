@@ -1,4 +1,4 @@
-function [precision, recall, timing] = analyse_results( test_res, gnd_truth, times, case_name, test_path, min_index, max_index )
+function [precision, recall, timing] = analyse_results( test_res, gnd_truth, times, case_name, test_path, indexes )
 %CALC_RESULTS Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -6,10 +6,10 @@ function [precision, recall, timing] = analyse_results( test_res, gnd_truth, tim
     load(desc_model_f_name, 'obj_names');
     
     % Compute mean time.
-    matching_time = zeros(max_index-min_index+1,1);
-    filtering_time= zeros(max_index-min_index+1,1);
-    ransac_time = zeros(max_index-min_index+1,1);
-    for i = 1 : max_index-min_index+1
+    matching_time = zeros(length(indexes),1);
+    filtering_time= zeros(length(indexes),1);
+    ransac_time = zeros(length(indexes),1);
+    for i = 1 : length(indexes)
         matching_time(i) = times{i}.matching;
         filtering_time(i) = times{i}.filtering;
         ransac_time(i) = times{i}.ransac;

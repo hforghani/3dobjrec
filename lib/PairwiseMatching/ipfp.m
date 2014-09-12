@@ -38,7 +38,7 @@ sol = sol0;
 
 % score_sol = 0;
 % Edited by Forghani:
-score_sol = new_sol'*M*new_sol;
+score_sol = sol0'*M*sol0;
 
 score(1) =  xc'*M*xc+D'*xc;
 

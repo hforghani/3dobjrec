@@ -1,4 +1,4 @@
-function results = test(case_name, test_path, load_matches, load_filtered, min_index, max_index, interactive, options)
+function results = test(case_name, test_path, load_matches, load_filtered, indexes, interactive, options)
 
 % interactive:      0 for no ouput; 1 for just precision, recal, and
 %                   timing; 2 logs details in addition; 3 shows images too.
@@ -6,7 +6,7 @@ function results = test(case_name, test_path, load_matches, load_filtered, min_i
 % options.global:   global filter method. choices: exhaust, hao, geom, geomGradient,
 %                   geomSM, geomIPFP, geomRRWM, angle
 
-if nargin < 8
+if nargin < 7
     options = [];
 end
 if ~isfield(options, 'local'); options.local = 'hao'; end
@@ -22,7 +22,6 @@ if ~isfield(options, 'sampling_mode'); options.sampling_mode = 'guidedRansac'; e
 
 if interactive; fprintf('======= testing %s, local: %s, global: %s =======\n', case_name, options.local, options.global); end
 
-close all;
 
 addpath test model utils filtering estimation;
 addpath lib/daisy/ lib/EPnP/ lib/PairwiseMatching/ lib/medoidshift/;
@@ -58,25 +57,25 @@ end
 
 % Run the algorithm for all test images.
 
-test_res = cell(max_index-min_index+1, 1);
-times = cell(max_index-min_index+1, 1);
+test_res = cell(length(indexes), 1);
+times = cell(length(indexes), 1);
 
-for i = min_index : max_index
-    q_im_name = [test_path str_arr{i}];
-    if interactive; fprintf('%d . ', i); end
+for i = 1 : length(indexes)
+    q_im_name = [test_path str_arr{indexes(i)}];
+    if interactive; fprintf('%d . ', indexes(i)); end
     if interactive > 1; fprintf('======= testing %s =======\n', q_im_name); end
     [res, timing] = match_and_estimate(case_name, q_im_name, models, options, 'LoadMatches', ...
         load_matches, 'LoadFiltered', load_filtered, 'Interactive', interactive - 1);
-    times{i - min_index + 1} = timing;
-    test_res{i - min_index + 1} = res;
+    times{i} = timing;
+    test_res{i} = res;
     if interactive > 1; fprintf('======= done (elapsed time is %f sec.) =======\n', timing.total); end
 end
 
 if interactive; fprintf('\n'); end
 
 % Calculate results.
-gnd_truth = read_gnd_truth([test_path 'data.txt'], min_index, max_index);
-[precision, recall, timing] = analyse_results(test_res, gnd_truth, times, case_name, test_path, min_index, max_index);
+gnd_truth = read_gnd_truth([test_path 'data.txt'], indexes);
+[precision, recall, timing] = analyse_results(test_res, gnd_truth, times, case_name, test_path, indexes);
 
 if interactive
     if interactive > 1; fprintf('======= '); end

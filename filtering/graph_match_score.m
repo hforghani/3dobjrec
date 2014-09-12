@@ -4,6 +4,9 @@ score = [];
 
 if length(size(M)) == 2
     score = x' * M * x;
+    if x ~= 0
+        score = score / (norm(x) ^ 2);
+    end
 elseif length(size(M)) == 3
     score = 0;
     for i = 1 : length(x)
