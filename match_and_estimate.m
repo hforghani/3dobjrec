@@ -67,7 +67,7 @@ end
 % Estimate pose.
 query_poses = query_frames(1:2,:);
 start = tic;
-[transforms, rec_indexes] = estimate_multi_pose(query_poses, points, sel_model_i, ...
+[transforms, rec_indexes, inl_counts] = estimate_multi_pose(query_poses, points, sel_model_i, ...
     sel_corr, sel_adj_mat, models, obj_names, query_im_name, options, interactive);
 timing.ransac = toc(start);
 
@@ -78,8 +78,10 @@ count = length(rec_indexes);
 results.objcount = count;
 results.objnames = cell(count, 1);
 results.transforms = cell(count, 1);
+results.inl_counts = zeros(count, 1);
 obj_names = obj_names(rec_indexes);
 for i = 1 : count
     results.objnames{i} = obj_names{i};
     results.transforms{i} = transforms{i};
+    results.inl_counts(i) = inl_counts(i);
 end

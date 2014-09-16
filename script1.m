@@ -13,7 +13,7 @@ test_paths = {'test_img/auto50_112/', ...
             'test_img/auto50_112/'};
 
 methods = {
-    {'hao', 'hao', 45} ...
+    {'hao', 'hao', 40} ...
     ,{'gradient', 'hao', 30} ...
     ,{'hao', 'geomGradient', 30} ...
     ,{'gradient', 'geomGradient', 30} ...
@@ -35,12 +35,11 @@ warning('OFF', 'all');
 
 % indexes = randperm(106, 20);
 indexes = 1 : 106;
-% indexes = [44    76    18    29     7     6    12    48    41    98    27     1    88   86    79    20    60     4    46   105];
-cases = 5;
+cases = 1 : 5;
 
 colors = 'rgbcmykw';
 
-for i = 6
+for i = [1 6]
     m = methods{i};
     options.local = m{1};
     options.global = m{2};
@@ -48,11 +47,12 @@ for i = 6
     
     recalls = zeros(length(cases),1);
     for j = cases
-        res1 = test(case_names{j}, test_paths{j}, true, false, indexes, 2, options);
+        if i == 1; load_matches = false; else load_matches = true; end
+        res1 = test(case_names{j}, test_paths{j}, load_matches, false, indexes, 1, options);
 %         res2 = test(case_names{j}, test_paths{j}, true, true, indexes, 1, options);
 %         res3 = test(case_names{j}, test_paths{j}, true, true, indexes, 1, options);
 
-%         recalls(j) = mean([res2.recall, res3.recall]);
+        recalls(j) = mean([res1.recall]);
     end
     
     figure(1);

@@ -1,4 +1,4 @@
-function [transforms, rec_indexes] = estimate_multi_pose(query_poses, points, ...
+function [transforms, rec_indexes, inl_counts] = estimate_multi_pose(query_poses, points, ...
     model_indexes, correspondences, adj_matrices, models, obj_names, query_im_name, options, interactive)
 
 SAMPLE_COUNT = 3;
@@ -19,6 +19,7 @@ end
 
 transforms = {};
 rec_indexes = [];
+inl_counts = [];
 
 for i = 1 : length(correspondences)
     corr = correspondences{i};
@@ -68,19 +69,20 @@ for i = 1 : length(correspondences)
 
     try
         [rotation_mat, translation_mat, inliers, final_err] = estimate_pose(poses2d, poses3d, adj_mat, model.calibration, SAMPLE_COUNT, ERROR_THRESH, options);
-        inlier_ratio = length(inliers) / size(poses2d, 2);
+%         inlier_ratio = length(inliers) / size(poses2d, 2);
 %         if interactive; fprintf('inliers/total : %d / %d = %f\n', length(inliers), size(poses2d, 2), inlier_ratio) end
         
-        if inlier_ratio < options.min_inl_ratio || length(inliers) < options.min_inl_count
-            if interactive; fprintf('not enough inliers\n'); end
-        else
-            if interactive > 1
-                show_results(poses2d, rotation_mat, translation_mat, inliers, model, i);
-            end
-            transforms = [transforms; [rotation_mat, translation_mat]];
-            rec_indexes = [rec_indexes; model_i];
-            if interactive; fprintf('successfuly done, final error = %f\n', final_err); end
+%         if inlier_ratio < options.min_inl_ratio || length(inliers) < options.min_inl_count
+%             if interactive; fprintf('not enough inliers\n'); end
+%         else
+        if interactive > 1
+            show_results(poses2d, rotation_mat, translation_mat, inliers, model, i);
         end
+        transforms = [transforms; [rotation_mat, translation_mat]];
+        rec_indexes = [rec_indexes; model_i];
+        inl_counts = [inl_counts; length(inliers)];
+        if interactive; fprintf('successfuly done, final error = %f\n', final_err); end
+%         end
     catch e
         if strcmp(e.message, 'ransac was unable to find a useful solution')
             if interactive; fprintf('object not found\n'); end

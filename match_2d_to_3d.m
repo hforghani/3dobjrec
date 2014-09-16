@@ -12,7 +12,7 @@ end
 % Set parameters.
 kpt_score_thr = 2;
 max_num_comp = 500;
-desc_error_thr = 0.3;
+desc_error_thr = 0.4;
 col_thr = 50;
 
 
@@ -44,9 +44,9 @@ if interactive; fprintf('done. count : %d\n', size(query_desc, 2)); end
 
 % Register 2d to 3d. Find some nearest neighbors for each query pose.
 if interactive; fprintf('registering 2d to 3d ... '); end
-% models_count = length(unique(desc_model.desc_model_indexes));
-% nei_num = ceil(models_count/10);
-nei_num = 3;
+models_count = length(models);
+nei_num = ceil(models_count/10);
+% nei_num = 3;
 [indexes, distances] = vl_kdtreequery(desc_model.kdtree, double(desc_model.descriptors), query_desc, 'NUMNEIGHBORS', nei_num, 'MAXNUMCOMPARISONS', max_num_comp);
 distances = sqrt(distances);
 if interactive; fprintf('done\n'); end

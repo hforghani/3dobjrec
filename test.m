@@ -64,8 +64,10 @@ for i = 1 : length(indexes)
     q_im_name = [test_path str_arr{indexes(i)}];
     if interactive; fprintf('%d . ', indexes(i)); end
     if interactive > 1; fprintf('======= testing %s =======\n', q_im_name); end
+    
     [res, timing] = match_and_estimate(case_name, q_im_name, models, options, 'LoadMatches', ...
         load_matches, 'LoadFiltered', load_filtered, 'Interactive', interactive - 1);
+    
     times{i} = timing;
     test_res{i} = res;
     if interactive > 1; fprintf('======= done (elapsed time is %f sec.) =======\n', timing.total); end
@@ -73,10 +75,43 @@ end
 
 if interactive; fprintf('\n'); end
 
-% Calculate results.
-gnd_truth = read_gnd_truth([test_path 'data.txt'], indexes);
-[precision, recall, timing] = analyse_results(test_res, gnd_truth, times, case_name, test_path, indexes);
+% Calculate precision-recall pairs for different values of minimum inlier count.
 
+gnd_truth = read_gnd_truth([test_path 'data.txt'], indexes);
+
+inl_counts = [];
+for i = 1 : length(indexes)
+    inl_counts = [inl_counts, test_res{i}.inl_counts'];
+end
+inl_counts = sort(unique(inl_counts));
+
+valid_test_res = test_res;
+roc_data = zeros(length(inl_counts), 3);
+roc_data(:, 1) = inl_counts;
+for i = 1 : length(inl_counts)
+    min_inl_count = inl_counts(i);
+    valid_test_res = validate_results(valid_test_res, min_inl_count);
+    [prec, rec] = compute_p_r(gnd_truth, valid_test_res, obj_names, false);
+    roc_data(i, 2 : 3) = [prec, rec];
+end
+
+results.roc = roc_data;
+
+% Choose minimum inlier count while keeping precision larger than 0.95 .
+% min_precision = 0.95;
+% prec_i = find(prec_recalls(:,1) >= min_precision, 1);
+% precision = prec_recalls(prec_i, 1);
+% recall = prec_recalls(prec_i, 2);
+% test_res = validate_results(test_res, min_inl_count);
+
+% Validate results by minimum inlier count.
+valid_test_res = validate_results(test_res, options.min_inl_count);
+[precision, recall] = compute_p_r(gnd_truth, valid_test_res, obj_names, false);
+
+% Compute mean time.
+timing = analyse_time(times, indexes);
+
+% Log results in console.
 if interactive
     if interactive > 1; fprintf('======= '); end
     fprintf('MEAN TIME : %f + %f + %f = %f', ...
@@ -90,7 +125,6 @@ if interactive
 end
 
 % Save results.
-parts = textscan(test_path, '%[^/]/%[^/]/');
 cl = clock;
 time_specifier = sprintf('%d-%d-%d-%d-%d', cl(1),cl(2),cl(3),cl(4),cl(5));
 res_fname = sprintf('result/%s_%s_%s_%s', time_specifier, case_name, options.local, options.global);

@@ -21,7 +21,7 @@ end
 corr_covis = covis(model_corr(2,:), model_corr(2,:));
 corr_dist3d = dist3d(model_corr(2,:), model_corr(2,:));
 
-max_dist = 0.1;
+max_dist = 0.2;
 sigma = max_dist / 2;
 
 for x = find(any(corr_covis))
