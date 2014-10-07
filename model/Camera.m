@@ -113,7 +113,7 @@ classdef Camera
         end
         
         function scales = calc_scales_sift(self, points, calibration, model_path)
-            [crop_im, top_left, bottom_right] = self.crop_points(points, calibration, model_path);
+            [crop_im, meas_poses, top_left, bottom_right] = self.crop_points(points, calibration, model_path);
             
             max_feature_dist = 2;
             
@@ -127,7 +127,7 @@ classdef Camera
         end
         
         function scales = calc_scales_surf(self, points, calibration, model_path)
-            [crop_im, top_left, bottom_right] = self.crop_points(points, calibration, model_path);
+            [crop_im, meas_poses, top_left, bottom_right] = self.crop_points(points, calibration, model_path);
             
             max_feature_dist = 2;
             
@@ -148,7 +148,7 @@ classdef Camera
             scales = mean([frames(3,:); frames(6,:)]);
         end
         
-        function [crop_im, top_left, bottom_right] = crop_points(self, points, calibration, model_path)
+        function [crop_im, meas_poses, top_left, bottom_right] = crop_points(self, points, calibration, model_path)
             im_gray = single(rgb2gray(self.get_image(model_path)));
             [meas_poses, ~] = self.get_points_poses(points, calibration);
 

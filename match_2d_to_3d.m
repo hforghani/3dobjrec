@@ -20,14 +20,30 @@ col_thr = 50;
 if interactive; fprintf('extracting feature from query image ... '); end
 query_im = single(rgb2gray(color_im));    
 
-start = tic;
-[query_frames, ~, info] = vl_covdet(query_im, 'Method', 'DoG');
-% [query_frames, ~] = vl_sift(query_im, 'Levels', 3, 'EdgeThresh' , 20);
-fprintf('%f\n', toc(start));
+detector = 'surf';
 
-query_frames = query_frames(:, info.edgeScores > kpt_score_thr);
-scales = mean([query_frames(3,:); query_frames(6,:)]);
-query_frames = [query_frames(1:2,:); scales];
+switch detector
+    case 'DoG'
+        [query_frames, ~, info] = vl_covdet(query_im, 'Method', 'DoG');
+        query_frames = query_frames(:, info.edgeScores > kpt_score_thr);
+        scales = mean([query_frames(3,:); query_frames(6,:)]);
+        query_frames = [query_frames(1:2,:); scales];
+    case 'harris'
+        [query_frames, ~, info] = vl_covdet(query_im, 'Method', 'HarrisLaplace');
+        query_frames = query_frames(:, info.edgeScores > kpt_score_thr);
+        scales = mean([query_frames(3,:); query_frames(6,:)]);
+        query_frames = [query_frames(1:2,:); scales];
+    case 'sift'
+        [query_frames, ~] = vl_sift(query_im, 'Levels', 3, 'EdgeThresh' , 20);
+        query_frames = query_frames(1:3,:);
+    case 'surf'
+        surf_points = detectSURFFeatures(query_im);
+        extracted_poses = double(surf_points.Location');
+        scales = surf_points.Scale';
+        query_frames = [extracted_poses; scales];
+    otherwise
+        error('invalid detector name');
+end
 
 %     figure; imshow(color_im); hold on;
 %     h2 = vl_plotframe(query_frames) ;
