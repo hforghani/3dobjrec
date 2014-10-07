@@ -16,5 +16,5 @@ end_i = length(folders);
 for i = start_i:end_i
     obj_name = folders(i).name;
     fprintf('preparing model "%s"\n', obj_name);
-    prepare_model(obj_name, base_path, 'ReadNVM', false, 'CalcDescriptors', false, 'CalcPointSizes', false, 'Calc3dRelations', false);
+    prepare_model(obj_name, base_path, 'ReadNVM', false, 'CalcDescriptors', false, 'CalcPointSizes', true, 'Calc3dRelations', false);
 end

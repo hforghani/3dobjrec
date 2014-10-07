@@ -80,11 +80,11 @@ if calc_point_sizes
     fprintf('calculating scales (%d cameras) ...\n', length(model.cameras));
     scales = [];
     for i = 1:length(model.cameras)
-        fprintf('\tcamera %d ... ', i);
+        fprintf('%d . ', i);
         cam_scales = model.cameras{i}.calc_scales(model.points, model.calibration, model_data_path);
         scales = [scales, cam_scales];
-        fprintf('done\n');
     end
+    fprintf('\n');
 
     fprintf('calculating sizes ... ');
 

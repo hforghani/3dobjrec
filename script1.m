@@ -39,16 +39,15 @@ cases = 1 : 5;
 
 colors = 'rgbcmykw';
 
-for i = [1 6]
+for i = 1
     m = methods{i};
     options.local = m{1};
     options.global = m{2};
     options.min_inl_count = m{3};
     
     recalls = zeros(length(cases),1);
-    for j = cases
-        if i == 1; load_matches = false; else load_matches = true; end
-        res1 = test(case_names{j}, test_paths{j}, load_matches, false, indexes, 1, options);
+    for j = 1
+        res1 = test(case_names{j}, test_paths{j}, false, false, indexes, 1, options);
 %         res2 = test(case_names{j}, test_paths{j}, true, true, indexes, 1, options);
 %         res3 = test(case_names{j}, test_paths{j}, true, true, indexes, 1, options);
 

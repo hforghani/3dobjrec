@@ -1,11 +1,12 @@
 addpath utils;
+addpath model;
 
 close all;
 figure;
 xlabel('x'); ylabel('y'); zlabel('z');
 hold on;
 
-N = 1000;
+N = 10000;
 radius = 5;
 
 
@@ -39,6 +40,8 @@ for i = 1 : N
 %     line([C(1) p(1)], [C(2) p(2)], [C(3) p(3)]);
 
     proj_points = R * points - R * repmat(C, 1, 3);
+    proj_points = proj_points(1:2,:) ./ repmat(proj_points(3,:), 2, 1);
+    
     dist(i) = abs(middle_angle(proj_points) - main_angle);
 end
 
