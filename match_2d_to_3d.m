@@ -41,7 +41,7 @@ switch detector
     case 'surf'
         surf_points = detectSURFFeatures(query_im, 'NumOctaves', 4, 'NumScaleLevels', 4, 'MetricThreshold', 2);
         extracted_poses = double(surf_points.Location');
-        scales = surf_points.Scale';
+        scales = double(surf_points.Scale)';
         query_frames = [extracted_poses; scales];
     otherwise
         error('invalid detector name');

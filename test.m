@@ -62,7 +62,7 @@ times = cell(length(indexes), 1);
 
 for i = 1 : length(indexes)
     q_im_name = [test_path str_arr{indexes(i)}];
-%     if interactive; fprintf('%d . ', indexes(i)); end
+    if interactive; fprintf('%d . ', indexes(i)); end
     if interactive > 1; fprintf('======= testing %s =======\n', q_im_name); end
     
     [res, timing] = match_and_estimate(case_name, q_im_name, models, options, 'LoadMatches', ...
